@@ -1,8 +1,9 @@
-// server/server.js
 const express = require('express');
 const cors = require('cors');
 const session = require('express-session');
 const loginRoute = require('./routes/login');
+const findCourseRoute = require('./routes/findcourse'); // ✅ added
+
 require('dotenv').config();
 
 const app = express();
@@ -23,7 +24,9 @@ app.use(session({
 
 // Routes
 app.use('/login', loginRoute);
+app.use('/findcourse', findCourseRoute); // ✅ added
 
+// Start server
 const PORT = 4000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
