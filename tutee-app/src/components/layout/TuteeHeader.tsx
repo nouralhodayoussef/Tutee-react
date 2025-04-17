@@ -25,7 +25,7 @@ const TuteeHeader = () => {
       <nav className="hidden md:flex items-center gap-8 text-xs font-bold text-black">
         <Link href="#home" className="hover:text-[#E8B14F]">HOME</Link>
         <Link href="#scheduling" className="hover:text-[#E8B14F]">SCHEDULING</Link>
-        <Link href="#courses" className="hover:text-[#E8B14F]">FIND A COURSE</Link>
+        <Link href="/tutee-findcourse" className="hover:text-[#E8B14F]">FIND A COURSE</Link>
         <Link href="#tutors" className="hover:text-[#E8B14F]">FIND A TUTOR</Link>
         <Link href="#contact" className="hover:text-[#E8B14F]">CONTACT US</Link>
       </nav>
