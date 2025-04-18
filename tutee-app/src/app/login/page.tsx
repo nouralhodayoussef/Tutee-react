@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import 'bootstrap-icons/font/bootstrap-icons.css';
@@ -11,6 +12,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
+  const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,11 +30,22 @@ export default function LoginPage() {
 
       if (!res.ok) {
         setError(data.error || 'Login failed');
-      } else {
-        // Redirect based on role
-        if (data.role === 'admin') window.location.href = '/admin';
-        else if (data.role === 'tutor') window.location.href = '/tutor';
-        else if (data.role === 'tutee') window.location.href = '/tutee';
+        return;
+      }
+
+      // Redirect user based on role
+      switch (data.role) {
+        case 'admin':
+          router.push('/admin');
+          break;
+        case 'tutor':
+          router.push('/tutor');
+          break;
+        case 'tutee':
+          router.push('/tutee');
+          break;
+        default:
+          setError('Unknown user role');
       }
     } catch (err) {
       setError('Something went wrong. Please try again.');
@@ -68,6 +81,7 @@ export default function LoginPage() {
             Welcome to Tutee!
           </h3>
 
+          {/* Toggle Login/Register */}
           <div className="flex justify-center mb-6">
             <div className="flex bg-[#e8b14f82] rounded-full px-2 py-1 w-full max-w-[329px] h-[59px] items-center">
               <div className="bg-[#E8B14F] text-white w-[146px] h-[40px] rounded-full flex items-center justify-center text-[16px] font-medium">
@@ -88,6 +102,7 @@ export default function LoginPage() {
             <p className="text-red-600 text-center text-sm mb-4">{error}</p>
           )}
 
+          {/* Login Form */}
           <form className="flex flex-col gap-6" onSubmit={handleLogin}>
             <div>
               <label className="text-black text-[16px]">Email Address</label>
