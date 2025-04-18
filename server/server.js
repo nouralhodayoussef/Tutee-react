@@ -25,6 +25,13 @@ app.use(session({
 // Routes
 app.use('/login', loginRoute);
 app.use('/findcourse', findCourseRoute); // ✅ added
+// ✅ correct path if your file is here: /routes/tuteehome.js
+const tuteeHomeRoute = require('./routes/tuteehome');
+app.use('/tutee/home', tuteeHomeRoute);
+
+
+const tuteeInfoRoute = require('./routes/tuteeinfo');
+app.use('/tutee/info', tuteeInfoRoute);
 
 // Start server
 const PORT = 4000;
