@@ -1,43 +1,64 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import TuteeHeader from '@/components/layout/TuteeHeader';
 
 export default function TuteeFindCourse() {
   const [majors, setMajors] = useState([]);
   const [universities, setUniversities] = useState([]);
-  const [selectedMajor, setSelectedMajor] = useState('Major');
-  const [selectedUniversity, setSelectedUniversity] = useState('University');
+  const [selectedMajor, setSelectedMajor] = useState<string | null>(null);
+  const [selectedUniversity, setSelectedUniversity] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-
   const [showMajors, setShowMajors] = useState(false);
   const [showUniversities, setShowUniversities] = useState(false);
 
+  const majorDropdownRef = useRef<HTMLDivElement>(null);
+  const uniDropdownRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    const fetchOptions = async () => {
+    const fetchData = async () => {
       try {
-        const res = await fetch('http://localhost:4000/findcourse/options');
-        const data = await res.json();
-        setMajors(data.majors);
-        setUniversities(data.universities);
+        const [optionsRes, userRes] = await Promise.all([
+          fetch('http://localhost:4000/findcourse/options', { credentials: 'include' }),
+          fetch('http://localhost:4000/me', { credentials: 'include' })
+        ]);
+
+        const optionsData = await optionsRes.json();
+        const userData = await userRes.json();
+
+        setMajors(optionsData.majors);
+        setUniversities(optionsData.universities);
+
+        if (userRes.ok) {
+          if (userData.major_name) setSelectedMajor(userData.major_name);
+          if (userData.university_name) setSelectedUniversity(userData.university_name);
+        }
       } catch (err) {
-        console.error('Failed to fetch options:', err);
+        console.error('Fetch error:', err);
       }
     };
 
-    fetchOptions();
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (majorDropdownRef.current && !majorDropdownRef.current.contains(event.target as Node)) setShowMajors(false);
+      if (uniDropdownRef.current && !uniDropdownRef.current.contains(event.target as Node)) setShowUniversities(false);
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   return (
     <>
       <TuteeHeader />
-
       <section className="w-full flex justify-center items-center py-10 bg-[#f5f5ef] font-poppins">
         <div
-          className="relative w-[1057px] rounded-[15px] shadow-lg bg-cover bg-center px-6 pt-8 pb-24"
+          className="relative w-[1057px] rounded-[15px] shadow-lg bg-cover bg-center px-6 pt-8 pb-24 overflow-visible"
           style={{ backgroundImage: "url('/imgs/Findacourseillustration.png')" }}
         >
-          {/* Search Bar */}
           <div className="flex w-full justify-between items-center bg-white rounded-[10px] h-[60px] px-6 mb-6">
             <input
               type="text"
@@ -51,15 +72,14 @@ export default function TuteeFindCourse() {
             </button>
           </div>
 
-          {/* Custom Dropdowns */}
           <div className="flex gap-4 relative z-10">
             {/* Major Dropdown */}
-            <div className="relative w-[150px]">
+            <div className="relative w-[150px]" ref={majorDropdownRef}>
               <button
                 onClick={() => setShowMajors(!showMajors)}
                 className="w-full h-[55px] bg-white rounded-[10px] px-4 text-[16px] text-left text-black shadow-md relative overflow-hidden whitespace-nowrap truncate"
               >
-                {selectedMajor}
+                {selectedMajor ?? 'Major'}
                 <span className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">▾</span>
               </button>
               {showMajors && (
@@ -81,12 +101,12 @@ export default function TuteeFindCourse() {
             </div>
 
             {/* University Dropdown */}
-            <div className="relative w-[190px]">
+            <div className="relative w-[190px]" ref={uniDropdownRef}>
               <button
                 onClick={() => setShowUniversities(!showUniversities)}
                 className="w-full h-[55px] bg-white rounded-[10px] px-4 text-[16px] text-left text-black shadow-md relative overflow-hidden whitespace-nowrap truncate"
               >
-                {selectedUniversity}
+                {selectedUniversity ?? 'University'}
                 <span className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">▾</span>
               </button>
               {showUniversities && (
@@ -109,6 +129,8 @@ export default function TuteeFindCourse() {
           </div>
         </div>
       </section>
+      
+
     </>
   );
 }
