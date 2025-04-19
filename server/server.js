@@ -6,6 +6,7 @@ const findCourseRoute = require('./routes/findcourse');
 const tuteeHomeRoute = require('./routes/tuteehome');
 const tuteeInfoRoute = require('./routes/tuteeinfo');
 const meRoute = require('./routes/me');
+const filterCourseRoute = require('./routes/filtercourse');
 require('dotenv').config();
 
 const app = express();
@@ -28,6 +29,7 @@ app.use('/findcourse', findCourseRoute);
 app.use('/tutee/home', tuteeHomeRoute);
 app.use('/tutee/info', tuteeInfoRoute);
 app.use('/me', meRoute); // ✅ mount the route
+app.use('/findcourse', filterCourseRoute);
 
 const PORT = 4000;
 app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
