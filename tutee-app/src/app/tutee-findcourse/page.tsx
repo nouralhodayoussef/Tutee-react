@@ -20,21 +20,25 @@ export default function TuteeFindCourse() {
       try {
         const [optionsRes, userRes] = await Promise.all([
           fetch('http://localhost:4000/findcourse/options', { credentials: 'include' }),
-          fetch('http://localhost:4000/me', { credentials: 'include' })
+          fetch('http://localhost:4000/me', { credentials: 'include' }) // Fetch tutee info
         ]);
 
         const optionsData = await optionsRes.json();
         const userData = await userRes.json();
 
+        console.log('User info from /me:', userData); // ✅ helpful debug
+
+        // Update the dropdown options
         setMajors(optionsData.majors);
         setUniversities(optionsData.universities);
 
-        if (userRes.ok) {
-          if (userData.major_name) setSelectedMajor(userData.major_name);
-          if (userData.university_name) setSelectedUniversity(userData.university_name);
+        // Check if the user data contains major and university info and set the selected values
+        if (userData.major_name && userData.university_name) {
+          setSelectedMajor(userData.major_name);
+          setSelectedUniversity(userData.university_name);
         }
       } catch (err) {
-        console.error('Fetch error:', err);
+        console.error('❌ Fetch error:', err);
       }
     };
 
@@ -79,7 +83,7 @@ export default function TuteeFindCourse() {
                 onClick={() => setShowMajors(!showMajors)}
                 className="w-full h-[55px] bg-white rounded-[10px] px-4 text-[16px] text-left text-black shadow-md relative overflow-hidden whitespace-nowrap truncate"
               >
-                {selectedMajor ?? 'Major'}
+                {selectedMajor ?? 'Select Major'}
                 <span className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">▾</span>
               </button>
               {showMajors && (
@@ -106,7 +110,7 @@ export default function TuteeFindCourse() {
                 onClick={() => setShowUniversities(!showUniversities)}
                 className="w-full h-[55px] bg-white rounded-[10px] px-4 text-[16px] text-left text-black shadow-md relative overflow-hidden whitespace-nowrap truncate"
               >
-                {selectedUniversity ?? 'University'}
+                {selectedUniversity ?? 'Select University'}
                 <span className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">▾</span>
               </button>
               {showUniversities && (
@@ -129,8 +133,6 @@ export default function TuteeFindCourse() {
           </div>
         </div>
       </section>
-      
-
     </>
   );
 }

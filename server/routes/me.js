@@ -4,7 +4,7 @@ const router = express.Router();
 
 // GET /me
 router.get('/', (req, res) => {
-  console.log("SESSION CHECK:", req.session.user);
+  console.log("SESSION CHECK:", req.session.user); // <-- ADD THIS
 
   if (!req.session.user || req.session.user.role !== 'tutee') {
     return res.status(401).json({ error: 'Unauthorized' });
@@ -13,19 +13,9 @@ router.get('/', (req, res) => {
   const userId = req.session.user.id;
 
   const userInfoQuery = `
-    SELECT 
-      u.email,
-      t.first_name,
-      t.last_name,
-      m.id AS major_id,
-      m.major_name,
-      uni.id AS university_id,
-      uni.university_name
+    SELECT u.email, t.first_name, t.last_name, t.university, t.major
     FROM users u
     JOIN tutees t ON u.id = t.user_id
-    JOIN universitymajors um ON um.major_id = u.major AND um.university_id = u.university
-    JOIN majors m ON m.id = um.major_id
-    JOIN universities uni ON uni.id = um.university_id
     WHERE u.id = ?
   `;
 
@@ -76,7 +66,7 @@ router.get('/', (req, res) => {
           if (err) return res.status(500).json({ error: 'Error fetching courses' });
 
           return res.status(200).json({
-            ...userResult[0], // includes email, names, major_name, university_name
+            ...userResult[0],
             booked_sessions: sessionResult,
             tutors: tutorResult,
             courses: courseResult.map(c => c.code)
