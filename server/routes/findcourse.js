@@ -1,6 +1,6 @@
 const express = require('express');
-const router = express.Router();
 const db = require('../config/db');
+const router = express.Router();
 
 router.get('/options', (req, res) => {
   const getMajors = 'SELECT id, major_name FROM majors';
