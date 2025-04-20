@@ -3,8 +3,12 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import TuteeHeader from "@/components/layout/TuteeHeader";
+import dynamic from "next/dynamic";
+
+const ScheduleModal = dynamic(() => import("@/components/tutee/ScheduleModal"), { ssr: false });
 
 interface Course {
+  id: number;
   course_code: string;
   course_name: string;
 }
@@ -17,6 +21,7 @@ interface Review {
 }
 
 interface Tutor {
+  id: number;
   name: string;
   photo: string;
   bio: string;
@@ -31,16 +36,17 @@ interface Tutor {
 export default function TuteeTutorProfile() {
   const [tutor, setTutor] = useState<Tutor | null>(null);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [showModal, setShowModal] = useState(false);
   const searchParams = useSearchParams();
 
   useEffect(() => {
     const fetchTutor = async () => {
       const id = window.location.pathname.split("/").pop();
+      const tutorId = parseInt(id || "0");
       try {
         const res = await fetch(`http://localhost:4000/tutee/tutor-profile/${id}`);
         const data = await res.json();
 
-        // Try to match the selected course from query string
         const queryCode = searchParams.get("selectedCourse");
         const queryName = searchParams.get("courseName");
 
@@ -48,13 +54,14 @@ export default function TuteeTutorProfile() {
           const match = data.courses.find((c: Course) => c.course_code === queryCode);
           if (match) {
             setSelectedCourse({
-              course_code: queryCode,
-              course_name: queryName || match.course_name,
+              id: match.id, // ✅ include the real ID from DB
+              course_code: match.course_code,
+              course_name: match.course_name,
             });
           }
         }
 
-        setTutor(data);
+        setTutor({ ...data, id: tutorId });
       } catch (err) {
         console.error("Error fetching tutor profile:", err);
       }
@@ -68,7 +75,7 @@ export default function TuteeTutorProfile() {
   };
 
   return (
-    <main className="bg-[#F5F5EF] min-h-screen font-montserrat">
+    <main className="bg-[#F5F5EF] min-h-screen font-montserrat relative z-0">
       <TuteeHeader />
 
       {/* Banner */}
@@ -91,6 +98,7 @@ export default function TuteeTutorProfile() {
                 </div>
                 <button
                   disabled={!selectedCourse}
+                  onClick={() => setShowModal(true)}
                   className={`${
                     selectedCourse
                       ? "bg-[#E8B14F] text-white"
@@ -111,7 +119,7 @@ export default function TuteeTutorProfile() {
         </div>
       </section>
 
-      {/* Courses + Skills + CTA */}
+      {/* Courses + Skills */}
       <section className="w-full px-4 md:px-24 py-10 grid grid-cols-1 md:grid-cols-3 gap-10">
         <div className="md:col-span-2">
           <h2 className="text-3xl font-bold mb-6">Courses</h2>
@@ -153,6 +161,7 @@ export default function TuteeTutorProfile() {
           </p>
           <button
             disabled={!selectedCourse}
+            onClick={() => setShowModal(true)}
             className={`${
               selectedCourse
                 ? "bg-[#E8B14F] hover:bg-yellow-500"
@@ -164,7 +173,7 @@ export default function TuteeTutorProfile() {
         </div>
       </section>
 
-      {/* Reviews Section */}
+      {/* Reviews */}
       <section className="w-full px-6 md:px-24 py-10">
         <h2 className="text-[36px] font-bold mb-8 text-black">Reviews</h2>
 
@@ -233,6 +242,25 @@ export default function TuteeTutorProfile() {
           )}
         </div>
       </section>
+
+      {/* Scheduling Modal */}
+      {showModal && tutor && selectedCourse && (
+        <>
+          {console.log("🧪 ScheduleModal props", {
+            tutorId: tutor.id,
+            courseId: selectedCourse.id,
+            tutorName: tutor.name,
+            courseCode: selectedCourse.course_code,
+          })}
+          <ScheduleModal
+            onClose={() => setShowModal(false)}
+            tutorId={tutor.id}
+            courseId={selectedCourse.id}
+            tutorName={tutor.name}
+            courseCode={selectedCourse.course_code}
+          />
+        </>
+      )}
     </main>
   );
 }

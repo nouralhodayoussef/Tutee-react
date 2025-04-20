@@ -41,7 +41,7 @@ router.get('/:id', (req, res) => {
   `;
 
   const coursesQuery = `
-    SELECT DISTINCT c.course_code, c.course_name
+    SELECT DISTINCT c.id, c.course_code, c.course_name
     FROM tutor_courses tc
     JOIN courses c ON tc.course_id = c.id
     WHERE tc.tutor_id = ?
@@ -84,8 +84,7 @@ router.get('/:id', (req, res) => {
               db.query(reviewsQuery, [tutorId], (err, reviewsRes) => {
                 if (err) return res.status(500).json({ error: 'Failed to get reviews' });
 
-                // ✅ Final response
-                return res.json({
+                const response = {
                   name: tutor.name,
                   photo: tutor.photo,
                   bio: tutor.bio,
@@ -94,17 +93,20 @@ router.get('/:id', (req, res) => {
                   avg_rating: ratingRes[0].avg_rating || "N/A",
                   skills: skillRows.map(s => s.skill_name),
                   courses: courseRows.map(c => ({
+                    id: c.id,
                     course_code: c.course_code,
                     course_name: c.course_name,
                   })),
-                  
                   reviews: reviewsRes.map(r => ({
                     reviewer: r.reviewer,
                     photo: r.photo,
                     rating: r.rating,
                     comment: r.comment,
                   }))
-                });
+                };
+
+                console.log("✅ Sending tutor profile:", response); // For debug
+                return res.json(response);
               });
             });
           });

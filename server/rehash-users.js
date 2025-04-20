@@ -6,7 +6,7 @@ const db = mysql.createConnection({
   host: 'localhost',
   user: 'root',
   password: '',           // Or your XAMPP MySQL password
-  database: 'tutee'
+  database: 'tutee-db'
 });
 
 db.connect((err) => {
