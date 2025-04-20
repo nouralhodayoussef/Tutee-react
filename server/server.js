@@ -6,6 +6,7 @@ const findCourseRoute = require('./routes/findcourse');
 const tuteeHomeRoute = require('./routes/tuteehome');
 const tuteeInfoRoute = require('./routes/tuteeinfo');
 const meRoute = require('./routes/me');
+const filterCourseRoute = require('./routes/filtercourse');
 require('dotenv').config();
 
 const app = express();
@@ -30,7 +31,6 @@ app.use('/tutee/info', tuteeInfoRoute);
 app.use('/me', meRoute); // ✅ mount the route
 const tutorProfileRoute = require('./routes/tutorprofile');
 app.use('/tutee/tutor-profile', tutorProfileRoute);
-
 
 
 const PORT = 4000;
