@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import TuteeHeader from "@/components/layout/TuteeHeader";
 
 interface Course {
@@ -30,6 +31,7 @@ interface Tutor {
 export default function TuteeTutorProfile() {
   const [tutor, setTutor] = useState<Tutor | null>(null);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     const fetchTutor = async () => {
@@ -37,6 +39,21 @@ export default function TuteeTutorProfile() {
       try {
         const res = await fetch(`http://localhost:4000/tutee/tutor-profile/${id}`);
         const data = await res.json();
+
+        // Try to match the selected course from query string
+        const queryCode = searchParams.get("selectedCourse");
+        const queryName = searchParams.get("courseName");
+
+        if (queryCode) {
+          const match = data.courses.find((c: Course) => c.course_code === queryCode);
+          if (match) {
+            setSelectedCourse({
+              course_code: queryCode,
+              course_name: queryName || match.course_name,
+            });
+          }
+        }
+
         setTutor(data);
       } catch (err) {
         console.error("Error fetching tutor profile:", err);
