@@ -33,16 +33,33 @@ router.get('/', (req, res) => {
   `;
 
   const pastTutorsQuery = `
-  SELECT DISTINCT
-    CONCAT(t.first_name, ' ', t.last_name) AS name,
-    t.description AS bio,
-    t.photo
-  FROM scheduled_sessions s
-  JOIN requested_sessions r ON r.id = s.request_id
-  JOIN tutors t ON r.tutor_id = t.id
-  WHERE r.tutee_id = ?
-`;
-
+    SELECT DISTINCT
+      t.id AS id, -- ✅ ADD THE ID HERE
+      CONCAT(t.first_name, ' ', t.last_name) AS name,
+      t.description AS bio,
+      t.photo,
+      (
+        SELECT ROUND(AVG(ra.stars), 1)
+        FROM ratings ra
+        JOIN scheduled_sessions s2 ON ra.scheduled_session_id = s2.id
+        JOIN requested_sessions r2 ON s2.request_id = r2.id
+        WHERE r2.tutor_id = t.id
+      ) AS rating,
+      (
+        SELECT COUNT(DISTINCT r3.tutee_id)
+        FROM requested_sessions r3
+        WHERE r3.tutor_id = t.id
+      ) AS tutee_count,
+      (
+        SELECT COUNT(DISTINCT r4.course_id)
+        FROM requested_sessions r4
+        WHERE r4.tutor_id = t.id
+      ) AS course_count
+    FROM scheduled_sessions s
+    JOIN requested_sessions r ON r.id = s.request_id
+    JOIN tutors t ON r.tutor_id = t.id
+    WHERE r.tutee_id = ?
+  `;
 
   const pastCoursesQuery = `
     SELECT DISTINCT c.course_code
@@ -52,7 +69,6 @@ router.get('/', (req, res) => {
     WHERE r.tutee_id = ?
   `;
 
-  // Step 1: get tutee name
   db.query(tuteeNameQuery, [tuteeId], (err, nameResult) => {
     if (err || nameResult.length === 0) {
       return res.status(500).json({ error: 'Failed to get tutee name' });
@@ -60,21 +76,17 @@ router.get('/', (req, res) => {
 
     const first_name = nameResult[0].first_name;
 
-    // Step 2: get booked sessions
     db.query(bookedSessionsQuery, [tuteeId], (err, sessions) => {
       if (err) return res.status(500).json({ error: 'Error fetching future sessions' });
 
-      // Step 3: get past tutors
       db.query(pastTutorsQuery, [tuteeId], (err, tutorRows) => {
         if (err) return res.status(500).json({ error: 'Error fetching tutors' });
 
-        // Step 4: get past courses
         db.query(pastCoursesQuery, [tuteeId], (err, courseRows) => {
           if (err) return res.status(500).json({ error: 'Error fetching courses' });
 
           const courses = courseRows.map(row => row.course_code);
 
-          // ✅ ✅ ✅ Now return everything to frontend
           res.json({
             first_name,
             booked_sessions: sessions,

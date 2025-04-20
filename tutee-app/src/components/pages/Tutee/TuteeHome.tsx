@@ -21,6 +21,7 @@ interface Tutor {
   tutee_count?: number;
   course_count?: number;
   photo?: string;
+  id?: number; // Add ID to route to profile
 }
 
 interface TuteeData {
@@ -170,9 +171,11 @@ export default function TuteeHome() {
                         <span>📚 {tutor.course_count || 0} Courses</span>
                       </div>
                     </div>
-                    <button className="bg-[#E8B14F] text-black font-bold px-4 py-2 text-xs rounded-full shadow">
-                      Schedule
-                    </button>
+                    <Link href={`/tutee/tutor-profile/${tutor.id}`}>
+                      <button className="bg-[#E8B14F] text-black font-bold px-4 py-2 text-xs rounded-full shadow">
+                        Schedule
+                      </button>
+                    </Link>
                   </div>
                 ))
               ) : (
