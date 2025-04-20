@@ -28,6 +28,10 @@ app.use('/findcourse', findCourseRoute);
 app.use('/tutee/home', tuteeHomeRoute);
 app.use('/tutee/info', tuteeInfoRoute);
 app.use('/me', meRoute); // ✅ mount the route
+const tutorProfileRoute = require('./routes/tutorprofile');
+app.use('/tutee/tutor-profile', tutorProfileRoute);
+
+
 
 const PORT = 4000;
 app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
