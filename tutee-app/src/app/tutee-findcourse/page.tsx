@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import TuteeHeader from '@/components/layout/TuteeHeader';
+import Link from 'next/link';
 
 export default function TuteeFindCourse() {
   const [majors, setMajors] = useState([]);
@@ -12,6 +14,7 @@ export default function TuteeFindCourse() {
   const [courses, setCourses] = useState([]);
   const [showMajors, setShowMajors] = useState(false);
   const [showUniversities, setShowUniversities] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,14 +47,12 @@ export default function TuteeFindCourse() {
     }
   };
 
-  // Re-fetch when searchTerm is cleared
   useEffect(() => {
     if (searchTerm === '') {
       fetchCourses();
     }
   }, [searchTerm]);
 
-  // Re-fetch on major/university change
   useEffect(() => {
     fetchCourses();
   }, [selectedMajor, selectedUniversity]);
@@ -159,9 +160,10 @@ export default function TuteeFindCourse() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
                 {courses.map((course: any, index) => (
-                  <div
+                  <Link
                     key={index}
-                    className="bg-white rounded-2xl p-5 shadow-md w-[272px] h-[291px] flex flex-col justify-between"
+                    href={`/tutee/tutor-profile/${course.tutor_id}?selectedCourse=${encodeURIComponent(course.course_code)}&courseName=${encodeURIComponent(course.course_name)}`}
+                    className="bg-white rounded-2xl p-5 shadow-md w-[272px] h-[291px] flex flex-col justify-between hover:shadow-lg transition"
                   >
                     <div className="text-[#696984] text-sm">
                       {selectedMajor} · {selectedUniversity}
@@ -178,7 +180,7 @@ export default function TuteeFindCourse() {
                       </p>
                       {renderStars(course.avg_rating)}
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}
