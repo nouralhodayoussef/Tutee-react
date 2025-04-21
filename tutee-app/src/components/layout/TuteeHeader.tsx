@@ -1,114 +1,109 @@
-"use client";
+'use client';
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Menu, X } from "lucide-react";
+import HeaderDropdown from "./headerdropdown";
 
 const TuteeHeader = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [name, setName] = useState('');
   const [photo, setPhoto] = useState('/imgs/tutee-profile.png');
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchTutee = async () => {
       try {
         const res = await fetch('http://localhost:4000/tutee/info', {
-          credentials: 'include'
+          credentials: 'include',
         });
-
         const data = await res.json();
-        console.log("📦 Received from backend:", data);
 
         if (res.ok) {
           setName(data.first_name);
-
           if (data.photo?.includes('drive.google.com')) {
             const match = data.photo.match(/[-\w]{25,}/);
             const fileId = match ? match[0] : '';
             const driveUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
-            console.log("🔗 Transformed Drive URL:", driveUrl);
             setPhoto(driveUrl);
           } else if (data.photo) {
-            console.log("🖼️ Using direct image link:", data.photo);
             setPhoto(data.photo);
           }
-        } else {
-          console.error("❌ Tutee info fetch failed");
         }
-      } catch (err) {
-        console.error("🚨 Error fetching tutee info:", err);
+      } catch (error) {
+        console.error('Error fetching tutee info:', error);
       }
     };
 
     fetchTutee();
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   return (
-    <header className="w-full bg-[#F5F5EF] px-6 md:px-24 py-4 flex items-center justify-between relative z-50">
+    <header className="w-full px-6 py-5 flex items-center justify-between shadow-md bg-white relative z-50">
       {/* Logo */}
-      <Link href="/tutee">
-        <div className="w-32 h-auto relative cursor-pointer">
-          <img
-            src="/imgs/logo.png"
-            alt="Tutee Logo"
-            width={128}
-            height={61}
-          />
-        </div>
-      </Link>
-
-      {/* Desktop Navigation */}
-      <nav className="hidden md:flex items-center gap-8 text-xs font-bold text-black">
-        <Link href="/tutee" className="hover:text-[#E8B14F]">HOME</Link>
-        <Link href="#scheduling" className="hover:text-[#E8B14F]">SCHEDULING</Link>
-        <Link href="/tutee-findcourse" className="hover:text-[#E8B14F]">FIND A COURSE</Link>
-        <Link href="#tutors" className="hover:text-[#E8B14F]">FIND A TUTOR</Link>
-        <Link href="#contact" className="hover:text-[#E8B14F]">CONTACT US</Link>
-      </nav>
-
-      {/* Desktop Profile Section */}
-      <div className="hidden md:flex items-center gap-2">
-        <div className="w-[63px] h-[63px] rounded-full overflow-hidden">
-          <img
-            src={photo}
-            alt="Tutee Profile"
-            width={63}
-            height={63}
-            className="rounded-full object-cover"
-          />
-        </div>
-        <p className="text-[18px] font-medium text-black">{name || '...'}</p>
-        <span className="text-lg font-bold text-black">▾</span>
+      <div className="flex items-center gap-2">
+        <img src="/imgs/logo.png" alt="Logo" className="w-20 h-auto" />
       </div>
 
-      {/* Mobile Hamburger */}
-      <button
-        className="md:hidden text-black"
-        onClick={() => setMobileOpen(!mobileOpen)}
-      >
-        {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-      </button>
+      {/* Desktop Nav */}
+      <nav className="hidden md:flex gap-10 text-sm font-semibold text-black">
+        <Link href="/">HOME</Link>
+        <Link href="/scheduling">SCHEDULING</Link>
+        <Link href="/tutee-findcourse">FIND A COURSE</Link>
+        <Link href="/find-tutor">FIND A TUTOR</Link>
+        <Link href="/contact">CONTACT US</Link>
+      </nav>
 
-      {/* Mobile Menu */}
+      {/* Avatar & Dropdown */}
+      <div className="relative" ref={dropdownRef}>
+        <div
+          onClick={() => setDropdownOpen(prev => !prev)}
+          className="cursor-pointer flex items-center gap-2"
+        >
+          <img
+            src={photo}
+            alt="Tutee"
+            className="w-10 h-10 rounded-full object-cover border border-gray-300"
+          />
+          <span className="font-semibold">{name} ▾</span>
+        </div>
+
+        {dropdownOpen && (
+          <>
+            <div className="absolute right-4 top-full mt-[2px] w-3 h-3 bg-[#F5F5F5] rotate-45 z-40" />
+            <HeaderDropdown />
+          </>
+        )}
+      </div>
+
+      {/* Mobile Nav Toggle */}
+      <div className="md:hidden">
+        {mobileOpen ? (
+          <X onClick={() => setMobileOpen(false)} className="w-6 h-6 cursor-pointer" />
+        ) : (
+          <Menu onClick={() => setMobileOpen(true)} className="w-6 h-6 cursor-pointer" />
+        )}
+      </div>
+
+      {/* Mobile Nav */}
       {mobileOpen && (
-        <div className="absolute top-full left-0 w-full bg-[#F5F5EF] shadow-md rounded-b-xl py-4 px-6 flex flex-col gap-4 text-sm font-semibold text-black md:hidden">
-          <Link href="/tutee" onClick={() => setMobileOpen(false)}>HOME</Link>
-          <Link href="#scheduling" onClick={() => setMobileOpen(false)}>SCHEDULING</Link>
-          <Link href="/tutee-findcourse" onClick={() => setMobileOpen(false)}>FIND A COURSE</Link>
-          <Link href="#tutors" onClick={() => setMobileOpen(false)}>FIND A TUTOR</Link>
-          <Link href="#contact" onClick={() => setMobileOpen(false)}>CONTACT US</Link>
-
-          <hr className="border-t border-black/10 my-2" />
-
-          <div className="flex items-center gap-2">
-            <img
-              src={photo}
-              alt="Profile"
-              width={40}
-              height={40}
-              className="rounded-full object-cover"
-            />
-            <p className="text-sm font-medium">{name || '...'}</p>
+        <div className="absolute top-full left-0 w-full bg-white shadow-md md:hidden z-40 border-t border-gray-200">
+          <div className="flex flex-col divide-y divide-gray-200">
+            <Link href="/" onClick={() => setMobileOpen(false)} className="px-10 py-3 text-sm font-semibold hover:underline tracking-wide">HOME</Link>
+            <Link href="/scheduling" onClick={() => setMobileOpen(false)} className="px-10 py-3 text-sm font-semibold hover:underline tracking-wide">SCHEDULING</Link>
+            <Link href="/tutee-findcourse" onClick={() => setMobileOpen(false)} className="px-10 py-3 text-sm font-semibold hover:underline tracking-wide">FIND A COURSE</Link>
+            <Link href="/find-tutor" onClick={() => setMobileOpen(false)} className="px-10 py-3 text-sm font-semibold hover:underline tracking-wide">FIND A TUTOR</Link>
+            <Link href="/contact" onClick={() => setMobileOpen(false)} className="px-10 py-3 text-sm font-semibold hover:underline tracking-wide">CONTACT US</Link>
           </div>
         </div>
       )}

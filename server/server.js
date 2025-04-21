@@ -8,7 +8,9 @@ const tuteeInfoRoute = require('./routes/tuteeinfo');
 const meRoute = require('./routes/me');
 const tutorProfileRoute = require('./routes/tutorprofile');
 const filterCourseRoutes = require('./routes/filtercourse'); // ✅ only this
-
+const changePasswordRoute = require('./routes/changepassword');
+const dropdownInfoRoute = require('./routes/dropdowninfo');
+const forgotPasswordRoute = require('./routes/forgotpassword');
 require('dotenv').config();
 
 const app = express();
@@ -31,6 +33,8 @@ app.use('/tutee/home', tuteeHomeRoute);
 app.use('/tutee/info', tuteeInfoRoute);
 app.use('/tutee/tutor-profile', tutorProfileRoute);
 app.use('/me', meRoute);
-
+app.use('/dropdowninfo', dropdownInfoRoute);
+app.use('/change-password', changePasswordRoute);
+app.use('/forgot-password', forgotPasswordRoute);
 const PORT = 4000;
 app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
