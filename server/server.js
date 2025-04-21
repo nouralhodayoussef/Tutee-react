@@ -11,6 +11,11 @@ const filterCourseRoutes = require('./routes/filtercourse');
 const uploadRoute = require('./routes/upload');
 const requestSessionRoute = require('./routes/requestsession');
 const tutorRoutes = require('./routes/tutor');
+const filterCourseRoutes = require('./routes/filtercourse'); // ✅ only this
+const changePasswordRoute = require('./routes/changepassword');
+const dropdownInfoRoute = require('./routes/dropdowninfo');
+const forgotPasswordRoute = require('./routes/forgotpassword');
+const logoutRoute = require('./routes/logout');
 require('dotenv').config();
 
 const app = express();
@@ -45,6 +50,10 @@ app.use('/me', meRoute);
 app.use('/upload', uploadRoute);
 app.use('/request-session', requestSessionRoute);
 app.use('/tutor', tutorRoutes);
+app.use('/dropdowninfo', dropdownInfoRoute);
+app.use('/change-password', changePasswordRoute);
+app.use('/forgot-password', forgotPasswordRoute);
+app.use('/logout', logoutRoute);
 
 const PORT = 4000;
 app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));

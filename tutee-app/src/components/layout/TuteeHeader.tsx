@@ -25,8 +25,7 @@ const TuteeHeader = () => {
           if (data.photo?.includes('drive.google.com')) {
             const match = data.photo.match(/[-\w]{25,}/);
             const fileId = match ? match[0] : '';
-            const driveUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
-            setPhoto(driveUrl);
+            setPhoto(`https://drive.google.com/uc?export=view&id=${fileId}`);
           } else if (data.photo) {
             setPhoto(data.photo);
           }
@@ -55,7 +54,7 @@ const TuteeHeader = () => {
         <img src="/imgs/logo.png" alt="Logo" className="w-20 h-auto" />
       </div>
 
-      {/* Desktop Nav */}
+      {/* Desktop Navigation */}
       <nav className="hidden md:flex gap-10 text-sm font-semibold text-black">
         <Link href="/">HOME</Link>
         <Link href="/scheduling">SCHEDULING</Link>
@@ -75,18 +74,18 @@ const TuteeHeader = () => {
             alt="Tutee"
             className="w-10 h-10 rounded-full object-cover border border-gray-300"
           />
-          <span className="font-semibold">{name} ▾</span>
+          <span className="font-semibold text-sm md:text-base">{name} ▾</span>
         </div>
 
         {dropdownOpen && (
           <>
-            <div className="absolute right-4 top-full mt-[2px] w-3 h-3 bg-[#F5F5F5] rotate-45 z-40" />
+            <div className="absolute right-6 top-full mt-1 w-3 h-3 bg-[#F5F5F5] rotate-45 z-40" />
             <HeaderDropdown />
           </>
         )}
       </div>
 
-      {/* Mobile Nav Toggle */}
+      {/* Mobile Menu Toggle */}
       <div className="md:hidden">
         {mobileOpen ? (
           <X onClick={() => setMobileOpen(false)} className="w-6 h-6 cursor-pointer" />
@@ -95,15 +94,23 @@ const TuteeHeader = () => {
         )}
       </div>
 
-      {/* Mobile Nav */}
+      {/* Mobile Navigation */}
       {mobileOpen && (
         <div className="absolute top-full left-0 w-full bg-white shadow-md md:hidden z-40 border-t border-gray-200">
           <div className="flex flex-col divide-y divide-gray-200">
-            <Link href="/" onClick={() => setMobileOpen(false)} className="px-10 py-3 text-sm font-semibold hover:underline tracking-wide">HOME</Link>
-            <Link href="/scheduling" onClick={() => setMobileOpen(false)} className="px-10 py-3 text-sm font-semibold hover:underline tracking-wide">SCHEDULING</Link>
-            <Link href="/tutee-findcourse" onClick={() => setMobileOpen(false)} className="px-10 py-3 text-sm font-semibold hover:underline tracking-wide">FIND A COURSE</Link>
-            <Link href="/find-tutor" onClick={() => setMobileOpen(false)} className="px-10 py-3 text-sm font-semibold hover:underline tracking-wide">FIND A TUTOR</Link>
-            <Link href="/contact" onClick={() => setMobileOpen(false)} className="px-10 py-3 text-sm font-semibold hover:underline tracking-wide">CONTACT US</Link>
+            {['/', '/scheduling', '/tutee-findcourse', '/find-tutor', '/contact'].map((path, i) => {
+              const label = ['HOME', 'SCHEDULING', 'FIND A COURSE', 'FIND A TUTOR', 'CONTACT US'][i];
+              return (
+                <Link
+                  key={path}
+                  href={path}
+                  onClick={() => setMobileOpen(false)}
+                  className="px-10 py-3 text-sm font-semibold hover:underline tracking-wide"
+                >
+                  {label}
+                </Link>
+              );
+            })}
           </div>
         </div>
       )}
