@@ -10,7 +10,7 @@ const tutorProfileRoute = require('./routes/tutorprofile');
 const filterCourseRoutes = require('./routes/filtercourse');
 const uploadRoute = require('./routes/upload');
 const requestSessionRoute = require('./routes/requestsession');
-
+const tutorRoutes = require('./routes/tutor');
 require('dotenv').config();
 
 const app = express();
@@ -44,6 +44,7 @@ app.use('/tutee/tutor-profile', tutorProfileRoute);
 app.use('/me', meRoute);
 app.use('/upload', uploadRoute);
 app.use('/request-session', requestSessionRoute);
+app.use('/tutor', tutorRoutes);
 
 const PORT = 4000;
 app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
