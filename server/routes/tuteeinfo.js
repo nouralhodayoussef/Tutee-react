@@ -9,7 +9,7 @@ router.get('/', (req, res) => {
 
   const tuteeId = req.session.user.profile_id;
 
-  const sql = 'SELECT first_name, photo FROM tutees WHERE id = ? LIMIT 1';
+  const sql = 'SELECT first_name, last_name, photo FROM tutees WHERE id = ? LIMIT 1';
   db.query(sql, [tuteeId], (err, results) => {
     if (err) return res.status(500).json({ error: 'Failed to fetch tutee info' });
     if (results.length === 0) return res.status(404).json({ error: 'Tutee not found' });
