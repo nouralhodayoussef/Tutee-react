@@ -17,8 +17,13 @@ const changePasswordRoute = require('./routes/changepassword');
 const dropdownInfoRoute = require('./routes/dropdowninfo');
 const forgotPasswordRoute = require('./routes/forgotpassword');
 const logoutRoute = require('./routes/logout');
+<<<<<<< HEAD
 const tutorRequestsRoutes = require('./routes/tutorrequests');
 const tutorSelectSlotRoute = require('./routes/tutorselectslot');
+=======
+const updateTuteeRoute = require('./routes/update-tutee');
+require('dotenv').config();
+>>>>>>> 034f01166f2bdc72c03e98c4e01adde0c0279e71
 
 const app = express();
 
@@ -58,6 +63,7 @@ app.use('/change-password', changePasswordRoute);
 app.use('/forgot-password', forgotPasswordRoute);
 app.use('/logout', logoutRoute);
 app.use('/tutor/select-slot', tutorSelectSlotRoute);
+app.use('/update-tutee', updateTuteeRoute);
 
 const PORT = 4000;
 app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));

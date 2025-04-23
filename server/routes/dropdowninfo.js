@@ -1,31 +1,26 @@
+// server/routes/dropdowninfo.js
 const express = require('express');
 const db = require('../config/db');
 const router = express.Router();
 
 router.get('/', (req, res) => {
-  if (!req.session.user || req.session.user.role !== 'tutee') {
+  if (!req.session.user) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
   const userId = req.session.user.id;
+  const role = req.session.user.role;
 
-  const query = `
-    SELECT u.email
-    FROM users u
-    WHERE u.id = ?
-  `;
-
-  db.query(query, [userId], (err, results) => {
-    if (err) {
-      console.error('❌ Failed to fetch dropdown email:', err);
-      return res.status(500).json({ error: 'Database error' });
+  const query = `SELECT email FROM users WHERE id = ?`;
+  db.query(query, [userId], (err, result) => {
+    if (err || result.length === 0) {
+      return res.status(500).json({ error: 'Failed to fetch email' });
     }
 
-    if (results.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    return res.status(200).json({ email: results[0].email });
+    return res.status(200).json({
+      email: result[0].email,
+      role: role // ✅ this MUST be included!
+    });
   });
 });
 
