@@ -18,14 +18,12 @@ export default function TutorDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch dashboard stats
         const dashboardRes = await fetch('http://localhost:4000/tutor/home', {
           credentials: 'include',
         });
         const dashboardData = await dashboardRes.json();
         setData(dashboardData);
 
-        // Fetch tutor name
         const infoRes = await fetch('http://localhost:4000/tutor/info', {
           credentials: 'include',
         });
@@ -86,19 +84,32 @@ export default function TutorDashboard() {
           </div>
         </div>
 
-        {/* Your Activity Section */}
+        {/* Your Activity Section (TuteeHome style) */}
         <div className="mb-20">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-center lg:text-left">Your Activity:</h2>
-          <div className="flex flex-col lg:flex-row gap-8">
-            {/* Tutees Card */}
-            <div className="flex-1 bg-white rounded-2xl shadow-md p-6 space-y-4">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-center">Your Activity:</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Previous Tutees Card */}
+            <div className="bg-white rounded-2xl shadow-md p-6 space-y-6">
+              <p className="text-lg font-semibold text-black">Previous Tutees:</p>
               {data?.previousTutees?.length ? (
-                data.previousTutees.map((tutee, i) => (
-                  <div key={i} className="border-b pb-2">
-                    <p className="text-sm font-semibold text-black">{tutee.name}</p>
-                    <p className="text-xs text-black/70">
-                      {tutee.major} — {tutee.university}
-                    </p>
+                data.previousTutees.map((tutee, idx) => (
+                  <div key={idx} className="bg-[#f5f5f5] rounded-xl p-4 flex items-center gap-4">
+                    <div className="w-[64px] h-[64px] rounded-full overflow-hidden">
+                      <Image
+                        src="/imgs/tutee-profile.png"
+                        alt="Tutee"
+                        width={64}
+                        height={64}
+                        className="object-cover rounded-full"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold text-black text-sm sm:text-base">{tutee.name}</p>
+                      <div className="flex gap-2 text-xs text-gray-600 mt-1">
+                        <span>🎓 {tutee.major}</span>
+                        <span>🏛 {tutee.university}</span>
+                      </div>
+                    </div>
                   </div>
                 ))
               ) : (
@@ -109,13 +120,14 @@ export default function TutorDashboard() {
             </div>
 
             {/* Active Courses Card */}
-            <div className="flex-1 bg-white rounded-2xl shadow-md p-6 space-y-4">
+            <div className="bg-white rounded-2xl shadow-md p-6 space-y-6">
+              <p className="text-lg font-semibold text-black">Active Courses:</p>
               {data?.activeCourses?.length ? (
                 <div className="flex flex-wrap gap-2">
-                  {data.activeCourses.map((code, i) => (
+                  {data.activeCourses.map((code, idx) => (
                     <span
-                      key={i}
-                      className="bg-[#E8B14F]/20 text-[#E8B14F] px-4 py-2 rounded-full text-sm font-medium"
+                      key={idx}
+                      className="bg-[#E8B14F] text-white text-sm px-4 py-2 rounded-full font-bold"
                     >
                       {code}
                     </span>
@@ -123,7 +135,7 @@ export default function TutorDashboard() {
                 </div>
               ) : (
                 <p className="text-base text-black">
-                  You haven’t had any active courses yet.
+                  You don’t have any active courses yet.
                 </p>
               )}
             </div>

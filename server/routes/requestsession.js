@@ -18,8 +18,7 @@ const upload = multer({
   fileFilter,
   storage: multerS3({
     s3,
-    bucket: "tutee-materials",
-    acl: "private",
+    bucket: "tutee-materials",      
     key: (req, file, cb) => {
       const filename = `${Date.now()}-${file.originalname}`;
       cb(null, filename);
@@ -82,10 +81,13 @@ router.post("/", upload.array("materials"), async (req, res) => {
       );
     }
 
-    // Insert file paths
+    // Insert file paths into materials
     if (req.files && req.files.length > 0) {
       const fileSql = `INSERT INTO materials (request_id, file_path) VALUES ?`;
-      const fileValues = req.files.map((f) => [requestId, f.key]);
+      const fileValues = req.files.map((f) => [
+        requestId,
+        `https://${f.bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${f.key}`,
+      ]);
 
       await new Promise((resolve, reject) =>
         db.query(fileSql, [fileValues], (err) =>
@@ -96,7 +98,7 @@ router.post("/", upload.array("materials"), async (req, res) => {
 
     return res.status(200).json({ message: "Request submitted successfully" });
   } catch (err) {
-    console.error("Error submitting request:", err);
+    console.error("❌ Error submitting request:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -116,4 +118,3 @@ function toTimeString(mins) {
 }
 
 module.exports = router;
-//push

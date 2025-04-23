@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const session = require('express-session');
+require('dotenv').config();
+
 const loginRoute = require('./routes/login');
 const findCourseRoute = require('./routes/findcourse');
 const tuteeHomeRoute = require('./routes/tuteehome');
@@ -11,25 +13,25 @@ const filterCourseRoutes = require('./routes/filtercourse');
 const uploadRoute = require('./routes/upload');
 const requestSessionRoute = require('./routes/requestsession');
 const tutorRoutes = require('./routes/tutor');
-const filterCourseRoutes = require('./routes/filtercourse'); // ✅ only this
 const changePasswordRoute = require('./routes/changepassword');
 const dropdownInfoRoute = require('./routes/dropdowninfo');
 const forgotPasswordRoute = require('./routes/forgotpassword');
 const logoutRoute = require('./routes/logout');
-require('dotenv').config();
+const tutorRequestsRoutes = require('./routes/tutorrequests');
+const tutorSelectSlotRoute = require('./routes/tutorselectslot');
 
 const app = express();
 
 app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
 
-// ✅ Properly skip JSON body parsing ONLY for multipart/form-data
+// ✅ Properly skip JSON body parsing for multipart/form-data
 app.use((req, res, next) => {
   const isMultipart = req.headers['content-type']?.startsWith('multipart/form-data');
   if (isMultipart) return next();
   express.json()(req, res, next);
 });
 
-// ✅ Required for FormData text fields (urlencoded part)
+// ✅ Required for FormData text fields
 app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
@@ -49,11 +51,13 @@ app.use('/tutee/tutor-profile', tutorProfileRoute);
 app.use('/me', meRoute);
 app.use('/upload', uploadRoute);
 app.use('/request-session', requestSessionRoute);
-app.use('/tutor', tutorRoutes);
+app.use('/tutor', tutorRoutes); // ✅ this stays
+app.use('/tutor/requests', tutorRequestsRoutes); // ✅ now unique path
 app.use('/dropdowninfo', dropdownInfoRoute);
 app.use('/change-password', changePasswordRoute);
 app.use('/forgot-password', forgotPasswordRoute);
 app.use('/logout', logoutRoute);
+app.use('/tutor/select-slot', tutorSelectSlotRoute);
 
 const PORT = 4000;
 app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));

@@ -59,8 +59,8 @@ const TutorHeader = () => {
       <nav className="hidden md:flex items-center gap-8 text-xs font-bold text-black">
         <Link href="/tutor" className="hover:text-[#E8B14F]">DASHBOARD</Link>
         <Link href="#scheduling" className="hover:text-[#E8B14F]">SCHEDULING</Link>
-        <Link href="#requests" className="hover:text-[#E8B14F]">TUTEE’S REQUESTS</Link>
-      </nav>
+        <Link href="/tutor/requests" className="hover:text-[#E8B14F]">TUTEE’S REQUESTS</Link>
+        </nav>
 
       {/* Desktop Profile Section */}
       <div className="hidden md:flex items-center gap-2">
