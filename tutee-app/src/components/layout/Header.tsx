@@ -32,13 +32,13 @@ const Header = () => {
       {/* Desktop Buttons */}
       <div className="hidden md:flex items-center gap-4">
         <Link
-          href="#login"
+          href="/login"
           className="border-2 border-black text-[#E8B14F] font-bold rounded-full px-6 py-2 text-sm hover:bg-yellow-100"
         >
           LOG IN
         </Link>
         <Link
-          href="#signup"
+          href="/signup"
           className="bg-[#E8B14F] hover:bg-yellow-500 text-black font-bold rounded-full px-6 py-2 text-sm shadow"
         >
           JOIN TUTEE
