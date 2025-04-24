@@ -8,7 +8,7 @@ interface TimeSlotsModalProps {
   availableSlots: { date: string; time: string }[];
   scheduledSlots: string[];
   onClose: () => void;
-  onConfirm: (slot: string) => void;
+  onConfirm: (slot: { date: string; time: string }) => void;
 }
 
 const getOrdinalSuffix = (day: number): string => {
@@ -22,7 +22,6 @@ const getOrdinalSuffix = (day: number): string => {
 };
 
 export default function TimeSlotsModal({
-  requestId,
   availableSlots,
   scheduledSlots,
   onClose,
@@ -32,13 +31,20 @@ export default function TimeSlotsModal({
   const [selectedTime, setSelectedTime] = useState<string | "">("");
   const [error, setError] = useState<string | null>(null);
 
-  // Extract unique session days
-  const uniqueDates = [...new Set(availableSlots.map((slot) => slot.date))];
+  const uniqueDates = [
+    ...new Set(
+      availableSlots.map((slot) =>
+        new Date(slot.date).toISOString().split("T")[0]
+      )
+    ),
+  ];
 
-  // Filter times based on selected day
   const timeOptions = selectedDate
     ? availableSlots
-        .filter((slot) => slot.date === selectedDate)
+        .filter(
+          (slot) =>
+            new Date(slot.date).toISOString().split("T")[0] === selectedDate
+        )
         .map((slot) => slot.time)
     : [];
 
@@ -48,28 +54,28 @@ export default function TimeSlotsModal({
       return;
     }
 
-    const fullSlot = `${selectedDate}T${selectedTime}`;
-    const nowISO = new Date().toISOString().slice(0, 16);
+    const slotDateTimeString = `${selectedDate}T${selectedTime}:00`;
+    const slotDate = new Date(slotDateTimeString);
 
-    try {
-      const slotDate = new Date(fullSlot);
-      const isoSlot = slotDate.toISOString().slice(0, 16);
-
-      if (isoSlot < nowISO) {
-        setError("You cannot select a date in the past.");
-        return;
-      }
-
-      if (scheduledSlots.includes(isoSlot)) {
-        setError("This slot is already scheduled.");
-        return;
-      }
-
-      onConfirm(isoSlot);
-      onClose();
-    } catch {
-      setError("Invalid Date");
+    if (isNaN(slotDate.getTime())) {
+      setError("Invalid Date Format");
+      return;
     }
+
+    const now = new Date();
+    if (slotDate < now) {
+      setError("You cannot select a date in the past.");
+      return;
+    }
+
+    const isoSlot = slotDate.toISOString().slice(0, 16);
+    if (scheduledSlots.includes(isoSlot)) {
+      setError("This slot is already scheduled.");
+      return;
+    }
+
+    onConfirm({ date: selectedDate, time: selectedTime });
+    onClose();
   };
 
   return (
@@ -91,7 +97,7 @@ export default function TimeSlotsModal({
               value={selectedDate}
               onChange={(e) => {
                 setSelectedDate(e.target.value);
-                setSelectedTime(""); // reset time when date changes
+                setSelectedTime("");
               }}
             >
               <option value="">Select a day</option>
@@ -117,11 +123,25 @@ export default function TimeSlotsModal({
               disabled={!selectedDate}
             >
               <option value="">Select time</option>
-              {timeOptions.map((time, index) => (
-                <option key={time + "-" + index} value={time}>
-                  {time}
-                </option>
-              ))}
+              {timeOptions.map((time, index) => {
+                let isDisabled = false;
+                try {
+                  const isoFull = `${selectedDate}T${time}:00`;
+                  const date = new Date(isoFull);
+                  if (!isNaN(date.getTime())) {
+                    const iso = date.toISOString().slice(0, 16);
+                    isDisabled = scheduledSlots.includes(iso);
+                  }
+                } catch {
+                  isDisabled = false;
+                }
+
+                return (
+                  <option key={time + index} value={time} disabled={isDisabled}>
+                    {time} {isDisabled ? "(Taken)" : ""}
+                  </option>
+                );
+              })}
             </select>
           </div>
 

@@ -6,11 +6,19 @@ import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
-export default function TutorDashboard() {
+export default function TutorHomePage() {
   const [data, setData] = useState<{
     upcomingSession: any;
     previousTutees: any[];
     activeCourses: string[];
+    booked_sessions?: {
+      tutee_name: String;
+      course_code: string;
+      course_name: string;
+      schedule: string;
+      tutor_name: string;
+      tutee_photo: string;
+    }[];
   } | null>(null);
 
   const [tutorName, setTutorName] = useState('');
@@ -42,53 +50,79 @@ export default function TutorDashboard() {
       <TutorHeader />
 
       <section className="w-full px-6 sm:px-10 md:px-24 py-12">
-        {/* Hero Section */}
-        <div className="bg-white rounded-2xl shadow-md p-8 flex flex-col lg:flex-row justify-between items-center gap-8 mb-20">
-          <div className="flex-1 space-y-4 text-center lg:text-left">
-            <h1 className="text-3xl sm:text-4xl font-bold text-black">
-              Welcome, {tutorName || '...'}!
+        <div className="bg-white rounded-2xl shadow-md p-8 mb-20 flex flex-col lg:flex-row justify-between items-center gap-12">
+          <div className="flex-1">
+            <h1 className="text-3xl sm:text-4xl font-bold text-black mb-2">
+              Welcome, {tutorName}!
             </h1>
-            <p className="text-sm sm:text-base font-medium text-black">Your Upcoming Session</p>
+            <p className="text-sm sm:text-base font-medium text-black mb-6">
+              Your Scheduled Session
+            </p>
 
-            {data?.upcomingSession ? (
-              <div className="space-y-2">
-                <p className="text-base sm:text-lg text-black">
-                  <strong>{data.upcomingSession.course_code}</strong> - {data.upcomingSession.course_name}
-                </p>
-                <p className="text-sm text-black">With: {data.upcomingSession.tutee_name}</p>
-                <p className="text-sm text-black">
-                  {data.upcomingSession.date} at {data.upcomingSession.time}
-                </p>
+            {data?.booked_sessions?.length ? (
+              <div className="bg-[#F5F5F5] p-6 rounded-xl flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="flex-1 text-left">
+                  <p className="text-sm sm:text-base">
+                    <strong>{data.booked_sessions[0].course_code}</strong> - {data.booked_sessions[0].course_name}
+                  </p>
+                  <div className="flex items-center mt-2">
+                    <Image
+                      src="/imgs/calendar-icon.png"
+                      alt="Calendar Icon"
+                      width={40}
+                      height={40}
+                      className="mr-2"
+                    />
+                    <p className="font-bold text-sm sm:text-base">
+                      {data.booked_sessions[0].schedule}
+                    </p>
+                  </div>
+                  <p className="text-sm mt-2">
+                    <strong>With:</strong> {data.booked_sessions[0].tutee_name}
+                  </p>
+                </div>
+
+                <div className="w-[100px] h-[100px] rounded-full overflow-hidden border-4 border-white shadow-md">
+                  <Image
+                    src={data.booked_sessions[0].tutee_photo || "/imgs/tutor-pic.png"}
+                    alt="Tutor Profile"
+                    width={100}
+                    height={100}
+                    unoptimized
+                    className="rounded-full object-cover"
+                  />
+                </div>
               </div>
             ) : (
-              <p className="text-base sm:text-lg text-black">
+              <p className="text-base sm:text-lg text-black mb-4">
                 You don’t have any scheduled sessions yet!
               </p>
             )}
 
-            <Link href="#scheduling">
-              <button className="bg-[#E8B14F] text-black font-bold px-6 py-3 text-sm rounded-full shadow mt-2">
-                See All Scheduled Sessions
-              </button>
-            </Link>
+            <div className="mt-6 flex items-center gap-4">
+              <Link href="#scheduling">
+                <button className="bg-[#E8B14F] text-black font-bold px-6 py-3 text-sm rounded-full shadow">
+                  See All Scheduled Sessions
+                </button>
+              </Link>
+              <ArrowRight className="text-[#E8B14F] w-6 h-6" />
+            </div>
           </div>
 
-          <div className="relative w-full max-w-[365px] h-[334px] hidden md:block">
+          <div className="max-w-[350px]">
             <Image
               src="/imgs/tutee-hero.png"
-              alt="Tutor Hero Illustration"
-              width={365}
-              height={334}
-              className="object-contain"
+              alt="Hero Illustration"
+              width={350}
+              height={333}
+              className="w-full h-auto"
             />
           </div>
         </div>
 
-        {/* Your Activity Section (TuteeHome style) */}
         <div className="mb-20">
           <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-center">Your Activity:</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Previous Tutees Card */}
             <div className="bg-white rounded-2xl shadow-md p-6 space-y-6">
               <p className="text-lg font-semibold text-black">Previous Tutees:</p>
               {data?.previousTutees?.length ? (
@@ -119,7 +153,6 @@ export default function TutorDashboard() {
               )}
             </div>
 
-            {/* Active Courses Card */}
             <div className="bg-white rounded-2xl shadow-md p-6 space-y-6">
               <p className="text-lg font-semibold text-black">Active Courses:</p>
               {data?.activeCourses?.length ? (

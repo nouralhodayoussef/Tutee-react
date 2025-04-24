@@ -18,8 +18,9 @@ const dropdownInfoRoute = require('./routes/dropdowninfo');
 const forgotPasswordRoute = require('./routes/forgotpassword');
 const logoutRoute = require('./routes/logout');
 const tutorRequestsRoutes = require('./routes/tutorrequests');
-const tutorSelectSlotRoute = require('./routes/tutorselectslot');
 const updateTuteeRoute = require('./routes/update-tutee');
+const respondSessionRoute = require('./routes/respond-session');
+
 require('dotenv').config();
 
 const app = express();
@@ -53,14 +54,14 @@ app.use('/tutee/tutor-profile', tutorProfileRoute);
 app.use('/me', meRoute);
 app.use('/upload', uploadRoute);
 app.use('/request-session', requestSessionRoute);
-app.use('/tutor', tutorRoutes); // ✅ this stays
-app.use('/tutor/requests', tutorRequestsRoutes); // ✅ now unique path
+app.use('/tutor', tutorRoutes); 
+app.use('/tutor/requests', tutorRequestsRoutes); 
 app.use('/dropdowninfo', dropdownInfoRoute);
 app.use('/change-password', changePasswordRoute);
 app.use('/forgot-password', forgotPasswordRoute);
 app.use('/logout', logoutRoute);
-app.use('/tutor/select-slot', tutorSelectSlotRoute);
 app.use('/update-tutee', updateTuteeRoute);
+app.use('/tutor/respond-session', respondSessionRoute);
 
 const PORT = 4000;
 app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));

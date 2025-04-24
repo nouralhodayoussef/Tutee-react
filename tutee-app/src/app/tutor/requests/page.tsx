@@ -71,16 +71,24 @@ export default function TutorRequests() {
                       />
                     </div>
 
+                    {req.confirmed_slot && (
+                      <p className="text-sm text-green-700 font-medium mt-2">
+                        ✅ Selected Slot: {req.confirmed_slot}
+                      </p>
+                    )}
+
                     <div className="flex gap-3 mt-4 flex-wrap justify-center md:justify-start">
-                      <button
-                        className="bg-[#E8B14F] px-4 py-2 rounded-full text-sm font-semibold"
-                        onClick={() => {
-                          setSelectedRequest(req);
-                          setShowSlotModal(true);
-                        }}
-                      >
-                        Select A Time Slot
-                      </button>
+                      {!req.confirmed_slot && (
+                        <button
+                          className="bg-[#E8B14F] px-4 py-2 rounded-full text-sm font-semibold"
+                          onClick={() => {
+                            setSelectedRequest(req);
+                            setShowSlotModal(true);
+                          }}
+                        >
+                          Select A Time Slot
+                        </button>
+                      )}
                       <button
                         className="bg-[#E8B14F] px-4 py-2 rounded-full text-sm font-semibold"
                         onClick={() => {
@@ -90,9 +98,63 @@ export default function TutorRequests() {
                       >
                         Check Material
                       </button>
-                      <button className="bg-black text-white px-4 py-2 rounded-full text-sm font-semibold">
-                        Reject
-                      </button>
+
+                      {req.confirmed_slot && (
+                        <>
+                          <button
+                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full text-sm font-semibold"
+                            onClick={async () => {
+                              try {
+                                const [date, time] = req.confirmed_slot.split(" ");
+                                const res = await fetch("http://localhost:4000/tutor/respond-session", {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" },
+                                  credentials: "include",
+                                  body: JSON.stringify({ requestId: req.id, action: "accept", date, time }),
+                                });
+
+                                if (!res.ok) throw new Error("Failed to accept");
+
+                                alert("🎉 Session confirmed!");
+                                fetchRequests();
+                              } catch (err) {
+                                console.error(err);
+                                alert("❌ Could not confirm session.");
+                              }
+                            }}
+                          >
+                            Accept
+                          </button>
+
+
+                          <button
+                            className="bg-black text-white px-4 py-2 rounded-full text-sm font-semibold"
+                            onClick={async () => {
+                              if (!confirm("Are you sure you want to reject this request?")) return;
+
+                              try {
+                                const res = await fetch("http://localhost:4000/tutor/respond-session", {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" },
+                                  credentials: "include",
+                                  body: JSON.stringify({ requestId: req.id, action: "reject" }),
+                                });
+
+                                if (!res.ok) throw new Error("Failed to reject");
+
+                                alert("❌ Session rejected.");
+                                fetchRequests();
+                              } catch (err) {
+                                console.error(err);
+                                alert("❌ Could not reject session.");
+                              }
+                            }}
+                          >
+                            Reject
+                          </button>
+
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -114,35 +176,21 @@ export default function TutorRequests() {
       {showSlotModal && selectedRequest && (
         <ModalPortal>
           <TimeSlotsModal
-            requestId={selectedRequest.id}
-            availableSlots={selectedRequest.available_slots || []}
-            scheduledSlots={selectedRequest.scheduled_slots || []}
-            onClose={() => setShowSlotModal(false)}
-            onConfirm={async (slot) => {
-              try {
-                const [date, time] = slot.split("T");
-                const res = await fetch("http://localhost:4000/tutor/select-slot", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  credentials: "include",
-                  body: JSON.stringify({
-                    requestId: selectedRequest.id,
-                    date,
-                    time,
-                  }),
-                });
+  requestId={selectedRequest.id}
+  availableSlots={selectedRequest.available_slots || []}
+  scheduledSlots={selectedRequest.scheduled_slots || []}
+  onClose={() => setShowSlotModal(false)}
+  onConfirm={({ date, time }) => {
+    setRequests((prev) =>
+      prev.map((req) =>
+        req.id === selectedRequest.id
+          ? { ...req, confirmed_slot: `${date} ${time}` }
+          : req
+      )
+    );
+  }}
+/>
 
-                if (!res.ok) throw new Error("Failed to confirm slot");
-
-                alert("✅ Slot confirmed successfully.");
-                fetchRequests(); // refresh the list
-                setShowSlotModal(false);
-              } catch (err) {
-                alert("❌ Failed to confirm slot. Try again.");
-                console.error(err);
-              }
-            }}
-          />
         </ModalPortal>
       )}
 

@@ -93,8 +93,8 @@ export default function TuteeHome() {
                     <Image
                       src="/imgs/calendar-icon.png"
                       alt="Calendar Icon"
-                      width={20}
-                      height={20}
+                      width={40}
+                      height={40}
                       className="mr-2"
                     />
                     <p className="font-bold text-sm sm:text-base">
