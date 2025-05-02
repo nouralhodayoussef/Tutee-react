@@ -5,13 +5,24 @@ import { useRouter } from 'next/navigation';
 import TuteeHeader from '@/components/layout/TuteeHeader';
 import Link from 'next/link';
 
+type Major = {
+  id: number;
+  major_name: string;
+};
+
+type University = {
+  id: number;
+  university_name: string;
+};
+
 export default function TuteeFindCourse() {
-  const [majors, setMajors] = useState([]);
-  const [universities, setUniversities] = useState([]);
+  const [majors, setMajors] = useState<Major[]>([]);
+  const [universities, setUniversities] = useState<University[]>([]);
   const [selectedMajor, setSelectedMajor] = useState<string | null>(null);
   const [selectedUniversity, setSelectedUniversity] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [courses, setCourses] = useState([]);
+  const [courses, setCourses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
   const [showMajors, setShowMajors] = useState(false);
   const [showUniversities, setShowUniversities] = useState(false);
   const router = useRouter();
@@ -23,8 +34,8 @@ export default function TuteeFindCourse() {
         const data = await res.json();
         setMajors(data.majors);
         setUniversities(data.universities);
-        if (data.selectedMajor) setSelectedMajor(data.selectedMajor);
-        if (data.selectedUniversity) setSelectedUniversity(data.selectedUniversity);
+        if (data.selectedMajor) setSelectedMajor(data.selectedMajor.toString());
+        if (data.selectedUniversity) setSelectedUniversity(data.selectedUniversity.toString());
       } catch (err) {
         console.error('❌ Fetch error:', err);
       }
@@ -35,22 +46,24 @@ export default function TuteeFindCourse() {
 
   const fetchCourses = async () => {
     if (!selectedMajor || !selectedUniversity) return;
+    setLoading(true);
 
     try {
       const res = await fetch(
-        `http://localhost:4000/findcourse/courses?major=${selectedMajor}&university=${selectedUniversity}&search=${encodeURIComponent(searchTerm)}`
+        `http://localhost:4000/findcourse/courses?major_id=${selectedMajor}&university_id=${selectedUniversity}&search=${encodeURIComponent(searchTerm)}`
       );
       const data = await res.json();
-      setCourses(data);
+      setCourses(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('❌ Error fetching courses:', err);
+      setCourses([]);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (searchTerm === '') {
-      fetchCourses();
-    }
+    if (searchTerm === '') fetchCourses();
   }, [searchTerm]);
 
   useEffect(() => {
@@ -97,21 +110,22 @@ export default function TuteeFindCourse() {
 
             {/* Dropdown Filters */}
             <div className="flex gap-4 relative z-10">
-              {/* Major */}
+              {/* Major Dropdown */}
               <div className="relative w-[150px]">
                 <button
                   onClick={() => setShowMajors(!showMajors)}
                   className="w-full h-[55px] bg-white rounded-[10px] px-4 text-[16px] text-left text-black shadow-md truncate"
                 >
-                  {selectedMajor ?? 'Major'} <span className="absolute right-4 top-1/2 -translate-y-1/2">▾</span>
+                  {majors.find((m) => m.id.toString() === selectedMajor)?.major_name ?? 'Major'}
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2">▾</span>
                 </button>
                 {showMajors && (
                   <div className="absolute mt-1 w-full max-h-[200px] overflow-y-auto bg-white rounded-[10px] shadow-md z-50">
-                    {majors.map((m: any) => (
+                    {majors.map((m) => (
                       <div
                         key={m.id}
                         onClick={() => {
-                          setSelectedMajor(m.major_name);
+                          setSelectedMajor(m.id.toString());
                           setShowMajors(false);
                         }}
                         className="px-4 py-2 hover:bg-gray-100 cursor-pointer truncate"
@@ -123,21 +137,22 @@ export default function TuteeFindCourse() {
                 )}
               </div>
 
-              {/* University */}
+              {/* University Dropdown */}
               <div className="relative w-[190px]">
                 <button
                   onClick={() => setShowUniversities(!showUniversities)}
                   className="w-full h-[55px] bg-white rounded-[10px] px-4 text-[16px] text-left text-black shadow-md truncate"
                 >
-                  {selectedUniversity ?? 'University'} <span className="absolute right-4 top-1/2 -translate-y-1/2">▾</span>
+                  {universities.find((u) => u.id.toString() === selectedUniversity)?.university_name ?? 'University'}
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2">▾</span>
                 </button>
                 {showUniversities && (
                   <div className="absolute mt-1 w-full max-h-[200px] overflow-y-auto bg-white rounded-[10px] shadow-md z-50">
-                    {universities.map((u: any) => (
+                    {universities.map((u) => (
                       <div
                         key={u.id}
                         onClick={() => {
-                          setSelectedUniversity(u.university_name);
+                          setSelectedUniversity(u.id.toString());
                           setShowUniversities(false);
                         }}
                         className="px-4 py-2 hover:bg-gray-100 cursor-pointer truncate"
@@ -155,18 +170,20 @@ export default function TuteeFindCourse() {
           <div className="mt-12">
             <h2 className="text-xl font-semibold mb-6 text-gray-800">Available Courses</h2>
 
-            {courses.length === 0 ? (
+            {loading ? (
+              <p className="text-gray-500">Loading courses...</p>
+            ) : courses.length === 0 ? (
               <p className="text-gray-500">No courses found for the selected filters.</p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-                {courses.map((course: any, index) => (
+                {courses.map((course, index) => (
                   <Link
                     key={index}
                     href={`/tutee/tutor-profile/${course.tutor_id}?selectedCourse=${encodeURIComponent(course.course_code)}&courseName=${encodeURIComponent(course.course_name)}`}
                     className="bg-white rounded-2xl p-5 shadow-md w-[272px] h-[291px] flex flex-col justify-between hover:shadow-lg transition"
                   >
                     <div className="text-[#696984] text-sm">
-                      {selectedMajor} · {selectedUniversity}
+                      {majors.find((m) => m.id.toString() === selectedMajor)?.major_name} · {universities.find((u) => u.id.toString() === selectedUniversity)?.university_name}
                     </div>
 
                     <div className="mt-3">
