@@ -24,7 +24,7 @@ router.get('/courses', (req, res) => {
     FROM courses c
     JOIN tutor_courses tc ON tc.course_id = c.id
     JOIN tutors t ON t.id = tc.tutor_id
-    LEFT JOIN scheduled_sessions ss ON ss.tutor_id = t.id AND ss.course_id = c.id
+    LEFT JOIN scheduled_sessions ss ON ss.course_id = c.id AND ss.tutor_id = t.id
     LEFT JOIN tutor_ratings r ON r.scheduled_session_id = ss.id
     WHERE c.major_id = ?
       AND c.university_id = ?
