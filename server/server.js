@@ -1,8 +1,11 @@
 const express = require('express');
 const cors = require('cors');
 const session = require('express-session');
+const http = require('http');
+const setupSocket = require('./signaling/socket');
 require('dotenv').config();
 
+// Route imports
 const loginRoute = require('./routes/login');
 const findCourseRoute = require('./routes/findcourse');
 const tuteeHomeRoute = require('./routes/tuteehome');
@@ -20,23 +23,23 @@ const logoutRoute = require('./routes/logout');
 const tutorRequestsRoutes = require('./routes/tutorrequests');
 const updateTuteeRoute = require('./routes/update-tutee');
 const respondSessionRoute = require('./routes/respond-session');
-
-require('dotenv').config();
+const tutorAvailabilityRoute = require('./routes/tutoravailability'); // ✅ stays separate now
 
 const app = express();
+const server = http.createServer(app);
 
+// CORS for frontend dev
 app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
 
-// ✅ Properly skip JSON body parsing for multipart/form-data
+// JSON + URL parsing
 app.use((req, res, next) => {
   const isMultipart = req.headers['content-type']?.startsWith('multipart/form-data');
   if (isMultipart) return next();
   express.json()(req, res, next);
 });
-
-// ✅ Required for FormData text fields
 app.use(express.urlencoded({ extended: true }));
 
+// Session
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
@@ -44,7 +47,7 @@ app.use(session({
   cookie: { secure: false }
 }));
 
-// Mount routes
+// Route mounting
 app.use('/login', loginRoute);
 app.use('/findcourse', findCourseRoute);
 app.use('/findcourse', filterCourseRoutes);
@@ -54,14 +57,19 @@ app.use('/tutee/tutor-profile', tutorProfileRoute);
 app.use('/me', meRoute);
 app.use('/upload', uploadRoute);
 app.use('/request-session', requestSessionRoute);
-app.use('/tutor', tutorRoutes); 
-app.use('/tutor/requests', tutorRequestsRoutes); 
+app.use('/tutor', tutorRoutes); // ✅ general tutor routes
+app.use('/tutor/availability', tutorAvailabilityRoute); // ✅ now scoped and isolated
+app.use('/tutor/requests', tutorRequestsRoutes);
+app.use('/tutor/respond-session', respondSessionRoute);
 app.use('/dropdowninfo', dropdownInfoRoute);
 app.use('/change-password', changePasswordRoute);
 app.use('/forgot-password', forgotPasswordRoute);
 app.use('/logout', logoutRoute);
 app.use('/update-tutee', updateTuteeRoute);
-app.use('/tutor/respond-session', respondSessionRoute);
 
+// Sockets
+setupSocket(server);
+
+// Start server
 const PORT = 4000;
-app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+server.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));

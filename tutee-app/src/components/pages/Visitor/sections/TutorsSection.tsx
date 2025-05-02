@@ -48,7 +48,7 @@ const TutorsSection = () => {
   const prev = () => setCurrentIndex((prev) => (prev - 1 + tutors.length) % tutors.length);
 
   return (
-    <section className="w-full bg-[#F5F5EF] px-6 md:px-24 py-20 overflow-hidden">
+    <section id="tutors" className="w-full bg-[#F5F5EF] px-6 md:px-24 py-20 overflow-hidden">
       {/* Header and Intro */}
       <div className="flex flex-col md:flex-row justify-between items-start mb-12">
         <div>

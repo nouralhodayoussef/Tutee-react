@@ -57,8 +57,8 @@ const TutorHeader = () => {
       {/* Desktop Navigation */}
       <nav className="hidden md:flex gap-10 text-sm font-semibold text-black">
         <Link href="/tutor">DASHBOARD</Link>
-        <Link href="/tutor/scheduling">SCHEDULING</Link>
-        <Link href="/tutor/requests">TUTEE’S REQUESTS</Link>
+        <Link href="/tutor/scheduling">BOOKED SESSIONS</Link>
+        <Link href="/tutor/editSchedule">EDIT SCHEDULE</Link>
       </nav>
 
       {/* Avatar & Dropdown */}
@@ -97,8 +97,8 @@ const TutorHeader = () => {
       {mobileOpen && (
         <div className="absolute top-full left-0 w-full bg-white shadow-md md:hidden z-40 border-t border-gray-200">
           <div className="flex flex-col divide-y divide-gray-200">
-            {["/tutor", "/tutor/scheduling", "/tutor/requests"].map((path, i) => {
-              const label = ["DASHBOARD", "SCHEDULING", "TUTEE’S REQUESTS"][i];
+            {["/tutor", "/tutor/scheduling", "/tutor/editSchedule"].map((path, i) => {
+              const label = ["DASHBOARD", "BOOKED SESSIONS", "EDIT SCHEDULE"][i];
               return (
                 <Link
                   key={path}
