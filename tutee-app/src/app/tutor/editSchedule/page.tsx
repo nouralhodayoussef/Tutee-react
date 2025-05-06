@@ -13,7 +13,6 @@ const daysOfWeek = [
   { id: 7, name: 'Sunday' },
 ];
 
-// Helper functions reused from tutee modal
 const toMinutes = (t: string) => {
   const [h, m] = t.split(':').map(Number);
   return h * 60 + m;
@@ -154,32 +153,37 @@ export default function TutorScheduleEditor() {
     <main className="min-h-screen bg-[#F5F5EF]">
       <TutorHeader />
 
-      <div className="p-6 max-w-4xl mx-auto mt-8">
+      <div className="p-6 max-w-4xl mx-auto mt-8 w-full">
         <h2 className="text-2xl font-bold mb-6 text-black">Edit Your Weekly Schedule</h2>
 
-        <div className="space-y-6">
+        <div className="space-y-6 overflow-x-auto">
           {daysOfWeek.map((day) => (
             <div key={day.id} className="bg-white p-4 rounded-xl shadow border border-gray-200">
               <h3 className="text-lg font-semibold mb-2">{day.name}</h3>
 
               {(availability[day.id] || []).map((range, index) => (
-                <div key={index} className="flex items-center gap-4 mb-2">
-                  <input
-                    type="time"
-                    value={range.start}
-                    onChange={(e) => updateRange(day.id, index, 'start', e.target.value)}
-                    className="border px-3 py-2 rounded-md w-32"
-                  />
-                  <span className="text-sm font-medium">to</span>
-                  <input
-                    type="time"
-                    value={range.end}
-                    onChange={(e) => updateRange(day.id, index, 'end', e.target.value)}
-                    className="border px-3 py-2 rounded-md w-32"
-                  />
+                <div
+                  key={index}
+                  className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-3"
+                >
+                  <div className="flex gap-2">
+                    <input
+                      type="time"
+                      value={range.start}
+                      onChange={(e) => updateRange(day.id, index, 'start', e.target.value)}
+                      className="border px-3 py-2 rounded-md w-[120px] sm:w-32"
+                    />
+                    <span className="text-sm font-medium self-center">to</span>
+                    <input
+                      type="time"
+                      value={range.end}
+                      onChange={(e) => updateRange(day.id, index, 'end', e.target.value)}
+                      className="border px-3 py-2 rounded-md w-[120px] sm:w-32"
+                    />
+                  </div>
                   <button
                     onClick={() => removeRange(day.id, index)}
-                    className="text-red-500 text-sm hover:underline"
+                    className="text-red-500 text-sm hover:underline mt-1 sm:mt-0"
                   >
                     Remove
                   </button>

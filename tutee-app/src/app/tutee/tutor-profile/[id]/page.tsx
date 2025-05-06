@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
-import TuteeHeader from "@/components/layout/TuteeHeader";
-import dynamic from "next/dynamic";
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
+import TuteeHeader from '@/components/layout/TuteeHeader';
+import dynamic from 'next/dynamic';
 
-const ScheduleModal = dynamic(() => import("@/components/tutee/ScheduleModal"), { ssr: false });
+const ScheduleModal = dynamic(() => import('@/components/tutee/ScheduleModal'), { ssr: false });
 
 interface Course {
   id: number;
@@ -17,7 +17,7 @@ interface Review {
   reviewer: string;
   comment: string;
   rating: number;
-  photo?: string;
+  photo?: string | null;
 }
 
 interface Tutor {
@@ -41,29 +41,30 @@ export default function TuteeTutorProfile() {
 
   useEffect(() => {
     const fetchTutor = async () => {
-      const id = window.location.pathname.split("/").pop();
-      const tutorId = parseInt(id || "0");
+      const id = window.location.pathname.split('/').pop();
+      const tutorId = parseInt(id || '0');
+
       try {
-        const res = await fetch(`http://localhost:4000/tutee/tutor-profile/${id}`);
+        const res = await fetch(`http://localhost:4000/tutee/tutor-profile/${tutorId}`);
         const data = await res.json();
 
-        const queryCode = searchParams.get("selectedCourse");
-        const queryName = searchParams.get("courseName");
+        if (data.error) {
+          console.error('API error:', data.error);
+          return;
+        }
 
-        if (queryCode) {
+        const queryCode = searchParams.get('selectedCourse');
+
+        if (queryCode && Array.isArray(data.courses)) {
           const match = data.courses.find((c: Course) => c.course_code === queryCode);
           if (match) {
-            setSelectedCourse({
-              id: match.id, // ✅ include the real ID from DB
-              course_code: match.course_code,
-              course_name: match.course_name,
-            });
+            setSelectedCourse(match);
           }
         }
 
         setTutor({ ...data, id: tutorId });
       } catch (err) {
-        console.error("Error fetching tutor profile:", err);
+        console.error('Error fetching tutor profile:', err);
       }
     };
 
@@ -101,8 +102,8 @@ export default function TuteeTutorProfile() {
                   onClick={() => setShowModal(true)}
                   className={`${
                     selectedCourse
-                      ? "bg-[#E8B14F] text-white"
-                      : "bg-gray-400 text-white cursor-not-allowed"
+                      ? 'bg-[#E8B14F] text-white'
+                      : 'bg-gray-400 text-white cursor-not-allowed'
                   } px-6 py-2 rounded-xl font-bold text-sm shadow`}
                 >
                   Schedule
@@ -110,7 +111,7 @@ export default function TuteeTutorProfile() {
               </div>
 
               <div className="flex flex-wrap gap-4 text-sm text-black/70">
-                <p>⭐ {tutor?.avg_rating || "N/A"} Instructor Rating</p>
+                <p>⭐ {tutor?.avg_rating || 'N/A'} Instructor Rating</p>
                 <p>👤 {tutor?.tutee_count || 0} Tutee</p>
                 <p>📚 {tutor?.course_count || 0} Course</p>
               </div>
@@ -131,8 +132,8 @@ export default function TuteeTutorProfile() {
                 title={course.course_name}
                 className={`px-6 py-2 rounded-xl font-bold text-sm transition shadow whitespace-nowrap ${
                   selectedCourse?.course_code === course.course_code
-                    ? "bg-[#E8B14F] text-white"
-                    : "bg-black/10 text-black"
+                    ? 'bg-[#E8B14F] text-white'
+                    : 'bg-black/10 text-black'
                 }`}
               >
                 {course.course_code}
@@ -157,15 +158,15 @@ export default function TuteeTutorProfile() {
           <p className="text-lg text-black mb-6">
             {selectedCourse
               ? `Are you ready to request a ${selectedCourse.course_code} course session with ${tutor?.name}?`
-              : `Select a course to take with ${tutor?.name || "this tutor"}.`}
+              : `Select a course to take with ${tutor?.name || 'this tutor'}.`}
           </p>
           <button
             disabled={!selectedCourse}
             onClick={() => setShowModal(true)}
             className={`${
               selectedCourse
-                ? "bg-[#E8B14F] hover:bg-yellow-500"
-                : "bg-gray-400 cursor-not-allowed"
+                ? 'bg-[#E8B14F] hover:bg-yellow-500'
+                : 'bg-gray-400 cursor-not-allowed'
             } px-6 py-3 rounded-full text-white font-bold text-sm`}
           >
             Continue to Scheduling
@@ -181,7 +182,9 @@ export default function TuteeTutorProfile() {
           <div className="flex flex-col lg:flex-row mb-8">
             <div className="bg-white rounded-2xl w-full max-w-[198px] h-[150px] flex flex-col items-center justify-center mr-0 lg:mr-6 mb-6 lg:mb-0">
               <p className="text-[24px] text-black/60 font-semibold">{tutor?.avg_rating} out of 5</p>
-              <p className="text-[#FDB022] text-lg">{'⭐'.repeat(Math.round(Number(tutor?.avg_rating)))}</p>
+              <p className="text-[#FDB022] text-lg">
+                {'⭐'.repeat(Math.round(Number(tutor?.avg_rating)))}
+              </p>
               <p className="text-sm text-black/60">Top Rated</p>
             </div>
             <div className="flex-1 flex flex-col justify-center gap-2">
@@ -220,7 +223,11 @@ export default function TuteeTutorProfile() {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-white bg-gray-400 text-sm font-bold">
-                        {review.reviewer[0]}
+                        {review.reviewer
+                          .split(' ')
+                          .map((n) => n[0])
+                          .join('')
+                          .toUpperCase()}
                       </div>
                     )}
                   </div>
@@ -245,23 +252,14 @@ export default function TuteeTutorProfile() {
 
       {/* Scheduling Modal */}
       {showModal && tutor && selectedCourse && (
-        <>
-          {console.log("🧪 ScheduleModal props", {
-            tutorId: tutor.id,
-            courseId: selectedCourse.id,
-            tutorName: tutor.name,
-            courseCode: selectedCourse.course_code,
-          })}
-          <ScheduleModal
-            onClose={() => setShowModal(false)}
-            tutorId={tutor.id}
-            courseId={selectedCourse.id}
-            tutorName={tutor.name}
-            courseCode={selectedCourse.course_code}
-          />
-        </>
+        <ScheduleModal
+          onClose={() => setShowModal(false)}
+          tutorId={tutor.id}
+          courseId={selectedCourse.id}
+          tutorName={tutor.name}
+          courseCode={selectedCourse.course_code}
+        />
       )}
     </main>
   );
 }
-//push
