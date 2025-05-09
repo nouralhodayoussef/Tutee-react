@@ -16,21 +16,22 @@ router.get('/', (req, res) => {
     FROM tutees
     WHERE id = ?
   `;
-
   const bookedSessionsQuery = `
-    SELECT 
-      c.course_code,
-      c.course_name,
-      CONCAT(t.first_name, ' ', t.last_name) AS tutor_name,
-      t.photo AS tutor_photo,
-      DATE_FORMAT(s.scheduled_date, '%W, %M %e at %l:%i%p') AS schedule
-    FROM scheduled_sessions s
-    JOIN requested_sessions r ON r.id = s.request_id
-    JOIN courses c ON r.course_id = c.id
-    JOIN tutors t ON r.tutor_id = t.id
-    WHERE r.tutee_id = ? AND s.scheduled_date >= NOW()
-    ORDER BY s.scheduled_date ASC
-  `;
+  SELECT 
+    c.course_code,
+    c.course_name,
+    CONCAT(t.first_name, ' ', t.last_name) AS tutor_name,
+    t.photo AS tutor_photo,
+    DATE_FORMAT(s.scheduled_date, '%W, %M %e at %l:%i%p') AS schedule
+  FROM scheduled_sessions s
+  JOIN requested_sessions r ON r.id = s.request_id
+  JOIN courses c ON r.course_id = c.id
+  JOIN tutors t ON r.tutor_id = t.id
+  WHERE r.tutee_id = ? AND s.scheduled_date >= NOW()
+  ORDER BY s.scheduled_date ASC
+  LIMIT 1;
+`;
+
 
   const pastTutorsQuery = `
     SELECT DISTINCT

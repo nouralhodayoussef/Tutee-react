@@ -14,23 +14,28 @@ router.get('/:id', (req, res) => {
   `;
 
   const tuteeCountQuery = `
-    SELECT COUNT(DISTINCT r.tutee_id) AS tutee_count
-    FROM requested_sessions r
-    WHERE r.tutor_id = ?
+    SELECT COUNT(DISTINCT ss.tutee_id) AS tutee_count
+    FROM scheduled_sessions ss
+    JOIN session_slots sl ON ss.slot_id = sl.id
+    JOIN tutor_availability ta ON sl.availability_id = ta.id
+    WHERE ta.tutor_id = ?
   `;
 
   const courseCountQuery = `
-    SELECT COUNT(DISTINCT r.course_id) AS course_count
-    FROM requested_sessions r
-    WHERE r.tutor_id = ?
+    SELECT COUNT(DISTINCT ss.course_id) AS course_count
+    FROM scheduled_sessions ss
+    JOIN session_slots sl ON ss.slot_id = sl.id
+    JOIN tutor_availability ta ON sl.availability_id = ta.id
+    WHERE ta.tutor_id = ?
   `;
 
   const avgRatingQuery = `
-    SELECT ROUND(AVG(stars), 1) AS avg_rating
-    FROM ratings ra
-    JOIN scheduled_sessions s ON ra.scheduled_session_id = s.id
-    JOIN requested_sessions r ON s.request_id = r.id
-    WHERE r.tutor_id = ?
+    SELECT ROUND(AVG(tr.stars), 1) AS avg_rating
+    FROM tutor_ratings tr
+    JOIN scheduled_sessions ss ON tr.scheduled_session_id = ss.id
+    JOIN session_slots sl ON ss.slot_id = sl.id
+    JOIN tutor_availability ta ON sl.availability_id = ta.id
+    WHERE ta.tutor_id = ?
   `;
 
   const skillsQuery = `
@@ -51,61 +56,80 @@ router.get('/:id', (req, res) => {
     SELECT 
       CONCAT(tutee.first_name, ' ', tutee.last_name) AS reviewer,
       tutee.photo AS photo,
-      ra.stars AS rating,
-      ra.description AS comment
-    FROM ratings ra
-    JOIN scheduled_sessions s ON ra.scheduled_session_id = s.id
-    JOIN requested_sessions r ON s.request_id = r.id
-    JOIN tutees tutee ON r.tutee_id = tutee.id
-    WHERE r.tutor_id = ?
+      tr.stars AS rating,
+      tr.description AS comment
+    FROM tutor_ratings tr
+    JOIN scheduled_sessions ss ON tr.scheduled_session_id = ss.id
+    JOIN session_slots sl ON ss.slot_id = sl.id
+    JOIN tutor_availability ta ON sl.availability_id = ta.id
+    JOIN tutees tutee ON ss.tutee_id = tutee.id
+    WHERE ta.tutor_id = ?
   `;
 
   db.query(basicInfoQuery, [tutorId], (err, basicResult) => {
-    if (err || basicResult.length === 0)
+    if (err || !basicResult || basicResult.length === 0) {
       return res.status(500).json({ error: 'Tutor not found' });
+    }
 
     const tutor = basicResult[0];
 
     db.query(tuteeCountQuery, [tutorId], (err, tuteeCountRes) => {
-      if (err) return res.status(500).json({ error: 'Failed to get tutee count' });
+      if (err || !tuteeCountRes || tuteeCountRes.length === 0) {
+        return res.status(500).json({ error: 'Failed to get tutee count' });
+      }
+
+      const tuteeCount = tuteeCountRes[0].tutee_count || 0;
 
       db.query(courseCountQuery, [tutorId], (err, courseCountRes) => {
-        if (err) return res.status(500).json({ error: 'Failed to get course count' });
+        if (err || !courseCountRes || courseCountRes.length === 0) {
+          return res.status(500).json({ error: 'Failed to get course count' });
+        }
+
+        const courseCount = courseCountRes[0].course_count || 0;
 
         db.query(avgRatingQuery, [tutorId], (err, ratingRes) => {
-          if (err) return res.status(500).json({ error: 'Failed to get rating' });
+          if (err || !ratingRes || ratingRes.length === 0) {
+            return res.status(500).json({ error: 'Failed to get rating' });
+          }
+
+          const avgRating = ratingRes[0].avg_rating ?? 'N/A';
 
           db.query(skillsQuery, [tutorId], (err, skillRows) => {
-            if (err) return res.status(500).json({ error: 'Failed to get skills' });
+            if (err || !skillRows) {
+              return res.status(500).json({ error: 'Failed to get skills' });
+            }
 
             db.query(coursesQuery, [tutorId], (err, courseRows) => {
-              if (err) return res.status(500).json({ error: 'Failed to get courses' });
+              if (err || !courseRows) {
+                return res.status(500).json({ error: 'Failed to get courses' });
+              }
 
               db.query(reviewsQuery, [tutorId], (err, reviewsRes) => {
-                if (err) return res.status(500).json({ error: 'Failed to get reviews' });
+                if (err || !reviewsRes) {
+                  return res.status(500).json({ error: 'Failed to get reviews' });
+                }
 
                 const response = {
                   name: tutor.name,
                   photo: tutor.photo,
                   bio: tutor.bio,
-                  tutee_count: tuteeCountRes[0].tutee_count,
-                  course_count: courseCountRes[0].course_count,
-                  avg_rating: ratingRes[0].avg_rating || "N/A",
-                  skills: skillRows.map(s => s.skill_name),
-                  courses: courseRows.map(c => ({
+                  tutee_count: tuteeCount,
+                  course_count: courseCount,
+                  avg_rating: avgRating,
+                  skills: skillRows.map((s) => s.skill_name),
+                  courses: courseRows.map((c) => ({
                     id: c.id,
                     course_code: c.course_code,
                     course_name: c.course_name,
                   })),
-                  reviews: reviewsRes.map(r => ({
+                  reviews: reviewsRes.map((r) => ({
                     reviewer: r.reviewer,
                     photo: r.photo,
                     rating: r.rating,
                     comment: r.comment,
-                  }))
+                  })),
                 };
 
-                console.log("✅ Sending tutor profile:", response); // For debug
                 return res.json(response);
               });
             });

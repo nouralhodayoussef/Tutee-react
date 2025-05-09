@@ -2,9 +2,9 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 
-// POST /tutor/update-availability
+// POST /tutor/availability
 router.post('/', (req, res) => {
-    if (!req.session.user || req.session.user.role !== 'tutor') {
+  if (!req.session.user || req.session.user.role !== 'tutor') {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
@@ -15,7 +15,6 @@ router.post('/', (req, res) => {
     return res.status(400).json({ error: 'Availability data is invalid or empty.' });
   }
 
-  // Step 1: Delete old availability and slots
   const deleteOld = `
     DELETE sa, av FROM session_slots sa
     JOIN tutor_availability av ON sa.availability_id = av.id
@@ -25,20 +24,17 @@ router.post('/', (req, res) => {
   db.query(deleteOld, [tutorId], (err) => {
     if (err) return res.status(500).json({ error: 'Failed to clear old availability.' });
 
-    // Step 2: Insert new availability
     const insertAvailability = `
       INSERT INTO tutor_availability (tutor_id, day_id, start_time, end_time)
       VALUES ?
     `;
-
     const availabilityData = availability.map(a => [tutorId, a.day_id, a.start_time, a.end_time]);
 
-    db.query(insertAvailability, [availabilityData], (err, result) => {
+    db.query(insertAvailability, [availabilityData], (err) => {
       if (err) return res.status(500).json({ error: 'Failed to insert availability.' });
 
-      // Step 3: Fetch new availability IDs
       const availabilityIdsQuery = `
-        SELECT id, start_time, end_time FROM tutor_availability
+        SELECT id, day_id, start_time, end_time FROM tutor_availability
         WHERE tutor_id = ?
       `;
 
@@ -48,9 +44,9 @@ router.post('/', (req, res) => {
         const slotInserts = [];
 
         for (const row of availabilityRows) {
-          const start = parseInt(row.start_time.split(':')[0]);
-          const end = parseInt(row.end_time.split(':')[0]);
-          for (let h = start; h < end; h++) {
+          const startHour = parseInt(row.start_time.split(':')[0], 10);
+          const endHour = parseInt(row.end_time.split(':')[0], 10);
+          for (let h = startHour; h < endHour; h++) {
             slotInserts.push([
               row.id,
               `${h.toString().padStart(2, '0')}:00:00`,
@@ -59,7 +55,6 @@ router.post('/', (req, res) => {
           }
         }
 
-        // Step 4: Insert session slots
         const insertSlots = `
           INSERT INTO session_slots (availability_id, slot_time, duration_minutes)
           VALUES ?
@@ -77,7 +72,7 @@ router.post('/', (req, res) => {
 
 // GET /tutor/availability
 router.get('/', (req, res) => {
-    if (!req.session.user || req.session.user.role !== 'tutor') {
+  if (!req.session.user || req.session.user.role !== 'tutor') {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
@@ -98,12 +93,44 @@ router.get('/', (req, res) => {
       const day = row.day_id;
       if (!grouped[day]) grouped[day] = [];
       grouped[day].push({
-        start: row.start_time.slice(0, 5), // HH:MM
+        start: row.start_time.slice(0, 5),
         end: row.end_time.slice(0, 5)
       });
     }
 
     res.json({ availability: grouped });
+  });
+});
+
+// GET /tutor/availability/slots?tutorId=123
+router.get('/slots', (req, res) => {
+  const tutorId = req.query.tutorId;
+
+  if (!tutorId) {
+    return res.status(400).json({ error: 'Missing tutorId in query' });
+  }
+
+  const sql = `
+    SELECT 
+      av.day_id, 
+      ss.slot_time 
+    FROM tutor_availability av
+    JOIN session_slots ss ON ss.availability_id = av.id
+    WHERE av.tutor_id = ?
+    ORDER BY av.day_id, ss.slot_time
+  `;
+
+  db.query(sql, [tutorId], (err, results) => {
+    if (err) return res.status(500).json({ error: 'Database error while fetching slots.' });
+
+    const grouped = {};
+    results.forEach(row => {
+      const day = row.day_id;
+      if (!grouped[day]) grouped[day] = [];
+      grouped[day].push(row.slot_time.slice(0, 5)); // HH:MM
+    });
+
+    res.json({ slots: grouped });
   });
 });
 

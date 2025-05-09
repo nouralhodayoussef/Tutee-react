@@ -44,24 +44,22 @@ router.get('/home', (req, res) => {
 
     const bookedSessionsQuery = `
   SELECT 
-  c.course_code AS course_code,
-  c.course_name AS course_name,
-  CONCAT(t.first_name, ' ', t.last_name) AS tutee_name,
+    c.course_code AS course_code,
+    c.course_name AS course_name,
+    CONCAT(t.first_name, ' ', t.last_name) AS tutee_name,
     t.photo AS tutee_photo,
-
-  DATE_FORMAT(s.scheduled_date, '%W, %M %e') AS date,
-  TIME_FORMAT(s.scheduled_date, '%h:%i%p') AS time
-FROM scheduled_sessions s
-JOIN requested_sessions r ON r.id = s.request_id
-JOIN courses c ON c.id = r.course_id
-JOIN tutees t ON t.id = r.tutee_id
-WHERE r.tutor_id = ?
-  AND r.status = 'accepted'
-  AND s.scheduled_date >= CURDATE()
-ORDER BY s.scheduled_date ASC
-LIMIT 1;
-
-    `;
+    DATE_FORMAT(s.scheduled_date, '%W, %M %e') AS date,
+    TIME_FORMAT(s.scheduled_date, '%h:%i%p') AS time
+  FROM scheduled_sessions s
+  JOIN requested_sessions r ON r.id = s.request_id
+  JOIN courses c ON c.id = r.course_id
+  JOIN tutees t ON t.id = r.tutee_id
+  WHERE r.tutor_id = ?
+    AND r.status = 'accepted'
+    AND s.scheduled_date >= CURDATE()
+  ORDER BY s.scheduled_date ASC
+  LIMIT 1;
+`;
 
 
     const previousTuteesQuery = `
