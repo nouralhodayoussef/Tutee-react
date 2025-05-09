@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import OtpModal from '@/components/OtpModal';
+import { useRouter } from 'next/navigation';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
 interface University {
@@ -39,6 +40,7 @@ export default function RegisterPage() {
   const [allMajors, setAllMajors] = useState<Major[]>([]);
   const [majors, setMajors] = useState<string[]>([]);
   const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     fetch('http://localhost:4000/register/options')
@@ -305,7 +307,16 @@ export default function RegisterPage() {
             <OtpModal
               email={form.email}
               userData={otpUserData}
-              onVerify={() => console.log('Verified')}
+              onVerify={() => {
+                
+                console.log('✅ Verified successfully! Redirecting...');
+              
+              
+                setTimeout(() => {
+                  router.push('/login');
+                }, 2000); 
+              }}
+             
               onClose={() => setOtpModalVisible(false)}
             />
           )}
