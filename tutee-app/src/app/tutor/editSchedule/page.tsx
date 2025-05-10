@@ -35,7 +35,7 @@ const checkOverlap = (ranges: { start: string; end: string }[]) => {
 const findNextAvailableRange = (ranges: { start: string; end: string }[]) => {
   const sorted = [...ranges].sort((a, b) => toMinutes(a.start) - toMinutes(b.start));
   let start = 8 * 60;
-  for (let r of sorted) {
+  for (const r of sorted) {
     const rStart = toMinutes(r.start);
     if (start + 60 <= rStart) {
       return {
