@@ -2,11 +2,17 @@ const express = require('express');
 const cors = require('cors');
 const session = require('express-session');
 const http = require('http');
-const setupSocket = require('./signaling/socket');
+// const setupSocket = require('./signaling/socket');
 require('dotenv').config();
 
 // Route imports
 const loginRoute = require('./routes/login');
+// const checkUser = require('./routes/check-username'); // useless for now
+const sendOtp = require('./routes/sendotp')
+const registerUser = require('./routes/registeruser');
+const checkEmailRoute = require('./routes/check-email');
+const registerOptions = require('./routes/register-options');
+const verifyOtpRoute = require('./routes/verify-otp');
 const findCourseRoute = require('./routes/findcourse');
 const tuteeHomeRoute = require('./routes/tuteehome');
 const tuteeInfoRoute = require('./routes/tuteeinfo');
@@ -51,6 +57,12 @@ app.use(session({
 
 // Route mounting
 app.use('/login', loginRoute);
+// app.use('/check-username', checkUser);//useless for now
+app.use('/send-otp', sendOtp);
+app.use('/register-user', registerUser);
+app.use('/check-email', checkEmailRoute);
+app.use('/register', registerOptions);
+app.use('/verify-otp', verifyOtpRoute);
 app.use('/findcourse', findCourseRoute);
 app.use('/findcourse', filterCourseRoutes);
 app.use('/tutee/home', tuteeHomeRoute);
@@ -72,7 +84,7 @@ app.use("/schedule-session", scheduleSessionRoute);
 app.use('/tutor/booked-sessions', tutorBookedSessions);
 
 // Sockets
-setupSocket(server);
+// setupSocket(server);
 
 // Start server
 const PORT = 4000;
