@@ -110,7 +110,7 @@ router.get('/slots', (req, res) => {
     return res.status(400).json({ error: 'Missing tutorId in query' });
   }
 
-  const sql = `
+  const availabilityQuery = `
     SELECT 
       av.day_id, 
       ss.slot_time 
@@ -120,17 +120,31 @@ router.get('/slots', (req, res) => {
     ORDER BY av.day_id, ss.slot_time
   `;
 
-  db.query(sql, [tutorId], (err, results) => {
+  const bookedQuery = `
+    SELECT 
+      DATE_FORMAT(ss.scheduled_date, '%Y-%m-%d') AS date,
+      TIME_FORMAT(s.slot_time, '%H:%i') AS time
+    FROM scheduled_sessions ss
+    JOIN session_slots s ON ss.slot_id = s.id
+    JOIN tutor_availability a ON s.availability_id = a.id
+    WHERE a.tutor_id = ? AND ss.status != 'cancelled'
+  `;
+
+  db.query(availabilityQuery, [tutorId], (err, availabilityResults) => {
     if (err) return res.status(500).json({ error: 'Database error while fetching slots.' });
 
     const grouped = {};
-    results.forEach(row => {
+    availabilityResults.forEach(row => {
       const day = row.day_id;
       if (!grouped[day]) grouped[day] = [];
-      grouped[day].push(row.slot_time.slice(0, 5)); // HH:MM
+      grouped[day].push(row.slot_time.slice(0, 5)); // "HH:MM"
     });
 
-    res.json({ slots: grouped });
+    db.query(bookedQuery, [tutorId], (err, bookedResults) => {
+      if (err) return res.status(500).json({ error: 'Database error while fetching booked sessions.' });
+
+      res.json({ slots: grouped, booked: bookedResults });
+    });
   });
 });
 
