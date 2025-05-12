@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import TutorHeader from '@/components/layout/TutorHeader';
 import CheckMaterialModal from '@/components/CheckMaterialModal';
 import ModalPortal from '@/components/ModalPortal';
@@ -19,6 +20,7 @@ interface Session {
 }
 
 export default function TutorBookedSessionsPage() {
+  const router = useRouter();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
@@ -98,14 +100,12 @@ export default function TutorBookedSessionsPage() {
 
                     <div className="flex gap-3 mt-4 flex-wrap justify-center md:justify-start">
                       {session.room_link ? (
-                        <a
-                          href={session.room_link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full text-sm font-semibold"
+                        <button
+                          onClick={() => router.push(`/session/setup/${session.room_link}`)}
+                          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full text-sm font-semibold"
                         >
-                          Join Room
-                        </a>
+                          Join Session
+                        </button>
                       ) : (
                         <p className="text-sm italic text-gray-500">No meeting link available</p>
                       )}
