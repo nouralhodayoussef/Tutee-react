@@ -45,6 +45,7 @@ const respondSessionRoute = require('./routes/respond-session');
 const tutorAvailabilityRoute = require('./routes/tutoravailability');
 const scheduleSessionRoute = require("./routes/schedule-session");
 const tutorBookedSessions = require('./routes/tutor/bookedSessions');
+const tuteeBookedSessionsRoute = require('./routes/tutee-booked-sessions');
 
 const app = express();
 const server = http.createServer(app);
@@ -111,6 +112,7 @@ app.use('/logout', logoutRoute);
 app.use('/update-tutee', updateTuteeRoute);
 app.use("/schedule-session", scheduleSessionRoute);
 app.use('/tutor/booked-sessions', tutorBookedSessions);
+app.use('/tutee/booked-sessions', tuteeBookedSessionsRoute);
 
 // Sockets
 setupSocket(server);
