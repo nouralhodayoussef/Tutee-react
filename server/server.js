@@ -12,7 +12,18 @@ const sendOtp = require('./routes/sendotp')
 const registerUser = require('./routes/registeruser');
 const checkEmailRoute = require('./routes/check-email');
 const registerOptions = require('./routes/register-options');
+
 const verifyOtpRoute = require('./routes/verify-otp');
+const tutorEditProfile = require('./routes/tutoreditprofile');
+const updateTutor = require('./routes/update-tutor');
+const addSkillRoute = require('./routes/add-skills');
+const removeSkillRoute = require('./routes/remove-skills');
+const allSkillsRoute = require('./routes/skills');
+const getTutorCourses = require('./routes/get-tutor-courses');
+const addCourseToTutor = require('./routes/add-course-to-tutor');
+const createNewCourse = require('./routes/create-new-course');
+const removeCourseFromTutor = require('./routes/remove-course-from-tutor');
+
 const findCourseRoute = require('./routes/findcourse');
 const tuteeHomeRoute = require('./routes/tuteehome');
 const tuteeInfoRoute = require('./routes/tuteeinfo');
@@ -63,6 +74,19 @@ app.use('/register-user', registerUser);
 app.use('/check-email', checkEmailRoute);
 app.use('/register', registerOptions);
 app.use('/verify-otp', verifyOtpRoute);
+app.use('/tutoreditprofile', tutorEditProfile);
+app.use('/update-tutor', updateTutor);
+app.use('/add-skills', addSkillRoute);
+app.use('/remove-skills', removeSkillRoute);
+app.use('/skills', allSkillsRoute);
+app.use('/remove-courses-from-tutor', removeCourseFromTutor);
+app.use('/add-new-course', require('./routes/add-new-course'));
+app.use('/get-filtered-courses', require('./routes/get-filtered-courses'));
+app.use('/tutor/courses', getTutorCourses);
+app.use('/tutor/add-course', addCourseToTutor);
+app.use('/tutor/create-course', createNewCourse);
+app.use('/tutor/remove-course', removeCourseFromTutor);
+app.use('/get-tutor-courses', getTutorCourses);
 app.use('/findcourse', findCourseRoute);
 app.use('/findcourse', filterCourseRoutes);
 app.use('/tutee/home', tuteeHomeRoute);
