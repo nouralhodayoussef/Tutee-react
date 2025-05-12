@@ -54,8 +54,8 @@ export default function TutorEditProfile() {
           setLastName(data.last_name);
           setDescription(data.description || "");
           setInputDescription(data.description || "");
-          setSelectedMajor(data.selectedMajorId || "");
-          setSelectedUniversity(data.selectedUniversityId || "");
+          setSelectedMajor(Number(data.selectedMajorId) || "");
+          setSelectedUniversity(Number(data.selectedUniversityId) || "");
           setCharCount((data.description || "").length);
           setUniversities(data.universities || []);
           setMajors(data.majors || []);
@@ -235,14 +235,14 @@ export default function TutorEditProfile() {
                 </div>
               </div>
 
-              <select value={selectedUniversity} onChange={(e) => setSelectedUniversity(e.target.value)} className="w-full border border-[#E8B14F] rounded-full px-6 py-2">
+              <select value={selectedUniversity} onChange={(e) => setSelectedUniversity(Number(e.target.value))} className="w-full border border-[#E8B14F] rounded-full px-6 py-2">
                 {universities.map((u: any) => (
-                  <option key={u.id} value={u.university_name}>{u.university_name}</option>
+                  <option key={u.id} value={u.id}>{u.university_name}</option>
                 ))}
               </select>
-              <select value={selectedMajor} onChange={(e) => setSelectedMajor(e.target.value)} className="w-full border border-[#E8B14F] rounded-full px-6 py-2">
+              <select value={selectedMajor} onChange={(e) => setSelectedMajor(Number(e.target.value))} className="w-full border border-[#E8B14F] rounded-full px-6 py-2">
                 {majors.map((m: any) => (
-                  <option key={m.major_id} value={m.major_name}>{m.major_name}</option>
+                  <option key={m.major_id} value={m.major_id}>{m.major_name}</option>
                 ))}
               </select>
 
@@ -306,7 +306,8 @@ export default function TutorEditProfile() {
               </div>
             </div>
           </div>
-           <TutorCoursesSection
+
+          <TutorCoursesSection
             selectedMajorId={Number(selectedMajor)}
             selectedUniversityId={Number(selectedUniversity)}
           />
@@ -314,7 +315,7 @@ export default function TutorEditProfile() {
       </div>
 
       {showSkillModal && (
-<div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-xl shadow-lg w-[90%] max-w-md max-h-[70vh] overflow-y-auto relative">
             <button onClick={() => setShowSkillModal(false)} className="absolute top-2 right-4 text-gray-500 text-xl font-bold">×</button>
             <h2 className="text-lg font-semibold mb-4">Your Skills</h2>
@@ -329,8 +330,6 @@ export default function TutorEditProfile() {
           </div>
         </div>
       )}
-
     </>
-    
   );
 }
