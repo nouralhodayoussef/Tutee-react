@@ -4,6 +4,8 @@ import TuteeHeader from '@/components/layout/TuteeHeader';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import RoleProtected from '@/components/security/RoleProtected';
+
 
 export default function TuteeEditProfile() {
   const [firstName, setFirstName] = useState('');
@@ -125,6 +127,7 @@ export default function TuteeEditProfile() {
 
   return (
     <>
+    <RoleProtected requiredRole="tutee">
       <TuteeHeader />
       <div className="min-h-screen bg-[#FAFAF5] font-poppins px-6 py-12">
         <div className="max-w-[1354px] min-h-[659px] bg-white mx-auto shadow-md rounded-[15px] px-12 pt-10 flex flex-col lg:flex-row justify-between">
@@ -281,6 +284,7 @@ export default function TuteeEditProfile() {
           <div className="hidden lg:block w-[25%] h-full"></div>
         </div>
       </div>
+      </RoleProtected>
     </>
   );
 }

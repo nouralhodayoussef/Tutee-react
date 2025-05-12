@@ -71,6 +71,7 @@ app.use(session({
 
 // Route mounting
 app.use('/login', loginRoute);
+app.use('/check-session', require('./routes/security/check-session'));
 // app.use('/check-username', checkUser);//useless for now
 app.use('/send-otp', sendOtp);
 app.use('/register-user', registerUser);
