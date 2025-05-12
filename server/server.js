@@ -46,7 +46,7 @@ const tutorAvailabilityRoute = require('./routes/tutoravailability');
 const scheduleSessionRoute = require("./routes/schedule-session");
 const tutorBookedSessions = require('./routes/tutor/bookedSessions');
 const tuteeBookedSessionsRoute = require('./routes/tutee-booked-sessions');
-
+const addCourseToTutorRoute = require('./routes/add-course-to-tutor');
 const app = express();
 const server = http.createServer(app);
 
@@ -81,7 +81,7 @@ app.use('/tutoreditprofile', tutorEditProfile);
 app.use('/update-tutor', updateTutor);
 app.use('/check-tutor-profile', checkTutorProfileRoute);
 app.use('/check-tutor-availability', checkTutorAvailabilityRoute);
-
+app.use('/add-course-to-tutor', addCourseToTutorRoute);
 app.use('/add-skills', addSkillRoute);
 app.use('/remove-skills', removeSkillRoute);
 app.use('/skills', allSkillsRoute);
