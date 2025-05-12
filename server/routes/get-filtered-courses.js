@@ -11,9 +11,12 @@ router2.get('/', async (req, res) => {
 
   try {
     const [courses] = await db2.promise().query(
-      `SELECT id, course_code, course_name
-       FROM courses
-       WHERE university_id = ? AND major_id = ?`,
+      `SELECT c.id, c.course_code, c.course_name
+       FROM courses c
+       JOIN universitymajors um 
+         ON c.university_id = um.university_id 
+        AND c.major_id = um.major_id
+       WHERE c.university_id = ? AND c.major_id = ?`,
       [universityId, majorId]
     );
 

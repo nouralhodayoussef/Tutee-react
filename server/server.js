@@ -45,7 +45,7 @@ const respondSessionRoute = require('./routes/respond-session');
 const tutorAvailabilityRoute = require('./routes/tutoravailability'); // ✅ stays separate now
 const scheduleSessionRoute = require("./routes/schedule-session");
 const tutorBookedSessions = require('./routes/tutor/bookedSessions');
-
+const addCourseToTutorRoute = require('./routes/add-course-to-tutor');
 const app = express();
 const server = http.createServer(app);
 
@@ -80,7 +80,7 @@ app.use('/tutoreditprofile', tutorEditProfile);
 app.use('/update-tutor', updateTutor);
 app.use('/check-tutor-profile', checkTutorProfileRoute);
 app.use('/check-tutor-availability', checkTutorAvailabilityRoute);
-
+app.use('/add-course-to-tutor', addCourseToTutorRoute);
 app.use('/add-skills', addSkillRoute);
 app.use('/remove-skills', removeSkillRoute);
 app.use('/skills', allSkillsRoute);
