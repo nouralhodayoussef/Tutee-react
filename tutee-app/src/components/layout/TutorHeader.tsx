@@ -15,20 +15,19 @@ const TutorHeader = () => {
   useEffect(() => {
     const fetchTutor = async () => {
       try {
-        const res = await fetch('http://localhost:4000/tutor/info', {
+        const res = await fetch('http://localhost:4000/tutor/dashboard', {
           credentials: 'include',
         });
         const data = await res.json();
 
         if (res.ok) {
-          setName(data.first_name);
-          if (data.photo?.includes("drive.google.com")) {
-            const match = data.photo.match(/[-\w]{25,}/);
-            const fileId = match ? match[0] : '';
-            setPhoto(`https://drive.google.com/uc?export=view&id=${fileId}`);
-          } else if (data.photo) {
+          setName(data.firstName || 'Tutor');
+          if (data.photo) {
             setPhoto(data.photo);
+          } else {
+            setPhoto('/imgs/tutor-profile.png');
           }
+          
         }
       } catch (err) {
         console.error("❌ Failed to fetch tutor info", err);

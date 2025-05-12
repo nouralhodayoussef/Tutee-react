@@ -34,7 +34,7 @@ const tutorProfileRoute = require('./routes/tutorprofile');
 const filterCourseRoutes = require('./routes/filtercourse');
 const uploadRoute = require('./routes/upload');
 const requestSessionRoute = require('./routes/requestsession');
-const tutorRoutes = require('./routes/tutor');
+const tutorRoutes = require('./routes/tutorhome');
 const changePasswordRoute = require('./routes/changepassword');
 const dropdownInfoRoute = require('./routes/dropdowninfo');
 const forgotPasswordRoute = require('./routes/forgotpassword');
@@ -42,7 +42,7 @@ const logoutRoute = require('./routes/logout');
 const tutorRequestsRoutes = require('./routes/tutorrequests');
 const updateTuteeRoute = require('./routes/update-tutee');
 const respondSessionRoute = require('./routes/respond-session');
-const tutorAvailabilityRoute = require('./routes/tutoravailability'); // ✅ stays separate now
+const tutorAvailabilityRoute = require('./routes/tutoravailability');
 const scheduleSessionRoute = require("./routes/schedule-session");
 const tutorBookedSessions = require('./routes/tutor/bookedSessions');
 
