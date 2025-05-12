@@ -14,13 +14,15 @@ interface ScheduleModalProps {
   courseCode: string;
 }
 
+
 interface TimeSlotMap {
   [day: number]: string[];
 }
 
-export default function ScheduleModal({ onClose, tutorId, courseId, tutorName, courseCode }: ScheduleModalProps) {
+export default function ScheduleModal({ onClose, tutorId, courseId }: ScheduleModalProps) {
   const [step, setStep] = useState(0);
   const [availableSlots, setAvailableSlots] = useState<TimeSlotMap>({});
+  const [bookedSlots, setBookedSlots] = useState<{ date: string; time: string }[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
   const [materialFiles, setMaterialFiles] = useState<File[]>([]);
@@ -34,20 +36,31 @@ export default function ScheduleModal({ onClose, tutorId, courseId, tutorName, c
   useEffect(() => {
     fetch(`http://localhost:4000/tutor/availability/slots?tutorId=${tutorId}`)
       .then(res => res.json())
-      .then(data => setAvailableSlots(data.slots || {}))
-      .catch(err => console.error("Failed to fetch slots:", err));
-  }, [tutorId]);
+      .then(data => {
+        setAvailableSlots(data.slots || {});
+        setBookedSlots(data.booked || []);
+      })
+      .catch(() => console.error("Failed to fetch slots"));
+    }, [tutorId]);
 
   const getDayIndex = (date: Date) => (date.getDay() === 0 ? 7 : date.getDay());
 
   const isDayAvailable = (date: Date) => {
     const day = getDayIndex(date);
-    return day in availableSlots;
+    const slots = availableSlots[day];
+    if (!slots || slots.length === 0) return false;
+
+    const dateStr = date.toLocaleDateString("en-CA");
+    const bookedTimes = bookedSlots
+      .filter((b: { date: string; time: string }) => b.date === dateStr)
+      .map((b) => b.time);
+
+    const availableUnbooked = slots.filter(s => !bookedTimes.includes(s));
+    return availableUnbooked.length > 0;
   };
 
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date);
-    const day = getDayIndex(date);
     setSelectedTimes([]);
   };
 
@@ -61,7 +74,7 @@ export default function ScheduleModal({ onClose, tutorId, courseId, tutorName, c
     const validFiles: File[] = [];
     let errorMessage = "";
 
-    for (let file of newFiles) {
+    for (const file of newFiles) {
       const ext = file.name.split(".").pop()?.toLowerCase();
       if (ext && allowedExtensions.includes(ext)) {
         validFiles.push(file);
@@ -114,11 +127,8 @@ export default function ScheduleModal({ onClose, tutorId, courseId, tutorName, c
         return;
       }
 
-      const dateString = selectedDate.toLocaleDateString("en-CA"); // 'YYYY-MM-DD' in local timezone
-      const normalizeTime = (time: string) => {
-        if (time.length === 5) return `${time}:00`; // from '08:00' to '08:00:00'
-        return time;
-      };
+      const dateString = selectedDate.toLocaleDateString("en-CA");
+      const normalizeTime = (time: string) => (time.length === 5 ? `${time}:00` : time);
 
       const slotRanges = selectedTimes.map(time => ({
         start: normalizeTime(time),
@@ -134,7 +144,7 @@ export default function ScheduleModal({ onClose, tutorId, courseId, tutorName, c
       const res = await fetch("http://localhost:4000/schedule-session", {
         method: "POST",
         body: formData,
-        credentials: "include", // to include session cookie
+        credentials: "include",
       });
 
       if (res.ok) {
@@ -144,20 +154,16 @@ export default function ScheduleModal({ onClose, tutorId, courseId, tutorName, c
         try {
           const json = JSON.parse(text);
           setError(json?.error || "Failed to schedule session.");
-        } catch (err) {
-          console.error("Non-JSON response:", text);
+        } catch {
           setError("Server returned unexpected response.");
         }
       }
-
-    } catch (err) {
-      console.error("Submission failed:", err);
+    } catch {
       setError("Something went wrong.");
     } finally {
       setIsSubmitting(false);
     }
   };
-
 
   return (
     <ModalPortal>
@@ -193,29 +199,40 @@ export default function ScheduleModal({ onClose, tutorId, courseId, tutorName, c
               <h2 className="text-xl font-semibold mb-4 text-center">Select available time slots</h2>
               <p className="text-center text-sm text-gray-600 mb-4">{selectedDate.toDateString()}</p>
               <div className="flex flex-wrap gap-2 justify-center">
-                {availableSlots[getDayIndex(selectedDate)]?.map((slot, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => toggleTime(slot)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium shadow ${selectedTimes.includes(slot)
-                      ? "bg-[#E8B14F] text-white"
-                      : "bg-gray-200 text-black"
-                      }`}
-                  >
-                    {slot}
-                  </button>
-                ))}
+                {availableSlots[getDayIndex(selectedDate)]?.map((slot, idx) => {
+                  const dateStr = selectedDate.toLocaleDateString("en-CA");
+                  const isBooked = bookedSlots.some(b => b.date === dateStr && b.time === slot);
+
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => !isBooked && toggleTime(slot)}
+                      disabled={isBooked}
+                      className={`px-4 py-2 rounded-full text-sm font-medium shadow 
+                        ${isBooked
+                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                          : selectedTimes.includes(slot)
+                            ? "bg-[#E8B14F] text-white"
+                            : "bg-gray-200 text-black"
+                        }`}
+                    >
+                      {slot}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
 
           {step === 2 && (
-            <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center bg-gray-50"
+            <div
+              className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center bg-gray-50"
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => {
                 e.preventDefault();
                 handleFiles(e.dataTransfer.files);
-              }}>
+              }}
+            >
               <h2 className="text-xl font-semibold mb-6">Upload materials to be covered</h2>
               <p className="mb-2 text-gray-700">Drag and drop files here, or click to browse</p>
               <input type="file" multiple className="hidden" id="material-upload" onChange={(e) => handleFiles(e.target.files)} />
@@ -265,7 +282,6 @@ export default function ScheduleModal({ onClose, tutorId, courseId, tutorName, c
               </div>
             </div>
           )}
-
 
           {step === 4 && (
             <div className="text-center py-12">
