@@ -6,8 +6,7 @@ import { Trash2 } from 'lucide-react';
 
 interface Session {
   session_id: number;
-  scheduled_date: string;
-  slot_time: string;
+  scheduled_datetime: string;
   room_link: string | null;
   tutor_name: string;
   tutor_photo: string | null;
@@ -49,10 +48,6 @@ export default function TuteeBookedSessions() {
       return 'Invalid Date';
     }
   };
-  
-  
-  
-  
 
   return (
     <main className="bg-[#F5F5EF] min-h-screen">
@@ -64,21 +59,20 @@ export default function TuteeBookedSessions() {
 
         <div className="bg-white rounded-xl p-6 shadow-md space-y-8">
           {sessions.map((session) => {
-              console.log('DATE:', session.scheduled_date, 'TIME:', session.slot_time); 
             const canJoin = !!session.room_link;
-            const formatted = formatDateTime(session.scheduled_date);
+            const formatted = formatDateTime(session.scheduled_datetime);
 
             return (
               <div
                 key={session.session_id}
-                className="relative bg-[#F9F9F9] rounded-xl px-6 py-4 flex justify-between items-center"
+                className="relative bg-[#F9F9F9] rounded-xl px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
               >
                 {/* Trash icon */}
                 <button className="absolute top-4 right-4 text-[#DE5462]">
                   <Trash2 className="w-5 h-5" />
                 </button>
 
-                {/* Left text */}
+                {/* Left section */}
                 <div className="space-y-2">
                   <p className="font-bold text-[14px]">
                     <span className="font-extrabold text-black">{session.course_code}</span> - {session.course_name}
@@ -94,7 +88,7 @@ export default function TuteeBookedSessions() {
                   </p>
 
                   {/* Buttons */}
-                  <div className="flex items-center space-x-2 pt-2">
+                  <div className="flex flex-wrap items-center gap-2 pt-2">
                     {canJoin ? (
                       <>
                         <a
@@ -116,7 +110,7 @@ export default function TuteeBookedSessions() {
                 </div>
 
                 {/* Tutor + Tutee photos */}
-                <div className="flex -space-x-4 mr-4">
+                <div className="flex -space-x-4 self-end sm:self-auto sm:mr-4">
                   <img
                     src={session.tutor_photo || '/imgs/default-profile.png'}
                     alt="Tutor"
