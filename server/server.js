@@ -12,10 +12,10 @@ const sendOtp = require('./routes/sendotp')
 const registerUser = require('./routes/registeruser');
 const checkEmailRoute = require('./routes/check-email');
 const registerOptions = require('./routes/register-options');
-
 const verifyOtpRoute = require('./routes/verify-otp');
 const tutorEditProfile = require('./routes/tutoreditprofile');
 const updateTutor = require('./routes/update-tutor');
+const checkTutorProfileRoute = require('./routes/check-tutor-profile');
 const addSkillRoute = require('./routes/add-skills');
 const removeSkillRoute = require('./routes/remove-skills');
 const allSkillsRoute = require('./routes/skills');
@@ -76,6 +76,7 @@ app.use('/register', registerOptions);
 app.use('/verify-otp', verifyOtpRoute);
 app.use('/tutoreditprofile', tutorEditProfile);
 app.use('/update-tutor', updateTutor);
+app.use('/check-tutor-profile', checkTutorProfileRoute);
 app.use('/add-skills', addSkillRoute);
 app.use('/remove-skills', removeSkillRoute);
 app.use('/skills', allSkillsRoute);

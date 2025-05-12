@@ -5,6 +5,7 @@ import TutorHeader from '@/components/layout/TutorHeader';
 import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import CompleteProfileModal from '@/components/Tutor/CompleteProfileModal';
 
 export default function TutorHomePage() {
   const [data, setData] = useState<{
@@ -46,7 +47,9 @@ export default function TutorHomePage() {
   }, []);
 
   return (
+    
     <main className="min-h-screen bg-[#F5F5EF]">
+       <CompleteProfileModal />
       <TutorHeader />
 
       <section className="w-full px-6 sm:px-10 md:px-24 py-12">

@@ -26,11 +26,11 @@ router.post('/', (req, res) => {
     params.push(description);
   }
   if (selectedMajor) {
-    updates.push('major_id = (SELECT id FROM majors WHERE major_name = ? LIMIT 1)');
+    updates.push('major_id = ?');  // Use the ID directly
     params.push(selectedMajor);
   }
   if (selectedUniversity) {
-    updates.push('university_id = (SELECT id FROM universities WHERE university_name = ? LIMIT 1)');
+    updates.push('university_id = ?');  // Use the ID directly
     params.push(selectedUniversity);
   }
   if (pricePerHour !== undefined) {
