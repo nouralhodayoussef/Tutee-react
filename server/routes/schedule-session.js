@@ -5,6 +5,7 @@ const db = require("../config/db");
 const multer = require("multer");
 const multerS3 = require("multer-s3");
 const path = require("path");
+const crypto = require("crypto");
 const s3 = require("../utils/s3Uploader");
 
 const allowedExtensions = [".pdf", ".doc", ".docx", ".ppt", ".pptx", ".zip", ".png", ".jpg", ".jpeg", ".gif"];
@@ -52,19 +53,18 @@ router.post("/", upload.array("materials"), async (req, res) => {
     const date = slot.date;
     const time = slot.ranges[0].start;
 
-    // Convert MySQL DAYOFWEEK to match your day.id structure
     const [slotRow] = await db.promise().query(
       `SELECT s.id FROM session_slots s
        JOIN tutor_availability a ON s.availability_id = a.id
        WHERE a.tutor_id = ?
          AND a.day_id = CASE DAYOFWEEK(?) 
-           WHEN 1 THEN 7  -- Sunday
-           WHEN 2 THEN 1  -- Monday
-           WHEN 3 THEN 2  -- Tuesday
-           WHEN 4 THEN 3  -- Wednesday
-           WHEN 5 THEN 4  -- Thursday
-           WHEN 6 THEN 5  -- Friday
-           WHEN 7 THEN 6  -- Saturday
+           WHEN 1 THEN 7
+           WHEN 2 THEN 1
+           WHEN 3 THEN 2
+           WHEN 4 THEN 3
+           WHEN 5 THEN 4
+           WHEN 6 THEN 5
+           WHEN 7 THEN 6
          END
          AND s.slot_time = ?`,
       [tutorId, date, time]
@@ -76,11 +76,12 @@ router.post("/", upload.array("materials"), async (req, res) => {
     }
 
     const slotId = slotRow[0].id;
+    const roomLink = crypto.randomUUID();
 
     const [insertResult] = await db.promise().query(
-      `INSERT INTO scheduled_sessions (tutee_id, tutor_id, course_id, slot_id, scheduled_date, note)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [tuteeId, tutorId, courseId, slotId, date, note || null]
+      `INSERT INTO scheduled_sessions (tutee_id, tutor_id, course_id, slot_id, scheduled_date, room_link, note)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [tuteeId, tutorId, courseId, slotId, date, roomLink, note || null]
     );
 
     const sessionId = insertResult.insertId;
@@ -95,7 +96,7 @@ router.post("/", upload.array("materials"), async (req, res) => {
       console.log("📦 Materials saved:", materials);
     }
 
-    res.status(200).json({ message: "Session scheduled successfully" });
+    res.status(200).json({ message: "Session scheduled successfully", roomLink });
   } catch (err) {
     console.error("🔥 Scheduling failed:", err);
     res.status(500).json({ error: "Internal server error while scheduling session." });

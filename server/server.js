@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const session = require('express-session');
 const http = require('http');
-// const setupSocket = require('./signaling/socket');
+const setupSocket = require('./signaling/socket');
 require('dotenv').config();
 
 // Route imports
@@ -84,7 +84,7 @@ app.use("/schedule-session", scheduleSessionRoute);
 app.use('/tutor/booked-sessions', tutorBookedSessions);
 
 // Sockets
-// setupSocket(server);
+setupSocket(server);
 
 // Start server
 const PORT = 4000;
