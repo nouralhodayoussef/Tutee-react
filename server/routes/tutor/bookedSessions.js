@@ -21,9 +21,8 @@ router.get('/', async (req, res) => {
   t.photo AS tutor_photo,
   c.course_code,
   c.course_name,
-  DATE_FORMAT(CONCAT(ss.scheduled_date, ' ', sl.slot_time), '%W, %M %e at %l:%i %p') AS schedule,
+  DATE_FORMAT(CONCAT(ss.scheduled_date, ' ', sl.slot_time), '%Y-%m-%d %H:%i:%s') AS scheduled_datetime,
   ss.room_link,
-  ss.scheduled_date,
   GROUP_CONCAT(m.file_path) AS materials
 FROM scheduled_sessions ss
 JOIN tutees tu ON ss.tutee_id = tu.id
@@ -34,6 +33,7 @@ LEFT JOIN materials m ON m.scheduled_session_id = ss.id
 WHERE ss.tutor_id = ? AND ss.scheduled_date >= CURDATE()
 GROUP BY ss.id
 ORDER BY ss.scheduled_date ASC;
+
 `,
             [tutorId]
         );

@@ -102,7 +102,7 @@ app.use('/me', meRoute);
 app.use('/upload', uploadRoute);
 app.use('/request-session', requestSessionRoute);
 app.use('/tutor', tutorRoutes); // ✅ general tutor routes
-app.use('/tutor/availability', tutorAvailabilityRoute); // ✅ now scoped and isolated
+app.use('/tutor/availability', tutorAvailabilityRoute); 
 app.use('/tutor/requests', tutorRequestsRoutes);
 app.use('/tutor/respond-session', respondSessionRoute);
 app.use('/dropdowninfo', dropdownInfoRoute);

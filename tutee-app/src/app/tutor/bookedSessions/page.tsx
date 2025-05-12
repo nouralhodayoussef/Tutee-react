@@ -14,7 +14,7 @@ interface Session {
   tutor_photo: string | null;
   course_code: string;
   course_name: string;
-  scheduled_date: string;
+  scheduled_datetime: string;
   room_link: string | null;
   materials: string[];
 }
@@ -32,13 +32,19 @@ export default function TutorBookedSessionsPage() {
           credentials: 'include',
         });
         const data = await res.json();
-        setSessions(data.bookedSessions || []);
+        const sorted = (data.bookedSessions || []).sort((a: Session, b: Session) => {
+          const dateA = new Date(a.scheduled_datetime.replace(' ', 'T')).getTime();
+          const dateB = new Date(b.scheduled_datetime.replace(' ', 'T')).getTime();
+          return dateA - dateB;
+        });
+        setSessions(sorted);
       } catch (err) {
         console.error('Failed to load booked sessions:', err);
       }
     };
     fetchSessions();
   }, []);
+  
 
   const handleCheckMaterials = (materials: string[]) => {
     setSelectedMaterials(materials || []);
@@ -51,9 +57,10 @@ export default function TutorBookedSessionsPage() {
     return sessionTime - now > 24 * 60 * 60 * 1000;
   };
 
-  const formatDateTime = (datetime: string): string => {
+  const formatDateTime = (datetime: string | undefined): string => {
+    if (!datetime) return 'Unknown';
     try {
-      const parsed = new Date(datetime);
+      const parsed = new Date(datetime.replace(' ', 'T'));
       return parsed.toLocaleString('en-US', {
         weekday: 'long',
         month: 'long',
@@ -66,6 +73,7 @@ export default function TutorBookedSessionsPage() {
       return 'Invalid Date';
     }
   };
+  
 
   return (
     <main className="bg-[#F5F5EF] min-h-screen">
@@ -78,7 +86,7 @@ export default function TutorBookedSessionsPage() {
         <div className="bg-white rounded-xl p-6 shadow-md space-y-8">
           {sessions.map((session) => {
             const canJoin = !!session.room_link;
-            const formatted = formatDateTime(session.scheduled_date);
+            const formatted = formatDateTime(session.scheduled_datetime);
 
             return (
               <div
@@ -130,7 +138,7 @@ export default function TutorBookedSessionsPage() {
                       Check Materials
                     </button>
 
-                    {isCancelable(session.scheduled_date) ? (
+                    {isCancelable(session.scheduled_datetime) ? (
                       <button
                         className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-full text-xs font-semibold"
                         onClick={() => alert('❌ Cancel functionality coming soon.')}
@@ -173,3 +181,4 @@ export default function TutorBookedSessionsPage() {
     </main>
   );
 }
+
