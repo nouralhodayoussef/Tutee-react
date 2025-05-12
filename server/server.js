@@ -16,6 +16,8 @@ const verifyOtpRoute = require('./routes/verify-otp');
 const tutorEditProfile = require('./routes/tutoreditprofile');
 const updateTutor = require('./routes/update-tutor');
 const checkTutorProfileRoute = require('./routes/check-tutor-profile');
+const checkTutorAvailabilityRoute = require('./routes/check-tutor-availability');
+
 const addSkillRoute = require('./routes/add-skills');
 const removeSkillRoute = require('./routes/remove-skills');
 const allSkillsRoute = require('./routes/skills');
@@ -77,6 +79,8 @@ app.use('/verify-otp', verifyOtpRoute);
 app.use('/tutoreditprofile', tutorEditProfile);
 app.use('/update-tutor', updateTutor);
 app.use('/check-tutor-profile', checkTutorProfileRoute);
+app.use('/check-tutor-availability', checkTutorAvailabilityRoute);
+
 app.use('/add-skills', addSkillRoute);
 app.use('/remove-skills', removeSkillRoute);
 app.use('/skills', allSkillsRoute);
