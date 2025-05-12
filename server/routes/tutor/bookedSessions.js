@@ -17,6 +17,8 @@ router.get('/', async (req, res) => {
   ss.id AS session_id,
   CONCAT(tu.first_name, ' ', tu.last_name) AS tutee_name,
   tu.photo AS tutee_photo,
+  CONCAT(t.first_name, ' ', t.last_name) AS tutor_name,
+  t.photo AS tutor_photo,
   c.course_code,
   c.course_name,
   DATE_FORMAT(CONCAT(ss.scheduled_date, ' ', sl.slot_time), '%W, %M %e at %l:%i %p') AS schedule,
@@ -25,6 +27,7 @@ router.get('/', async (req, res) => {
   GROUP_CONCAT(m.file_path) AS materials
 FROM scheduled_sessions ss
 JOIN tutees tu ON ss.tutee_id = tu.id
+JOIN tutors t ON ss.tutor_id = t.id
 JOIN courses c ON ss.course_id = c.id
 JOIN session_slots sl ON ss.slot_id = sl.id
 LEFT JOIN materials m ON m.scheduled_session_id = ss.id
