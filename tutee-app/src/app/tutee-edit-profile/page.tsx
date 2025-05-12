@@ -55,8 +55,11 @@ export default function TuteeEditProfile() {
         if (res.ok) {
           setMajors(data.majors);
           setUniversities(data.universities);
-          setSelectedMajor(data.selectedMajor);
-          setSelectedUniversity(data.selectedUniversity);
+
+          const majorName = data.majors.find((m: any) => m.id === data.selectedMajor)?.major_name || '';
+          const universityName = data.universities.find((u: any) => u.id === data.selectedUniversity)?.university_name || '';
+          setSelectedMajor(majorName);
+          setSelectedUniversity(universityName);
         }
       } catch (err) {
         console.error('❌ Error fetching dropdown options:', err);
@@ -141,7 +144,6 @@ export default function TuteeEditProfile() {
                 />
                 <div>
                   <p className="font-bold text-[16px]">{firstName} {lastName}</p>
-                 
                 </div>
               </div>
               <div className="flex gap-3">
