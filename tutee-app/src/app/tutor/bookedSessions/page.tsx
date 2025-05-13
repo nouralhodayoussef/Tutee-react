@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import TutorHeader from '@/components/layout/TutorHeader';
 import CheckMaterialModal from '@/components/CheckMaterialModal';
+import CancelSessionModal from '@/components/CancelSessionModal';
 import ModalPortal from '@/components/ModalPortal';
 import { Trash2 } from 'lucide-react';
 
@@ -25,6 +26,9 @@ export default function TutorBookedSessionsPage() {
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
 
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [sessionToCancel, setSessionToCancel] = useState<Session | null>(null);
+
   useEffect(() => {
     const fetchSessions = async () => {
       try {
@@ -44,15 +48,29 @@ export default function TutorBookedSessionsPage() {
     };
     fetchSessions();
   }, []);
-  
 
   const handleCheckMaterials = (materials: string[]) => {
     setSelectedMaterials(materials || []);
     setModalOpen(true);
   };
 
+  const handleCancelClick = (session: Session) => {
+    setSessionToCancel(session);
+    setCancelModalOpen(true);
+  };
+
+  const handleCancelSuccess = () => {
+    if (sessionToCancel) {
+      setSessions((prev) =>
+        prev.filter((s) => s.session_id !== sessionToCancel.session_id)
+      );
+    }
+    setCancelModalOpen(false);
+    setSessionToCancel(null);
+  };
+
   const isCancelable = (scheduledDate: string) => {
-    const sessionTime = new Date(scheduledDate).getTime();
+    const sessionTime = new Date(scheduledDate.replace(' ', 'T')).getTime();
     const now = Date.now();
     return sessionTime - now > 24 * 60 * 60 * 1000;
   };
@@ -73,7 +91,6 @@ export default function TutorBookedSessionsPage() {
       return 'Invalid Date';
     }
   };
-  
 
   return (
     <main className="bg-[#F5F5EF] min-h-screen">
@@ -94,7 +111,11 @@ export default function TutorBookedSessionsPage() {
                 className="relative bg-[#F9F9F9] rounded-xl px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
               >
                 {/* Trash icon */}
-                <button className="absolute top-4 right-4 text-[#DE5462]">
+                <button
+                  className="absolute top-4 right-4 text-[#DE5462]"
+                  onClick={() => handleCancelClick(session)}
+                  title="Cancel Session"
+                >
                   <Trash2 className="w-5 h-5" />
                 </button>
 
@@ -113,7 +134,6 @@ export default function TutorBookedSessionsPage() {
                     With: {session.tutee_name}
                   </p>
 
-                  {/* Buttons */}
                   <div className="flex flex-wrap items-center gap-2 pt-2">
                     {canJoin ? (
                       <>
@@ -141,7 +161,7 @@ export default function TutorBookedSessionsPage() {
                     {isCancelable(session.scheduled_datetime) ? (
                       <button
                         className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-full text-xs font-semibold"
-                        onClick={() => alert('❌ Cancel functionality coming soon.')}
+                        onClick={() => handleCancelClick(session)}
                       >
                         Cancel Session
                       </button>
@@ -178,7 +198,20 @@ export default function TutorBookedSessionsPage() {
           />
         </ModalPortal>
       )}
+
+      {cancelModalOpen && sessionToCancel && (
+        <ModalPortal>
+          <CancelSessionModal
+            sessionId={sessionToCancel.session_id}
+            role="tutor"
+            onClose={() => {
+              setCancelModalOpen(false);
+              setSessionToCancel(null);
+            }}
+            onCancelSuccess={handleCancelSuccess}
+          />
+        </ModalPortal>
+      )}
     </main>
   );
 }
-

@@ -38,7 +38,7 @@ const Header = () => {
           LOG IN
         </Link>
         <Link
-          href="/signup"
+          href="/register"
           className="bg-[#E8B14F] hover:bg-yellow-500 text-black font-bold rounded-full px-6 py-2 text-sm shadow"
         >
           JOIN TUTEE

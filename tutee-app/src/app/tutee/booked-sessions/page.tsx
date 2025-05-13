@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import TuteeHeader from '@/components/layout/TuteeHeader';
+import CancelSessionModal from '@/components/CancelSessionModal'; // reuse modal
 import { Trash2 } from 'lucide-react';
 
 interface Session {
@@ -17,6 +18,8 @@ interface Session {
 
 export default function TuteeBookedSessions() {
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [sessionToCancel, setSessionToCancel] = useState<Session | null>(null);
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchSessions = async () => {
@@ -49,6 +52,21 @@ export default function TuteeBookedSessions() {
     }
   };
 
+  const isCancelable = (datetime: string) => {
+    const time = new Date(datetime).getTime();
+    return time - Date.now() > 24 * 60 * 60 * 1000;
+  };
+
+  const handleCancelSuccess = () => {
+    if (sessionToCancel) {
+      setSessions((prev) =>
+        prev.filter((s) => s.session_id !== sessionToCancel.session_id)
+      );
+    }
+    setCancelModalOpen(false);
+    setSessionToCancel(null);
+  };
+
   return (
     <main className="bg-[#F5F5EF] min-h-screen">
       <TuteeHeader />
@@ -59,18 +77,27 @@ export default function TuteeBookedSessions() {
 
         <div className="bg-white rounded-xl p-6 shadow-md space-y-8">
           {sessions.map((session) => {
-            const canJoin = !!session.room_link;
             const formatted = formatDateTime(session.scheduled_datetime);
+            const canJoin = !!session.room_link;
+            const cancelable = isCancelable(session.scheduled_datetime);
 
             return (
               <div
                 key={session.session_id}
                 className="relative bg-[#F9F9F9] rounded-xl px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
               >
-                {/* Trash icon */}
-                <button className="absolute top-4 right-4 text-[#DE5462]">
-                  <Trash2 className="w-5 h-5" />
-                </button>
+                {/* Trash icon = cancel */}
+                {cancelable && (
+                  <button
+                    className="absolute top-4 right-4 text-[#DE5462]"
+                    onClick={() => {
+                      setSessionToCancel(session);
+                      setCancelModalOpen(true);
+                    }}
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                )}
 
                 {/* Left section */}
                 <div className="space-y-2">
@@ -87,7 +114,6 @@ export default function TuteeBookedSessions() {
                     With: {session.tutor_name}
                   </p>
 
-                  {/* Buttons */}
                   <div className="flex flex-wrap items-center gap-2 pt-2">
                     {canJoin ? (
                       <>
@@ -109,7 +135,7 @@ export default function TuteeBookedSessions() {
                   </div>
                 </div>
 
-                {/* Tutor + Tutee photos */}
+                {/* Photos */}
                 <div className="flex -space-x-4 self-end sm:self-auto sm:mr-4">
                   <img
                     src={session.tutor_photo || '/imgs/default-profile.png'}
@@ -127,6 +153,15 @@ export default function TuteeBookedSessions() {
           })}
         </div>
       </section>
+
+      {cancelModalOpen && sessionToCancel && (
+        <CancelSessionModal
+          sessionId={sessionToCancel.session_id}
+          role="tutee"
+          onClose={() => setCancelModalOpen(false)}
+          onCancelSuccess={handleCancelSuccess}
+        />
+      )}
     </main>
   );
 }

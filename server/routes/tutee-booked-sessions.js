@@ -17,6 +17,7 @@ router.get('/', async (req, res) => {
   ss.id AS session_id,
   CONCAT(t.first_name, ' ', t.last_name) AS tutor_name,
   t.photo AS tutor_photo,
+  CONCAT(tu.first_name, ' ', tu.last_name) AS tutee_name,
   tu.photo AS tutee_photo,
   c.course_code,
   c.course_name,
@@ -28,7 +29,10 @@ JOIN tutors t ON ss.tutor_id = t.id
 JOIN tutees tu ON ss.tutee_id = tu.id
 JOIN courses c ON ss.course_id = c.id
 WHERE ss.tutee_id = ?
-ORDER BY ss.scheduled_date ASC, sl.slot_time ASC;`,
+  AND ss.status = 'scheduled'
+ORDER BY ss.scheduled_date ASC, sl.slot_time ASC;
+
+`,
       [tuteeId]
     );
 

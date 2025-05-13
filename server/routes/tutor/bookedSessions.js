@@ -30,9 +30,12 @@ JOIN tutors t ON ss.tutor_id = t.id
 JOIN courses c ON ss.course_id = c.id
 JOIN session_slots sl ON ss.slot_id = sl.id
 LEFT JOIN materials m ON m.scheduled_session_id = ss.id
-WHERE ss.tutor_id = ? AND ss.scheduled_date >= CURDATE()
+WHERE ss.tutor_id = ? 
+  AND ss.scheduled_date >= CURDATE()
+  AND ss.status = 'scheduled'
 GROUP BY ss.id
 ORDER BY ss.scheduled_date ASC;
+
 
 `,
             [tutorId]
