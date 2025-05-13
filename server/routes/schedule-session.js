@@ -1,4 +1,3 @@
-// server/routes/schedule-session.js
 const express = require("express");
 const router = express.Router();
 const db = require("../config/db");
@@ -7,6 +6,7 @@ const multerS3 = require("multer-s3");
 const path = require("path");
 const crypto = require("crypto");
 const s3 = require("../utils/s3Uploader");
+const fetch = require("node-fetch"); // 📦 Needed to call notify-tutor-when-booked
 
 const allowedExtensions = [".pdf", ".doc", ".docx", ".ppt", ".pptx", ".zip", ".png", ".jpg", ".jpeg", ".gif"];
 
@@ -57,7 +57,7 @@ router.post("/", upload.array("materials"), async (req, res) => {
       `SELECT s.id FROM session_slots s
        JOIN tutor_availability a ON s.availability_id = a.id
        WHERE a.tutor_id = ?
-         AND a.day_id = CASE DAYOFWEEK(?) 
+         AND a.day_id = CASE DAYOFWEEK(?)
            WHEN 1 THEN 7
            WHEN 2 THEN 1
            WHEN 3 THEN 2
@@ -87,6 +87,7 @@ router.post("/", upload.array("materials"), async (req, res) => {
     const sessionId = insertResult.insertId;
     console.log("✅ Inserted scheduled_session ID:", sessionId);
 
+    // 📂 Save material uploads
     if (req.files && req.files.length > 0) {
       const materials = req.files.map((f) => [sessionId, f.key]);
       await db.promise().query(
@@ -95,6 +96,21 @@ router.post("/", upload.array("materials"), async (req, res) => {
       );
       console.log("📦 Materials saved:", materials);
     }
+
+    // 📧 Notify the tutor via email
+    try {
+  await fetch("http://localhost:4000/notify-tutor-when-booked", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Cookie: req.headers.cookie || "", // ✅ forward session
+    },
+    body: JSON.stringify({ sessionId }),
+  });
+  console.log("📧 Tutor notified via email.");
+} catch (emailErr) {
+  console.error("⚠️ Failed to send email to tutor:", emailErr);
+}
 
     res.status(200).json({ message: "Session scheduled successfully", roomLink });
   } catch (err) {
