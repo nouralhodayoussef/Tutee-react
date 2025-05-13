@@ -286,7 +286,7 @@ export default function ScheduleModal({ onClose, tutorId, courseId }: ScheduleMo
           {step === 4 && (
             <div className="text-center py-12">
               <h2 className="text-2xl font-bold text-[#E8B14F] mb-4">🎉 Request submitted!</h2>
-              <p className="text-gray-700">The tutor will review your session and respond soon.</p>
+              <p className="text-gray-700">The session is booked. We will notify the tutor.</p>
               <button
                 onClick={onClose}
                 className="mt-6 bg-[#E8B14F] text-white px-6 py-2 rounded-full font-bold"
