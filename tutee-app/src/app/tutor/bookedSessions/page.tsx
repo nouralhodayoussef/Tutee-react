@@ -18,7 +18,9 @@ interface Session {
   scheduled_datetime: string;
   room_link: string | null;
   materials: string[];
+  tutee_avg_rating: number | null;
 }
+
 
 export default function TutorBookedSessionsPage() {
   const router = useRouter();
@@ -133,6 +135,13 @@ export default function TutorBookedSessionsPage() {
                   <p className="text-sm font-bold text-black">
                     With: {session.tutee_name}
                   </p>
+                  {session.tutee_avg_rating !== null && !isNaN(Number(session.tutee_avg_rating)) && (
+                    <p className="text-sm font-bold text-black">
+                      Rating: {Number(session.tutee_avg_rating).toFixed(1)} ⭐
+                    </p>
+                  )}
+
+
 
                   <div className="flex flex-wrap items-center gap-2 pt-2">
                     {canJoin ? (
@@ -172,18 +181,20 @@ export default function TutorBookedSessionsPage() {
                 </div>
 
                 {/* Tutee + Tutor photos */}
-                <div className="flex -space-x-4 self-end sm:self-auto sm:mr-4">
+                <div className="w-full flex justify-center sm:justify-end -space-x-4 mt-4 sm:mt-0">
                   <img
                     src={session.tutor_photo || '/imgs/default-profile.png'}
                     alt="Tutor"
-                    className="w-12 h-12 rounded-full border-2 border-white object-cover"
+                    className="w-16 h-16 rounded-full border-2 border-white object-cover"
                   />
                   <img
                     src={session.tutee_photo || '/imgs/default-profile.png'}
                     alt="Tutee"
-                    className="w-12 h-12 rounded-full border-2 border-white object-cover"
+                    className="w-16 h-16 rounded-full border-2 border-white object-cover"
                   />
                 </div>
+
+
               </div>
             );
           })}

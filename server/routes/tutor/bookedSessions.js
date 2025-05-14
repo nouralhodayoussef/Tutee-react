@@ -23,20 +23,24 @@ router.get('/', async (req, res) => {
   c.course_name,
   DATE_FORMAT(CONCAT(ss.scheduled_date, ' ', sl.slot_time), '%Y-%m-%d %H:%i:%s') AS scheduled_datetime,
   ss.room_link,
-  GROUP_CONCAT(m.file_path) AS materials
+  GROUP_CONCAT(m.file_path) AS materials,
+  ROUND((
+    SELECT AVG(r.stars)
+    FROM scheduled_sessions s2
+    LEFT JOIN tutee_ratings r ON r.scheduled_session_id = s2.id
+    WHERE s2.tutee_id = tu.id
+  ), 1) AS tutee_avg_rating
 FROM scheduled_sessions ss
 JOIN tutees tu ON ss.tutee_id = tu.id
 JOIN tutors t ON ss.tutor_id = t.id
 JOIN courses c ON ss.course_id = c.id
 JOIN session_slots sl ON ss.slot_id = sl.id
 LEFT JOIN materials m ON m.scheduled_session_id = ss.id
-WHERE ss.tutor_id = ? 
+WHERE ss.tutor_id = ?
   AND ss.scheduled_date >= CURDATE()
   AND ss.status = 'scheduled'
 GROUP BY ss.id
 ORDER BY ss.scheduled_date ASC;
-
-
 `,
             [tutorId]
         );
