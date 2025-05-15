@@ -6,12 +6,14 @@ router.get('/:id', (req, res) => {
   const tutorId = req.params.id;
 
   const basicInfoQuery = `
-    SELECT CONCAT(t.first_name, ' ', t.last_name) AS name,
-           t.photo,
-           t.description AS bio
-    FROM tutors t
-    WHERE t.id = ?
-  `;
+  SELECT 
+    CONCAT(t.first_name, ' ', t.last_name) AS name,
+    t.photo,
+    t.description AS bio,
+    t.price_per_hour
+  FROM tutors t
+  WHERE t.id = ?
+`;
 
   const tuteeCountQuery = `
     SELECT COUNT(DISTINCT ss.tutee_id) AS tutee_count
@@ -113,6 +115,7 @@ router.get('/:id', (req, res) => {
                   name: tutor.name,
                   photo: tutor.photo,
                   bio: tutor.bio,
+                  price_per_hour: tutor.price_per_hour, 
                   tutee_count: tuteeCount,
                   course_count: courseCount,
                   avg_rating: avgRating,

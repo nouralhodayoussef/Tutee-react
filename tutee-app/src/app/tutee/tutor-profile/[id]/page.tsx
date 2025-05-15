@@ -28,6 +28,7 @@ interface Tutor {
   avg_rating: string;
   tutee_count: number;
   course_count: number;
+  price_per_hour: number;
   skills: string[];
   courses: Course[];
   reviews?: Review[];
@@ -100,11 +101,10 @@ export default function TuteeTutorProfile() {
                 <button
                   disabled={!selectedCourse}
                   onClick={() => setShowModal(true)}
-                  className={`${
-                    selectedCourse
+                  className={`${selectedCourse
                       ? 'bg-[#E8B14F] text-white'
                       : 'bg-gray-400 text-white cursor-not-allowed'
-                  } px-6 py-2 rounded-xl font-bold text-sm shadow`}
+                    } px-6 py-2 rounded-xl font-bold text-sm shadow`}
                 >
                   Schedule
                 </button>
@@ -114,7 +114,9 @@ export default function TuteeTutorProfile() {
                 <p>⭐ {tutor?.avg_rating || 'N/A'} Instructor Rating</p>
                 <p>👤 {tutor?.tutee_count || 0} Tutee</p>
                 <p>📚 {tutor?.course_count || 0} Course</p>
-              </div>
+                <p>💰 ${Number(tutor?.price_per_hour).toFixed(2)} / hour</p>
+                </div>
+
             </div>
           </div>
         </div>
@@ -130,11 +132,10 @@ export default function TuteeTutorProfile() {
                 key={idx}
                 onClick={() => setSelectedCourse(course)}
                 title={course.course_name}
-                className={`px-6 py-2 rounded-xl font-bold text-sm transition shadow whitespace-nowrap ${
-                  selectedCourse?.course_code === course.course_code
+                className={`px-6 py-2 rounded-xl font-bold text-sm transition shadow whitespace-nowrap ${selectedCourse?.course_code === course.course_code
                     ? 'bg-[#E8B14F] text-white'
                     : 'bg-black/10 text-black'
-                }`}
+                  }`}
               >
                 {course.course_code}
               </button>
@@ -163,11 +164,10 @@ export default function TuteeTutorProfile() {
           <button
             disabled={!selectedCourse}
             onClick={() => setShowModal(true)}
-            className={`${
-              selectedCourse
+            className={`${selectedCourse
                 ? 'bg-[#E8B14F] hover:bg-yellow-500'
                 : 'bg-gray-400 cursor-not-allowed'
-            } px-6 py-3 rounded-full text-white font-bold text-sm`}
+              } px-6 py-3 rounded-full text-white font-bold text-sm`}
           >
             Continue to Scheduling
           </button>
