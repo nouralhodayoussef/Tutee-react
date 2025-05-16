@@ -8,9 +8,12 @@ interface ControlsProps {
   isScreenSharing?: boolean;
   onShareScreen?: () => void;
   onLeave?: () => void;
+  onToggleMic?: () => void;
+  onToggleCam?: () => void;
 }
 
-const Controls = ({ stream, isScreenSharing, onShareScreen, onLeave }: ControlsProps) => {
+
+const Controls = ({ stream, isScreenSharing, onShareScreen, onLeave, onToggleMic, onToggleCam }: ControlsProps) => {
   const [micEnabled, setMicEnabled] = useState(true);
   const [camEnabled, setCamEnabled] = useState(true);
 
@@ -30,6 +33,7 @@ const Controls = ({ stream, isScreenSharing, onShareScreen, onLeave }: ControlsP
       track.enabled = next;
       setMicEnabled(next);
       sessionStorage.setItem('micEnabled', String(next));
+      onToggleMic?.();
     }
   };
 
@@ -41,6 +45,7 @@ const Controls = ({ stream, isScreenSharing, onShareScreen, onLeave }: ControlsP
       track.enabled = next;
       setCamEnabled(next);
       sessionStorage.setItem('camEnabled', String(next));
+      onToggleCam?.();
     }
   };
 
