@@ -17,7 +17,7 @@ const tutorEditProfile = require('./routes/tutoreditprofile');
 const updateTutor = require('./routes/update-tutor');
 const checkTutorProfileRoute = require('./routes/check-tutor-profile');
 const checkTutorAvailabilityRoute = require('./routes/check-tutor-availability');
-
+const deletePhotoRoute = require("./routes/delete-photo");
 const addSkillRoute = require('./routes/add-skills');
 const addCustomSkillRoute = require('./routes/add-custom-skill');
 const removeSkillRoute = require('./routes/remove-skills');
@@ -81,6 +81,7 @@ app.use('/check-email', checkEmailRoute);
 app.use('/register', registerOptions);
 app.use('/verify-otp', verifyOtpRoute);
 app.use('/tutoreditprofile', tutorEditProfile);
+app.use("/delete-photo", deletePhotoRoute);
 app.use('/update-tutor', updateTutor);
 app.use('/check-tutor-profile', checkTutorProfileRoute);
 app.use('/check-tutor-availability', checkTutorAvailabilityRoute);
