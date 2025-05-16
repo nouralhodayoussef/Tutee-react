@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import TutorHeader from "@/components/layout/TutorHeader";
 import TutorCoursesSection from "@/components/Tutor/TutorCoursesSection";
-import { X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 
 export default function TutorEditProfile() {
   const router = useRouter();
@@ -32,7 +32,7 @@ export default function TutorEditProfile() {
   const [pricePerHour, setPricePerHour] = useState("");
   const [defaultPrice, setDefaultPrice] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
-
+const [successMsg2, setSuccessMsg2] = useState("");
   const [firstNameError, setFirstNameError] = useState("");
   const [lastNameError, setLastNameError] = useState("");
 
@@ -44,11 +44,8 @@ export default function TutorEditProfile() {
   useEffect(() => {
     const fetchTutorInfo = async () => {
       try {
-        const res = await fetch("http://localhost:4000/tutoreditprofile", {
-          credentials: "include",
-        });
+        const res = await fetch("http://localhost:4000/tutoreditprofile", { credentials: "include" });
         const data = await res.json();
-
         if (res.ok) {
           setFirstName(data.first_name);
           setLastName(data.last_name);
@@ -61,7 +58,6 @@ export default function TutorEditProfile() {
           setMajors(data.majors || []);
           setDefaultPrice(data.price_per_hour?.toString() || "");
           setSkills(data.skills || []);
-
           if (data.photo?.includes("drive.google.com")) {
             const match = data.photo.match(/[-\w]{25,}/);
             const fileId = match ? match[0] : "";
@@ -77,9 +73,7 @@ export default function TutorEditProfile() {
 
     const fetchSkills = async () => {
       try {
-        const res = await fetch("http://localhost:4000/skills", {
-          credentials: "include",
-        });
+        const res = await fetch("http://localhost:4000/skills", { credentials: "include" });
         const data = await res.json();
         if (res.ok) setAvailableSkills(data);
       } catch (err) {
@@ -95,18 +89,18 @@ export default function TutorEditProfile() {
     e.preventDefault();
 
     let isValid = true;
-    const nameRegex = /^[A-Za-z]{2,25}$/;
-    const lastNameRegex = /^[A-Za-z]{2,35}$/;
+    const nameRegex = /^[A-Za-z\s]{2,25}$/;
+    const lastNameRegex = /^[A-Za-z\s]{2,35}$/;
 
     if (inputFirstName && !nameRegex.test(inputFirstName)) {
-      setFirstNameError("First name must be 2-25 letters only.");
+      setFirstNameError("First name must be 2-25 letters or spaces only.");
       isValid = false;
     } else {
       setFirstNameError("");
     }
 
     if (inputLastName && !lastNameRegex.test(inputLastName)) {
-      setLastNameError("Last name must be 2-35 letters only.");
+      setLastNameError("Last name must be 2-35 letters or spaces only.");
       isValid = false;
     } else {
       setLastNameError("");
@@ -177,6 +171,30 @@ export default function TutorEditProfile() {
     }
   };
 
+  const handleAddCustomSkill = async () => {
+  if (!searchSkill.trim()) return;
+  try {
+    const res = await fetch("http://localhost:4000/add-custom-skill", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ skillName: searchSkill }),
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      setSkills((prev) => [...prev, data.skill]);
+      setSearchSkill("");
+      setSuccessMsg2(`Skill "${data.skill.skill_name}" added successfully!`);
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      alert(data.error || "Failed to add skill");
+    }
+  } catch (err) {
+    console.error("Add custom skill error:", err);
+  }
+};
+
   const filteredSkills = availableSkills.filter(
     (s) =>
       s.skill_name.toLowerCase().includes(searchSkill.toLowerCase()) &&
@@ -197,14 +215,6 @@ export default function TutorEditProfile() {
                 <p className="font-bold text-[16px]">{firstName} {lastName}</p>
                 <p className="text-sm text-gray-600">{description || "No description provided"}</p>
               </div>
-            </div>
-            <div className="flex gap-3 mt-2 lg:mt-0">
-              <button type="button" className="bg-[#E8B14F] text-white rounded-full px-6 py-2 cursor-pointer hover:opacity-90">
-                Upload Photo
-              </button>
-              <button type="button" className="bg-[#8C94A3] text-white rounded-full px-6 py-2 cursor-pointer hover:opacity-90">
-                Delete
-              </button>
             </div>
           </div>
 
@@ -273,6 +283,7 @@ export default function TutorEditProfile() {
                   Change your password
                 </p>
               </div>
+
               <div>
                 <p className="text-[#E8B14F] font-bold text-[16px] mb-2">Price per Hour (USD)</p>
                 <input
@@ -283,25 +294,48 @@ export default function TutorEditProfile() {
                   placeholder={defaultPrice ? `$${defaultPrice}` : "Set your hourly rate"}
                 />
               </div>
+
               <div>
                 <div className="flex justify-between items-center">
                   <p className="text-[#E8B14F] font-bold text-[16px] mb-1">Your Skills</p>
                   <button type="button" onClick={() => setShowSkillModal(true)} className="text-[#E8B14F] underline text-sm font-medium">View Your Skills</button>
                 </div>
-                <input
-                  type="text"
-                  placeholder="Search skills..."
-                  className="w-full border border-[#E8B14F] rounded-full px-6 py-2 mb-2"
-                  value={searchSkill}
-                  onChange={(e) => setSearchSkill(e.target.value)}
-                />
-                <div className="max-h-40 overflow-y-auto">
-                  {filteredSkills.map((s) => (
-                    <div key={s.id} className="flex justify-between items-center py-1">
-                      <span>{s.skill_name}</span>
-                      <button className="text-[#E8B14F] font-semibold" onClick={() => addSkill(s.id)}>+ Add</button>
+
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search skills..."
+                    className="w-full border border-[#E8B14F] rounded-full px-6 py-2"
+                    value={searchSkill}
+                    onChange={(e) => setSearchSkill(e.target.value)}
+                  />
+                  {searchSkill && (
+                    <div className="absolute bg-white border border-gray-200 rounded-xl mt-1 w-full max-h-40 overflow-y-auto z-10 shadow-sm">
+                      {filteredSkills.length > 0 ? (
+                        filteredSkills.map((s) => (
+                          <div key={s.id} className="flex items-center justify-between px-4 py-2 hover:bg-gray-100">
+                            <span>{s.skill_name}</span>
+                            <button className="bg-[#E8B14F] hover:opacity-90 text-white rounded-full p-1" onClick={() => addSkill(s.id)}>
+                              <Plus size={16} />
+                            </button>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="px-4 py-2">
+                          <p className="text-sm text-gray-600 mb-1">Skill not found.</p>
+                          <p className="text-sm mb-2">Would you like to add <strong>“{searchSkill}”</strong> as a new skill?</p>
+                          <button
+                            className="bg-[#E8B14F] hover:opacity-90 text-white rounded-full px-4 py-1 text-sm"
+                            onClick={handleAddCustomSkill}
+                          >
+                            + Add “{searchSkill}”
+                          </button>
+                        </div>
+                      )}
                     </div>
-                  ))}
+                  )}
+                  {successMsg2 && <p className="text-green-600 text-sm font-semibold mb-2">{successMsg2}</p>}
+
                 </div>
               </div>
             </div>

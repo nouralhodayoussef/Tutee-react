@@ -19,6 +19,7 @@ const checkTutorProfileRoute = require('./routes/check-tutor-profile');
 const checkTutorAvailabilityRoute = require('./routes/check-tutor-availability');
 
 const addSkillRoute = require('./routes/add-skills');
+const addCustomSkillRoute = require('./routes/add-custom-skill');
 const removeSkillRoute = require('./routes/remove-skills');
 const allSkillsRoute = require('./routes/skills');
 const getTutorCourses = require('./routes/get-tutor-courses');
@@ -86,6 +87,7 @@ app.use('/check-tutor-availability', checkTutorAvailabilityRoute);
 app.use("/notify-tutor-when-booked", notifyTutorWhenBooked);
 app.use('/add-course-to-tutor', addCourseToTutorRoute);
 app.use('/add-skills', addSkillRoute);
+app.use('/add-custom-skill', addCustomSkillRoute);
 app.use('/remove-skills', removeSkillRoute);
 app.use('/skills', allSkillsRoute);
 app.use('/remove-courses-from-tutor', removeCourseFromTutor);
