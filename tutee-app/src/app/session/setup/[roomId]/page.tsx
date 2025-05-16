@@ -1,33 +1,57 @@
-// Edited: session/setup/[roomId]/page.tsx
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { useMicCam } from '@/components/MicCameraContext';
+import Image from 'next/image';
 import { Mic, MicOff, Video, VideoOff } from 'lucide-react';
 
-export default function SetupRoom() {
-  const { roomId } = useParams() as { roomId: string };
+export default function SetupPage() {
+  const { roomId } = useParams();
   const router = useRouter();
-
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [micEnabled, setMicEnabled] = useState(true);
-  const [camEnabled, setCamEnabled] = useState(true);
+  const { micOn, camOn, setMicOn, setCamOn } = useMicCam();
   const [stream, setStream] = useState<MediaStream | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [userPhoto, setUserPhoto] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(`http://localhost:4000/session/${roomId}/access`, {
+      credentials: 'include',
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error('Unauthorized');
+        return res.json();
+      })
+      .then((data) => {
+        if (!data.allowed) {
+          setError('Access denied.');
+        } else {
+          // Set user photo based on role
+          if (data.currentUserRole === 'tutee') {
+            setUserPhoto(data.session.tutee_photo || null);
+          } else if (data.currentUserRole === 'tutor') {
+            setUserPhoto(data.session.tutor_photo || null);
+          }
+        }
+      })
+      .catch(() => setError('Access denied.'))
+      .finally(() => setLoading(false));
+  }, [roomId]);
 
   useEffect(() => {
     navigator.mediaDevices
       .getUserMedia({ video: true, audio: true })
       .then((mediaStream) => {
         setStream(mediaStream);
-        if (videoRef.current) {
-          videoRef.current.srcObject = mediaStream;
-        }
-        sessionStorage.setItem('micEnabled', 'true');
-        sessionStorage.setItem('camEnabled', 'true');
+        videoRef.current!.srcObject = mediaStream;
+        setMicOn(true);
+        setCamOn(true);
       })
       .catch(() => {
-        setError('Unable to access camera or microphone.');
+        setError('Failed to access camera or microphone.');
       });
 
     return () => {
@@ -35,13 +59,21 @@ export default function SetupRoom() {
     };
   }, []);
 
+  const handleJoin = () => {
+    sessionStorage.setItem('micEnabled', String(micOn));
+    sessionStorage.setItem('camEnabled', String(camOn));
+    stream?.getTracks().forEach((track) => track.stop());
+    router.push(`/session/${roomId}`);
+  };
+
   const toggleMic = () => {
     if (!stream) return;
     const audioTrack = stream.getAudioTracks()[0];
     if (audioTrack) {
-      audioTrack.enabled = !audioTrack.enabled;
-      setMicEnabled(audioTrack.enabled);
-      sessionStorage.setItem('micEnabled', audioTrack.enabled.toString());
+      const next = !audioTrack.enabled;
+      audioTrack.enabled = next;
+      setMicOn(next);
+      sessionStorage.setItem('micEnabled', String(next));
     }
   };
 
@@ -49,64 +81,74 @@ export default function SetupRoom() {
     if (!stream) return;
     const videoTrack = stream.getVideoTracks()[0];
     if (videoTrack) {
-      videoTrack.enabled = !videoTrack.enabled;
-      setCamEnabled(videoTrack.enabled);
-      sessionStorage.setItem('camEnabled', videoTrack.enabled.toString());
+      const next = !videoTrack.enabled;
+      videoTrack.enabled = next;
+      setCamOn(next);
+      sessionStorage.setItem('camEnabled', String(next));
     }
   };
 
-  const handleJoin = () => {
-    router.push(`/session/${roomId}`);
-  };
+  if (loading) return <div className="text-center p-10">Checking access...</div>;
+  if (error) return <div className="text-red-600 text-center p-10">{error}</div>;
 
   return (
-    <div className="min-h-screen bg-[#f5f5ef] flex flex-col md:flex-row items-center justify-center p-8 gap-8">
-      <div className="flex flex-col items-center gap-4">
-        <div className="relative w-[320px] h-[240px] rounded-lg overflow-hidden bg-black">
-          {error ? (
-            <div className="flex items-center justify-center h-full text-red-600 text-sm">
-              {error}
+    <main className="min-h-screen bg-[#F5F5EF] text-black flex flex-col items-center px-4 py-8">
+      <div className="w-full max-w-6xl flex items-center justify-between mb-4">
+        <Image src="/imgs/logo.png" alt="Tutee Logo" width={120} height={60} />
+        <h1 className="text-xl sm:text-2xl font-bold text-center flex-1 -ml-16">
+          Prepare to Join Session
+        </h1>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-md p-6 sm:p-10 w-full max-w-3xl flex flex-col items-center gap-6">
+        <div className="w-full max-w-md h-64 sm:h-80 bg-black/10 rounded-xl overflow-hidden relative">
+          {/* Video always mounted */}
+          <video
+            ref={videoRef}
+            autoPlay
+            muted
+            playsInline
+            className={`w-full h-full object-cover ${camOn ? '' : 'opacity-0'}`}
+          />
+          {!camOn && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+              <Image
+                src={userPhoto || "/imgs/default-user.png"}
+                alt="User Photo"
+                width={120}
+                height={120}
+                className="rounded-full object-cover"
+              />
             </div>
-          ) : (
-            <video
-              ref={videoRef}
-              autoPlay
-              muted
-              playsInline
-              className="w-full h-full object-cover"
-            />
           )}
         </div>
 
-        <div className="flex gap-4 mt-2">
+        <div className="flex gap-6">
           <button
             onClick={toggleMic}
-            className="w-12 h-12 rounded-full bg-[#E8B14F] text-black shadow hover:bg-yellow-500"
+            className={`w-14 h-14 flex items-center justify-center rounded-full border-2 ${
+              micOn ? 'bg-[#E8B14F] border-[#E8B14F]' : 'bg-gray-200 border-gray-300'
+            }`}
           >
-            {micEnabled ? <Mic className="w-5 h-5 mx-auto" /> : <MicOff className="w-5 h-5 mx-auto" />}
+            {micOn ? <Mic className="text-white" /> : <MicOff className="text-gray-600" />}
           </button>
-
           <button
             onClick={toggleCam}
-            className="w-12 h-12 rounded-full bg-[#E8B14F] text-black shadow hover:bg-yellow-500"
+            className={`w-14 h-14 flex items-center justify-center rounded-full border-2 ${
+              camOn ? 'bg-[#E8B14F] border-[#E8B14F]' : 'bg-gray-200 border-gray-300'
+            }`}
           >
-            {camEnabled ? <Video className="w-5 h-5 mx-auto" /> : <VideoOff className="w-5 h-5 mx-auto" />}
+            {camOn ? <Video className="text-white" /> : <VideoOff className="text-gray-600" />}
           </button>
         </div>
-      </div>
 
-      <div className="flex flex-col items-center gap-6 text-center">
-        <h2 className="text-2xl font-bold">Ready to join?</h2>
-        <p className="text-sm text-gray-700 max-w-[300px]">
-          Make sure your microphone and camera are working correctly before joining the session.
-        </p>
         <button
           onClick={handleJoin}
-          className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-full shadow"
+          className="mt-4 bg-[#E8B14F] text-white font-bold px-8 py-3 rounded-full shadow hover:bg-yellow-500 transition"
         >
           Join Session
         </button>
       </div>
-    </div>
+    </main>
   );
 }

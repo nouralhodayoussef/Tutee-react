@@ -191,10 +191,9 @@ export default function TutorBookedSessionsPage() {
         doc.text(day.slice(0, 3), startX + i * cellWidth + 2, startY + 8);
       });
 
-      // Grid + sessions
       hours.forEach((hour, row) => {
-        doc.setFontSize(10); // ✅ reset to a standard size
-        doc.setTextColor(0); // ✅ reset color to black
+        doc.setFontSize(10); 
+        doc.setTextColor(0); 
         doc.text(`${hour}:00`, startX - 18, startY + (row + 1) * cellHeight + 8);
 
 
