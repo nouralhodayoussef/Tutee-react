@@ -74,91 +74,103 @@ export default function RegisterPage() {
 
   const validateStepByStep = async () => {
     
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$%&_.!*])[A-Za-z\d@#$%&_.!*]{8,18}$/;
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$%&_.!*])[A-Za-z\d@#$%&_.!*]{8,18}$/;
 
-    if (form.firstName.length > 25) {
-      setErrors({ firstName: 'First name must be at most 25 characters' });
-      return false;
-    }
-    if (!/^[A-Za-z]+$/.test(form.firstName)) {
-      setErrors({ firstName: 'First name must contain letters only' });
-      return false;
-    }
-    if (form.firstName.length < 2) {
-      setErrors({ firstName: 'First name must be at least 2 characters' });
-      return false;
-    }
-    
-    // Last Name Validation
-    if (form.lastName.length > 30) {
-      setErrors({ lastName: 'Last name must be at most 30 characters' });
-      return false;
-    }
-    if (!/^[A-Za-z\s]+$/.test(form.lastName)) {
-      setErrors({ lastName: 'Last name must contain letters only' });
-      return false;
-    }
-    if (form.lastName.length < 2) {
-      setErrors({ lastName: 'Last name must be at least 2 characters' });
-      return false;
-    }
-    if (!form.lastName) {
-      setErrors({ lastName: 'Last name is required' });
-      return false;
-    }
-    if (!form.email) {
-      setErrors({ email: 'Email is required' });
-      return false;
-    } else {
-      try {
-        const res = await fetch('http://localhost:4000/check-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: form.email }),
-        });
-        const data = await res.json();
-        if (data.exists) {
-          setErrors({ email: 'User already exists' });
-          return false;
-        }
-      } catch {
-        setErrors({ email: 'Server error. Please check your connection.' });
+  // First Name Validation
+  if (form.firstName.length > 25) {
+    setErrors({ firstName: 'First name must be at most 25 characters' });
+    return false;
+  }
+  if (!/^[A-Za-z\s]+$/.test(form.firstName)) {
+    setErrors({ firstName: 'First name must contain letters and spaces only' });
+    return false;
+  }
+  if (form.firstName.length < 2) {
+    setErrors({ firstName: 'First name must be at least 2 characters' });
+    return false;
+  }
+
+  // Last Name Validation
+  if (form.lastName.length > 30) {
+    setErrors({ lastName: 'Last name must be at most 30 characters' });
+    return false;
+  }
+  if (!/^[A-Za-z\s]+$/.test(form.lastName)) {
+    setErrors({ lastName: 'Last name must contain letters and spaces only' });
+    return false;
+  }
+  if (form.lastName.length < 2) {
+    setErrors({ lastName: 'Last name must be at least 2 characters' });
+    return false;
+  }
+  if (!form.lastName) {
+    setErrors({ lastName: 'Last name is required' });
+    return false;
+  }
+
+  // Email
+  if (!form.email) {
+    setErrors({ email: 'Email is required' });
+    return false;
+  } else {
+    try {
+      const res = await fetch('http://localhost:4000/check-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: form.email }),
+      });
+      const data = await res.json();
+      if (data.exists) {
+        setErrors({ email: 'User already exists' });
         return false;
       }
+    } catch {
+      setErrors({ email: 'Server error. Please check your connection.' });
+      return false;
     }
+  }
 
-    if (!form.university) {
-      setErrors({ university: 'University is required' });
-      return false;
-    }
-    if (!form.major) {
-      setErrors({ major: 'Major is required' });
-      return false;
-    }
-    if (!form.dob) {
-      setErrors({ dob: 'Date of birth is required' });
-      return false;
-    }
-    if (!form.gender) {
-      setErrors({ gender: 'Gender is required' });
-      return false;
-    }
-    if (!passwordRegex.test(form.password)) {
-      setErrors({ password: 'Password must be 8–18 chars, include uppercase, lowercase, digit, and special (@#$%&_.!*)' });
-      return false;
-    }
-    if (form.password !== form.confirmPassword) {
-      setErrors({ confirmPassword: 'Passwords do not match' });
-      return false;
-    }
+  // University and Major
+  if (!form.university) {
+    setErrors({ university: 'University is required' });
+    return false;
+  }
+  if (!form.major) {
+    setErrors({ major: 'Major is required' });
+    return false;
+  }
 
-    if (!form.role) {
-      setErrors({ role: 'Please select your account type' });
-      return false;
-    }
+  // DOB and Gender
+  if (!form.dob) {
+    setErrors({ dob: 'Date of birth is required' });
+    return false;
+  }
+  if (!form.gender) {
+    setErrors({ gender: 'Gender is required' });
+    return false;
+  }
 
-    return true;
-  };
+  // Password
+  if (!passwordRegex.test(form.password)) {
+    setErrors({
+      password:
+        'Password must be 8–18 chars, include uppercase, lowercase, digit, and special (@#$%&_.!*)',
+    });
+    return false;
+  }
+  if (form.password !== form.confirmPassword) {
+    setErrors({ confirmPassword: 'Passwords do not match' });
+    return false;
+  }
+
+  // Role
+  if (!form.role) {
+    setErrors({ role: 'Please select your account type' });
+    return false;
+  }
+
+  return true;
+};
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
