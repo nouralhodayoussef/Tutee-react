@@ -24,9 +24,16 @@ const OtpModal = ({ email, userData, onVerify, onClose }: OtpModalProps) => {
           body: JSON.stringify({ email }),
         });
 
+        // if (!res.ok) {
+        //   let errorData = {};
+        //   try {
+        //     errorData = await res.json();
+        //   } catch {}
+        //   throw new Error((errorData as any).error || 'Failed to send OTP. Please try again later.');
+        // }
+
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
-        console.log('✅ OTP sent to:', email);
+        console.log('✅ OTP sent to:', email, '| Server message:', data.message);
         setError('');
       } catch (err: any) {
         console.error(err);
@@ -81,7 +88,7 @@ const OtpModal = ({ email, userData, onVerify, onClose }: OtpModalProps) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full relative">
         <h2 className="text-2xl font-bold mb-4 text-center">Verify Your Email!</h2>
         <p className="text-sm text-center text-gray-600 mb-6">
