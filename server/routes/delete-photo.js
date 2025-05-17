@@ -4,10 +4,10 @@ const router = express.Router();
 const db = require("../config/db");
 
 // Default image URLs
-const DEFAULT_FEMALE_TUTOR_PHOTO = "https://i.imgur.com/Axnh9mE.png";
-const DEFAULT_FEMALE_TUTEE_PHOTO = "https://i.imgur.com/bqi2UBN.png";
-const DEFAULT_MALE_TUTOR_PHOTO = "https://i.imgur.com/jLAZm7R.png";
-const DEFAULT_MALE_TUTEE_PHOTO = "https://i.imgur.com/HHuaEy9.png";
+const DEFAULT_FEMALE_TUTOR_PHOTO = "https://i.imgur.com/rMYtR3l.png";
+const DEFAULT_FEMALE_TUTEE_PHOTO = "https://i.imgur.com/bQT7G82.png";
+const DEFAULT_MALE_TUTOR_PHOTO = "https://i.imgur.com/HhK2Ayg.png";
+const DEFAULT_MALE_TUTEE_PHOTO = "https://i.imgur.com/2D3oCYb.png";
 
 // Helper function to return correct default photo
 function getDefaultPhoto(role, gender) {
