@@ -8,6 +8,7 @@ import TutorCoursesSection from "@/components/Tutor/TutorCoursesSection";
 import { Plus, X } from "lucide-react";
 import { getDefaultPhoto } from "@/constants/imagePaths";
 import ConfirmModal from "@/components/ConfirmRemovalModal";
+import CropModal from "@/components/CropModal";
 export default function TutorEditProfile() {
   const router = useRouter();
 
@@ -41,6 +42,9 @@ export default function TutorEditProfile() {
   const [searchSkill, setSearchSkill] = useState("");
   const [showSkillModal, setShowSkillModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchTutorInfo = async () => {
@@ -89,6 +93,37 @@ export default function TutorEditProfile() {
     fetchTutorInfo();
     fetchSkills();
   }, []);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedImage(file);
+      setPreviewUrl(URL.createObjectURL(file));
+      setCropModalOpen(true);
+    }
+  };
+  const handleCropUpload = async (blob: Blob) => {
+    const formData = new FormData();
+    formData.append("profilePhoto", blob);
+
+    try {
+      const res = await fetch("http://localhost:4000/upload-profile-photo", {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setPhoto(data.photo);
+        setCropModalOpen(false);
+      } else {
+        alert("❌ Upload failed: " + data.error);
+      }
+    } catch (err) {
+      console.error("Upload error:", err);
+      alert("❌ Something went wrong.");
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -143,30 +178,29 @@ export default function TutorEditProfile() {
       alert("Something went wrong.");
     }
   };
- const handleDeletePhoto = async () => {
-  try {
-    const res = await fetch("http://localhost:4000/delete-photo", {
-      method: "POST",
-      credentials: "include",
-    });
+  const handleDeletePhoto = async () => {
+    try {
+      const res = await fetch("http://localhost:4000/delete-photo", {
+        method: "POST",
+        credentials: "include",
+      });
 
-    if (res.ok) {
-      const data = await res.json();
-      const defaultPhoto = data.photo;
-      setPhoto(defaultPhoto);
-      setShowDeleteModal(false); // hide modal
+      if (res.ok) {
+        const data = await res.json();
+        const defaultPhoto = data.photo;
+        setPhoto(defaultPhoto);
+        setShowDeleteModal(false); // hide modal
 
-      setTimeout(() => {
-        window.location.reload();
-      }, 600);
-    } else {
-      alert("Failed to delete photo.");
+        setTimeout(() => {
+          window.location.reload();
+        }, 600);
+      } else {
+        alert("Failed to delete photo.");
+      }
+    } catch (err) {
+      alert("Something went wrong.");
     }
-  } catch (err) {
-    alert("Something went wrong.");
-  }
-};
-
+  };
 
   const addSkill = async (skillId: number) => {
     try {
@@ -251,7 +285,7 @@ export default function TutorEditProfile() {
   );
   return (
     <>
-    <TutorHeader />
+      <TutorHeader />
       <div className="min-h-screen bg-[#FAFAF5] font-poppins px-4 py-12 md:px-6">
         <div className="max-w-[1354px] bg-white mx-auto shadow-md rounded-[15px] px-6 md:px-12 pt-10 pb-8">
           <h1 className="text-[32px] md:text-[46px] font-bold mb-10">
@@ -277,11 +311,17 @@ export default function TutorEditProfile() {
               </div>
             </div>
             <div className="flex gap-3">
-              <button className="bg-[#E8B14F] text-white rounded-full px-6 py-2 text-[16px] hover:opacity-90">
-                Update Photo
-              </button>
+              <label className="bg-[#E8B14F] text-white rounded-full px-6 py-[10px] text-[16px] font-medium hover:opacity-90 cursor-pointer flex items-center justify-center">
+  Update Photo
+  <input
+    type="file"
+    accept="image/*"
+    onChange={handleFileChange}
+    hidden
+  />
+</label>
               <button
-                 onClick={() => setShowDeleteModal(true)}
+                onClick={() => setShowDeleteModal(true)}
                 className="bg-[#8C94A3] text-white rounded-full px-6 py-2 text-[16px] hover:opacity-90"
               >
                 Remove Photo
@@ -547,14 +587,25 @@ export default function TutorEditProfile() {
             </div>
           </div>
         )}
-      {showDeleteModal && (
-  <ConfirmModal
-    title="Delete Photo?"
-    message="Are you sure you want to remove your profile photo? A default photo will be used instead."
-    confirmLabel="Yes, Delete"
-    cancelLabel="Cancel"
-    onConfirm={handleDeletePhoto}
-    onCancel={() => setShowDeleteModal(false)}
+        {showDeleteModal && (
+          <ConfirmModal
+            title="Delete Photo?"
+            message="Are you sure you want to remove your profile photo? A default photo will be used instead."
+            confirmLabel="Yes, Delete"
+            cancelLabel="Cancel"
+            onConfirm={handleDeletePhoto}
+            onCancel={() => setShowDeleteModal(false)}
+          />
+        )}
+        {cropModalOpen && previewUrl && (
+  <CropModal
+    imageSrc={previewUrl}
+    open={cropModalOpen}
+    onCropComplete={handleCropUpload}
+    onClose={() => {
+      setCropModalOpen(false);
+      setPreviewUrl(null);
+    }}
   />
 )}
 

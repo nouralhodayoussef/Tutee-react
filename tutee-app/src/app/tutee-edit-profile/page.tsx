@@ -6,11 +6,15 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import RoleProtected from "@/components/security/RoleProtected";
 import ConfirmModal from "@/components/ConfirmRemovalModal";
+import CropModal from "@/components/CropModal";
 
 export default function TuteeEditProfile() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [photo, setPhoto] = useState("/imgs/tutee-profile.png");
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const [majors, setMajors] = useState([]);
   const [universities, setUniversities] = useState([]);
@@ -50,6 +54,17 @@ export default function TuteeEditProfile() {
         console.error("Error fetching tutee info:", err);
       }
     };
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        setSelectedImage(file);
+        setPreviewUrl(URL.createObjectURL(file));
+        setCropModalOpen(true);
+      }
+    };
+
+    
+    
 
     const fetchDropdownOptions = async () => {
       try {
@@ -169,6 +184,40 @@ export default function TuteeEditProfile() {
     }
   };
 
+  const handleCropUpload = async (blob: Blob) => {
+  const formData = new FormData();
+  formData.append("profilePhoto", blob);
+
+  try {
+    const res = await fetch("http://localhost:4000/upload-profile-photo", {
+      method: "POST",
+      credentials: "include",
+      body: formData,
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      setPhoto(data.photo);
+      setCropModalOpen(false);
+    } else {
+      alert("❌ Upload failed: " + data.error);
+    }
+  } catch (err) {
+    console.error("Upload error:", err);
+    alert("❌ Something went wrong.");
+  }
+};
+const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (file) {
+    setSelectedImage(file);
+    setPreviewUrl(URL.createObjectURL(file));
+    setCropModalOpen(true);
+  }
+};
+
+
+
   return (
     <>
       <RoleProtected requiredRole="tutee">
@@ -196,9 +245,15 @@ export default function TuteeEditProfile() {
                   </div>
                 </div>
                 <div className="flex gap-3">
-                  <button className="bg-[#E8B14F] text-white rounded-full px-6 py-2 text-[16px] hover:opacity-90">
+                  <label className="bg-[#E8B14F] text-white rounded-full px-6 py-2 text-[16px] hover:opacity-90 cursor-pointer">
                     Update Photo
-                  </button>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      hidden
+                    />
+                  </label>
                   <button
                     onClick={() => setShowDeleteModal(true)}
                     className="bg-[#8C94A3] text-white rounded-full px-6 py-2 text-[16px] hover:opacity-90"
@@ -345,7 +400,7 @@ export default function TuteeEditProfile() {
             <div className="hidden lg:block w-[25%] h-full"></div>
           </div>
         </div>
-         {showDeleteModal && (
+        {showDeleteModal && (
           <ConfirmModal
             title="Delete Photo?"
             message="Are you sure you want to remove your profile photo? A default photo will be used instead."
@@ -355,8 +410,18 @@ export default function TuteeEditProfile() {
             onCancel={() => setShowDeleteModal(false)}
           />
         )}
+        {cropModalOpen && previewUrl && (
+          <CropModal
+            imageSrc={previewUrl}
+            open={cropModalOpen}
+            onCropComplete={handleCropUpload}
+            onClose={() => {
+              setCropModalOpen(false);
+              setPreviewUrl(null);
+            }}
+          />
+        )}
       </RoleProtected>
-      
     </>
   );
 }

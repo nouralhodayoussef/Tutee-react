@@ -61,7 +61,7 @@ const TuteeHeader = () => {
         <Link href="/tutee">HOME</Link>
         <Link href="/tutee/booked-sessions">BOOKED SESSIONS</Link>
         <Link href="/tutee-findcourse">FIND A COURSE</Link>
-        <Link href="/find-tutor">FIND A TUTOR</Link>
+        <Link href="/tutee/find-tutor">FIND A TUTOR</Link>
         <Link href="/contact">CONTACT US</Link>
       </nav>
 
