@@ -97,7 +97,7 @@ const TuteeHeader = () => {
       {mobileOpen && (
         <div className="absolute top-full left-0 w-full bg-white shadow-md md:hidden z-40 border-t border-gray-200">
           <div className="flex flex-col divide-y divide-gray-200">
-            {["/", "/booked-sessions", "/tutee-findcourse", "/find-tutor", "/contact"].map((path, i) => {
+            {["/tutee", "tutee/booked-sessions", "/tutee-findcourse", "/tutee/find-tutor", "/contact"].map((path, i) => {
               const label = ["HOME", "BOOKED SESSIONS", "FIND A COURSE", "FIND A TUTOR", "CONTACT US"][i];
               return (
                 <Link

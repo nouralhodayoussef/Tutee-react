@@ -12,22 +12,30 @@ router.get('/', (req, res) => {
   const nameQuery = `SELECT first_name FROM tutees WHERE id = ?`;
 
   const nextSessionQuery = `
-    SELECT 
-      ss.scheduled_date,
-      sl.slot_time,
-      c.course_code,
-      c.course_name,
-      CONCAT(t.first_name, ' ', t.last_name) AS tutor_name,
-      t.photo AS tutor_photo
-    FROM scheduled_sessions ss
-    JOIN courses c ON ss.course_id = c.id
-    JOIN session_slots sl ON ss.slot_id = sl.id
-    JOIN tutor_availability ta ON sl.availability_id = ta.id
-    JOIN tutors t ON ta.tutor_id = t.id
-    WHERE ss.tutee_id = ?
-      AND ss.status = 'scheduled'
-    ORDER BY ss.scheduled_date ASC, sl.slot_time ASC
-    LIMIT 1
+      SELECT 
+    ss.scheduled_date,
+    sl.slot_time,
+    c.course_code,
+    c.course_name,
+    CONCAT(t.first_name, ' ', t.last_name) AS tutor_name,
+    t.photo AS tutor_photo,
+    CONCAT(ss.scheduled_date, ' ', sl.slot_time) AS session_start
+  FROM scheduled_sessions ss
+  JOIN courses c ON ss.course_id = c.id
+  JOIN session_slots sl ON ss.slot_id = sl.id
+  JOIN tutor_availability ta ON sl.availability_id = ta.id
+  JOIN tutors t ON ta.tutor_id = t.id
+  WHERE ss.tutee_id = ?
+    AND ss.status = 'scheduled'
+    AND (
+      TIMESTAMP(CONCAT(ss.scheduled_date, ' ', sl.slot_time)) > NOW()
+      OR (
+        TIMESTAMP(CONCAT(ss.scheduled_date, ' ', sl.slot_time)) <= NOW()
+        AND TIMESTAMP(DATE_ADD(CONCAT(ss.scheduled_date, ' ', sl.slot_time), INTERVAL 1 HOUR)) > NOW()
+      )
+    )
+  ORDER BY ss.scheduled_date ASC, sl.slot_time ASC
+  LIMIT 1
   `;
 
   const tutorsQuery = `

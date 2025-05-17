@@ -25,21 +25,29 @@ router.get('/dashboard', async (req, res) => {
     // Get next upcoming session
     const [nextSessionRows] = await db.promise().query(
       `
-      SELECT 
-        c.course_code,
-        c.course_name,
-        CONCAT(t.first_name, ' ', t.last_name) AS tutee_name,
-        t.photo AS tutee_photo,
-        DATE_FORMAT(ss.scheduled_date, '%W, %M %e') AS scheduled_date,
-        TIME_FORMAT(sl.slot_time, '%h:%i %p') AS slot_time
-      FROM scheduled_sessions ss
-      JOIN session_slots sl ON ss.slot_id = sl.id
-      JOIN tutees t ON ss.tutee_id = t.id
-      JOIN courses c ON ss.course_id = c.id
-      WHERE ss.tutor_id = ?
-        AND ss.scheduled_date >= CURDATE()
-      ORDER BY ss.scheduled_date ASC, sl.slot_time ASC
-      LIMIT 1
+        SELECT 
+    c.course_code,
+    c.course_name,
+    CONCAT(t.first_name, ' ', t.last_name) AS tutee_name,
+    t.photo AS tutee_photo,
+    DATE_FORMAT(ss.scheduled_date, '%W, %M %e') AS scheduled_date,
+    TIME_FORMAT(sl.slot_time, '%h:%i %p') AS slot_time,
+    CONCAT(ss.scheduled_date, ' ', sl.slot_time) AS session_start
+  FROM scheduled_sessions ss
+  JOIN session_slots sl ON ss.slot_id = sl.id
+  JOIN tutees t ON ss.tutee_id = t.id
+  JOIN courses c ON ss.course_id = c.id
+  WHERE ss.tutor_id = ?
+    AND ss.status = 'scheduled'
+    AND (
+      TIMESTAMP(CONCAT(ss.scheduled_date, ' ', sl.slot_time)) > NOW()
+      OR (
+        TIMESTAMP(CONCAT(ss.scheduled_date, ' ', sl.slot_time)) <= NOW()
+        AND TIMESTAMP(DATE_ADD(CONCAT(ss.scheduled_date, ' ', sl.slot_time), INTERVAL 1 HOUR)) > NOW()
+      )
+    )
+  ORDER BY ss.scheduled_date ASC, sl.slot_time ASC
+  LIMIT 1
       `,
       [tutorId]
     );

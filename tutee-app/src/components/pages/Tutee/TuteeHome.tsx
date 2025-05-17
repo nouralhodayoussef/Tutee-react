@@ -129,7 +129,7 @@ export default function TuteeHome() {
             )}
 
             <div className="mt-6 flex items-center gap-4">
-              <Link href="/schedule">
+              <Link href="/tutee-findcourse">
                 <button className="bg-[#E8B14F] text-black font-bold px-6 py-3 text-sm rounded-full shadow">
                   Search & Schedule
                 </button>
@@ -190,7 +190,7 @@ export default function TuteeHome() {
                   Find a Tutor and a Course and get started now!
                 </p>
               )}
-              <Link href="/find-tutor">
+              <Link href="tutee/find-tutor">
                 <button className="bg-[#E8B14F] text-black font-bold px-6 py-3 text-sm rounded-full shadow">
                   Find A Tutor
                 </button>
