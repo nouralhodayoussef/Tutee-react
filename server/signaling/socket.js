@@ -19,13 +19,13 @@ function setupSocket(server) {
       socket.join(roomId);
 
       if (numClients === 1) {
-        socket.emit('created-room'); // first peer
+        socket.emit('created-room');
       } else {
-        socket.emit('joined-room');  // second peer
+        socket.emit('joined-room');
       }
 
-      // ✅ Always emit this AFTER joining
       socket.to(roomId).emit('user-joined');
+      socket.roomId = roomId; // Save for later use
 
       console.log(`✅ ${socket.id} joined room ${roomId}`);
     });
@@ -43,6 +43,9 @@ function setupSocket(server) {
     });
 
     socket.on('disconnect', () => {
+      if (socket.roomId) {
+        socket.to(socket.roomId).emit('user-left');
+      }
       console.log('🔴 Client disconnected:', socket.id);
     });
   });

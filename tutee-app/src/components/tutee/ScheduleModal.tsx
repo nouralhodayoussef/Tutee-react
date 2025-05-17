@@ -210,7 +210,7 @@ export default function ScheduleModal({ onClose, tutorId, courseId }: ScheduleMo
                       disabled={isBooked}
                       className={`px-4 py-2 rounded-full text-sm font-medium shadow 
                         ${isBooked
-                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                          ? "bg-gray-300 text-gray-500 cursor-not-allowed line-through"
                           : selectedTimes.includes(slot)
                             ? "bg-[#E8B14F] text-white"
                             : "bg-gray-200 text-black"

@@ -2,15 +2,16 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { useMicCam } from '@/components/MicCameraContext';
+// import Controls from '@/components/Controls';
 import Image from 'next/image';
 import { Mic, MicOff, Video, VideoOff } from 'lucide-react';
+import { useControls } from '@/hooks/useControls';
 
 export default function SetupPage() {
   const { roomId } = useParams();
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
-  const { micOn, camOn, setMicOn, setCamOn } = useMicCam();
+  const { micOn, camOn, setMicOn, setCamOn } = useControls();
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -29,7 +30,6 @@ export default function SetupPage() {
         if (!data.allowed) {
           setError('Access denied.');
         } else {
-          // Set user photo based on role
           if (data.currentUserRole === 'tutee') {
             setUserPhoto(data.session.tutee_photo || null);
           } else if (data.currentUserRole === 'tutor') {
@@ -102,7 +102,6 @@ export default function SetupPage() {
 
       <div className="bg-white rounded-2xl shadow-md p-6 sm:p-10 w-full max-w-3xl flex flex-col items-center gap-6">
         <div className="w-full max-w-md h-64 sm:h-80 bg-black/10 rounded-xl overflow-hidden relative">
-          {/* Video always mounted */}
           <video
             ref={videoRef}
             autoPlay

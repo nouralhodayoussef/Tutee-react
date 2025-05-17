@@ -76,81 +76,104 @@ export default function TuteeBookedSessions() {
         <p className="text-lg text-black mb-10">You have these sessions to attend</p>
 
         <div className="bg-white rounded-xl p-6 shadow-md space-y-8">
-          {sessions.map((session) => {
-            const formatted = formatDateTime(session.scheduled_datetime);
-            const canJoin = !!session.room_link;
-            const cancelable = isCancelable(session.scheduled_datetime);
-
-            return (
-              <div
-                key={session.session_id}
-                className="relative bg-[#F9F9F9] rounded-xl px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
-              >
-                {/* Trash icon = cancel */}
-                {cancelable && (
-                  <button
-                    className="absolute top-4 right-4 text-[#DE5462]"
-                    onClick={() => {
-                      setSessionToCancel(session);
-                      setCancelModalOpen(true);
-                    }}
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
-                )}
-
-                {/* Left section */}
-                <div className="space-y-2">
-                  <p className="font-bold text-[14px]">
-                    <span className="font-extrabold text-black">{session.course_code}</span> - {session.course_name}
-                  </p>
-
-                  <div className="flex items-center space-x-2 text-sm font-semibold text-black">
-                    <span className="text-[18px]">📅</span>
-                    <span>{formatted}</span>
-                  </div>
-
-                  <p className="text-sm font-bold text-black">
-                    With: {session.tutor_name}
-                  </p>
-
-                  <div className="flex flex-wrap items-center gap-2 pt-2">
-                    {canJoin ? (
-                      <>
-                        <a
-                          href={`https://meet.tutee.com/${session.room_link}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="bg-[#E8B14F] text-black font-bold text-xs px-6 py-2 rounded-full"
-                        >
-                          Join Session Now
-                        </a>
-                        <span className="text-[#E8B14F] text-2xl font-bold">→</span>
-                      </>
-                    ) : (
-                      <div className="bg-black text-white font-bold text-xs px-6 py-2 rounded-full">
-                        You cannot join now
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Photos */}
-                <div className="flex -space-x-4 self-end sm:self-auto sm:mr-4">
-                  <img
-                    src={session.tutor_photo || '/imgs/default-profile.png'}
-                    alt="Tutor"
-                    className="w-12 h-12 rounded-full border-2 border-white object-cover"
-                  />
-                  <img
-                    src={session.tutee_photo || '/imgs/default-profile.png'}
-                    alt="Tutee"
-                    className="w-12 h-12 rounded-full border-2 border-white object-cover"
-                  />
-                </div>
+          {sessions.length === 0 ? (
+            <div className="text-center py-12">
+              <h2 className="text-xl font-semibold text-gray-700 mb-6">
+                You don&apos;t have any upcoming booked sessions.
+              </h2>
+              <div className="flex justify-center gap-4 flex-wrap">
+                <a
+                  href="/tutee-findcourse"
+                  className="bg-[#E8B14F] hover:bg-yellow-500 text-white font-semibold px-6 py-3 rounded-full shadow transition"
+                >
+                  🎯 Find a Course
+                </a>
+                <a
+                  href="/find-tutor"
+                  className="bg-[#E8B14F] hover:bg-yellow-500 text-white font-semibold px-6 py-3 rounded-full shadow transition"
+                >
+                  🧑‍🏫 Find a Tutor
+                </a>
               </div>
-            );
-          })}
+            </div>
+          ) :
+
+            sessions.map((session) => {
+              const formatted = formatDateTime(session.scheduled_datetime);
+              const canJoin = !!session.room_link;
+              const cancelable = isCancelable(session.scheduled_datetime);
+
+              return (
+                <div
+                  key={session.session_id}
+                  className="relative bg-[#F9F9F9] rounded-xl px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+                >
+                  {/* Trash icon = cancel */}
+                  {cancelable && (
+                    <button
+                      className="absolute top-4 right-4 text-[#DE5462]"
+                      onClick={() => {
+                        setSessionToCancel(session);
+                        setCancelModalOpen(true);
+                      }}
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  )}
+
+                  {/* Left section */}
+                  <div className="space-y-2">
+                    <p className="font-bold text-[14px]">
+                      <span className="font-extrabold text-black">{session.course_code}</span> - {session.course_name}
+                    </p>
+
+                    <div className="flex items-center space-x-2 text-sm font-semibold text-black">
+                      <span className="text-[18px]">📅</span>
+                      <span>{formatted}</span>
+                    </div>
+
+                    <p className="text-sm font-bold text-black">
+                      With: {session.tutor_name}
+                    </p>
+
+                    <div className="flex flex-wrap items-center gap-2 pt-2">
+                      {canJoin ? (
+                        <>
+                          <a
+                            href={`/session/setup/${session.room_link}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bg-[#E8B14F] text-black font-bold text-xs px-6 py-2 rounded-full"
+                          >
+                            Join Session Now
+                          </a>
+                          <span className="text-[#E8B14F] text-2xl font-bold">→</span>
+                        </>
+                      ) : (
+                        <div className="bg-black text-white font-bold text-xs px-6 py-2 rounded-full">
+                          You cannot join now
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Photos */}
+                  <div className="flex -space-x-4 self-end sm:self-auto sm:mr-4">
+                    <img
+                      src={session.tutor_photo || '/imgs/default-profile.png'}
+                      alt="Tutor"
+                      className="w-12 h-12 rounded-full border-2 border-white object-cover"
+                    />
+                    <img
+                      src={session.tutee_photo || '/imgs/default-profile.png'}
+                      alt="Tutee"
+                      className="w-12 h-12 rounded-full border-2 border-white object-cover"
+                    />
+                  </div>
+                </div>
+              );
+            })
+          }
         </div>
       </section>
 

@@ -192,8 +192,8 @@ export default function TutorBookedSessionsPage() {
       });
 
       hours.forEach((hour, row) => {
-        doc.setFontSize(10); 
-        doc.setTextColor(0); 
+        doc.setFontSize(10);
+        doc.setTextColor(0);
         doc.text(`${hour}:00`, startX - 18, startY + (row + 1) * cellHeight + 8);
 
 
@@ -264,90 +264,111 @@ export default function TutorBookedSessionsPage() {
 
 
         <div className="bg-white rounded-xl p-6 shadow-md space-y-8">
-          {sessions.map((session) => {
-            const canJoin = !!session.room_link;
-            const formatted = formatDateTime(session.scheduled_datetime);
-
-            return (
-              <div
-                key={session.session_id}
-                className="relative bg-[#F9F9F9] rounded-xl px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
-              >
-                <button
-                  className="absolute top-4 right-4 text-[#DE5462]"
-                  onClick={() => handleCancelClick(session)}
-                  title="Cancel Session"
+          {sessions.length === 0 ? (
+            <div className="text-center py-12">
+              <h2 className="text-xl font-semibold text-gray-700 mb-6">
+                You don&apos;t have any upcoming booked sessions.
+              </h2>
+              <div className="flex justify-center gap-4 flex-wrap">
+                <a
+                  href="/tutor/editSchedule"
+                  className="bg-[#E8B14F] hover:bg-yellow-500 text-white font-semibold px-6 py-3 rounded-full shadow transition"
                 >
-                  <Trash2 className="w-5 h-5" />
-                </button>
-
-                <div className="space-y-2">
-                  <p className="font-bold text-[14px]">
-                    <span className="font-extrabold text-black">{session.course_code}</span> - {session.course_name}
-                  </p>
-                  <div className="flex items-center space-x-2 text-sm font-semibold text-black">
-                    <span className="text-[18px]">📅</span>
-                    <span>{formatted}</span>
-                  </div>
-                  <p className="text-sm font-bold text-black">With: {session.tutee_name}</p>
-                  {session.tutee_avg_rating !== null && !isNaN(Number(session.tutee_avg_rating)) && (
-                    <p className="text-sm font-bold text-black">
-                      Rating: {Number(session.tutee_avg_rating).toFixed(1)} ⭐
-                    </p>
-                  )}
-
-                  <div className="flex flex-wrap items-center gap-2 pt-2">
-                    {canJoin ? (
-                      <>
-                        <button
-                          onClick={() => router.push(`/session/setup/${session.room_link}`)}
-                          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full text-xs font-semibold"
-                        >
-                          Join Session
-                        </button>
-                        <span className="text-green-600 text-2xl font-bold">→</span>
-                      </>
-                    ) : (
-                      <div className="bg-black text-white font-bold text-xs px-6 py-2 rounded-full">
-                        You cannot join now
-                      </div>
-                    )}
-
-                    <button
-                      className="bg-[#E8B14F] px-4 py-2 rounded-full text-xs font-semibold"
-                      onClick={() => handleCheckMaterials(session.materials)}
-                    >
-                      Check Materials
-                    </button>
-
-                    {isCancelable(session.scheduled_datetime) ? (
-                      <button
-                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-full text-xs font-semibold"
-                        onClick={() => handleCancelClick(session)}
-                      >
-                        Cancel Session
-                      </button>
-                    ) : (
-                      <p className="text-sm text-gray-600 italic">Cannot cancel within 24h</p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="w-full flex justify-center sm:justify-end -space-x-4 mt-4 sm:mt-0">
-                  <img
-                    src={session.tutor_photo || '/imgs/default-profile.png'}
-                    alt="Tutor"
-                    className="w-16 h-16 rounded-full border-2 border-white object-cover"
-                  />
-                  <img
-                    src={session.tutee_photo || '/imgs/default-profile.png'}
-                    alt="Tutee"
-                    className="w-16 h-16 rounded-full border-2 border-white object-cover"
-                  />
-                </div>
+                  ✏️ Edit Your Schedule
+                </a>
+                <a
+                  href="/tutor-edit-profile"
+                  className="bg-[#E8B14F] hover:bg-yellow-500 text-white font-semibold px-6 py-3 rounded-full shadow transition"
+                >
+                  🧑‍🏫 Edit Your Profile
+                </a>
               </div>
-            );
-          })}
+            </div>
+          ) :
+            sessions.map((session) => {
+              const canJoin = !!session.room_link;
+              const formatted = formatDateTime(session.scheduled_datetime);
+
+              return (
+                <div
+                  key={session.session_id}
+                  className="relative bg-[#F9F9F9] rounded-xl px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+                >
+                  <button
+                    className="absolute top-4 right-4 text-[#DE5462]"
+                    onClick={() => handleCancelClick(session)}
+                    title="Cancel Session"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+
+                  <div className="space-y-2">
+                    <p className="font-bold text-[14px]">
+                      <span className="font-extrabold text-black">{session.course_code}</span> - {session.course_name}
+                    </p>
+                    <div className="flex items-center space-x-2 text-sm font-semibold text-black">
+                      <span className="text-[18px]">📅</span>
+                      <span>{formatted}</span>
+                    </div>
+                    <p className="text-sm font-bold text-black">With: {session.tutee_name}</p>
+                    {session.tutee_avg_rating !== null && !isNaN(Number(session.tutee_avg_rating)) && (
+                      <p className="text-sm font-bold text-black">
+                        Rating: {Number(session.tutee_avg_rating).toFixed(1)} ⭐
+                      </p>
+                    )}
+
+                    <div className="flex flex-wrap items-center gap-2 pt-2">
+                      {canJoin ? (
+                        <>
+                          <button
+                            onClick={() => router.push(`/session/setup/${session.room_link}`)}
+                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full text-xs font-semibold"
+                          >
+                            Join Session
+                          </button>
+                          <span className="text-green-600 text-2xl font-bold">→</span>
+                        </>
+                      ) : (
+                        <div className="bg-black text-white font-bold text-xs px-6 py-2 rounded-full">
+                          You cannot join now
+                        </div>
+                      )}
+
+                      <button
+                        className="bg-[#E8B14F] px-4 py-2 rounded-full text-xs font-semibold"
+                        onClick={() => handleCheckMaterials(session.materials)}
+                      >
+                        Check Materials
+                      </button>
+
+                      {isCancelable(session.scheduled_datetime) ? (
+                        <button
+                          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-full text-xs font-semibold"
+                          onClick={() => handleCancelClick(session)}
+                        >
+                          Cancel Session
+                        </button>
+                      ) : (
+                        <p className="text-sm text-gray-600 italic">Cannot cancel within 24h</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="w-full flex justify-center sm:justify-end -space-x-4 mt-4 sm:mt-0">
+                    <img
+                      src={session.tutor_photo || '/imgs/default-profile.png'}
+                      alt="Tutor"
+                      className="w-16 h-16 rounded-full border-2 border-white object-cover"
+                    />
+                    <img
+                      src={session.tutee_photo || '/imgs/default-profile.png'}
+                      alt="Tutee"
+                      className="w-16 h-16 rounded-full border-2 border-white object-cover"
+                    />
+                  </div>
+                </div>
+              );
+            })}
         </div>
       </section>
 

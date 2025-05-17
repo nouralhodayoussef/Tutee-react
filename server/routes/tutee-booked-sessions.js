@@ -1,12 +1,12 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const db = require('../config/db');
+const db = require("../config/db");
 
-router.get('/', async (req, res) => {
+router.get("/", async (req, res) => {
   const user = req.session?.user;
 
-  if (!user || user.role !== 'tutee') {
-    return res.status(401).json({ error: 'Unauthorized' });
+  if (!user || user.role !== "tutee") {
+    return res.status(401).json({ error: "Unauthorized" });
   }
 
   const tuteeId = user.profile_id;
@@ -30,17 +30,19 @@ JOIN tutees tu ON ss.tutee_id = tu.id
 JOIN courses c ON ss.course_id = c.id
 WHERE ss.tutee_id = ?
   AND ss.status = 'scheduled'
+  AND CONCAT(ss.scheduled_date, ' ', sl.slot_time) >= NOW() - INTERVAL 1 HOUR
 ORDER BY ss.scheduled_date ASC, sl.slot_time ASC;
+
 
 `,
       [tuteeId]
     );
 
-    const formatted = rows.map(session => {
+    const formatted = rows.map((session) => {
       // Handle Drive photo formatting if needed
-      if (session.tutor_photo?.includes('drive.google.com')) {
+      if (session.tutor_photo?.includes("drive.google.com")) {
         const match = session.tutor_photo.match(/[-\w]{25,}/);
-        const fileId = match ? match[0] : '';
+        const fileId = match ? match[0] : "";
         session.tutor_photo = `https://drive.google.com/uc?export=view&id=${fileId}`;
       }
       return session;
@@ -48,8 +50,8 @@ ORDER BY ss.scheduled_date ASC, sl.slot_time ASC;
 
     res.json(formatted);
   } catch (err) {
-    console.error('❌ Error fetching tutee booked sessions:', err);
-    res.status(500).json({ error: 'Failed to fetch booked sessions' });
+    console.error("❌ Error fetching tutee booked sessions:", err);
+    res.status(500).json({ error: "Failed to fetch booked sessions" });
   }
 });
 
