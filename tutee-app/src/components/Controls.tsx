@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Mic, MicOff, Video, VideoOff, Monitor, PhoneOff } from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff, Monitor, PhoneOff, PenSquare } from 'lucide-react';
 
 interface ControlsProps {
   stream: MediaStream | null;
@@ -10,76 +9,70 @@ interface ControlsProps {
   onLeave?: () => void;
   onToggleMic?: () => void;
   onToggleCam?: () => void;
+  onOpenWhiteboard?: () => void;
 }
 
-
-const Controls = ({ stream, isScreenSharing, onShareScreen, onLeave, onToggleMic, onToggleCam }: ControlsProps) => {
-  const [micEnabled, setMicEnabled] = useState(true);
-  const [camEnabled, setCamEnabled] = useState(true);
-
-  useEffect(() => {
-    const mic = sessionStorage.getItem('micEnabled');
-    const cam = sessionStorage.getItem('camEnabled');
-
-    setMicEnabled(mic !== 'false');
-    setCamEnabled(cam !== 'false');
-  }, []);
-
-  const toggleMic = () => {
-    if (!stream) return;
-    const track = stream.getAudioTracks()[0];
-    if (track) {
-      const next = !track.enabled;
-      track.enabled = next;
-      setMicEnabled(next);
-      sessionStorage.setItem('micEnabled', String(next));
-      onToggleMic?.();
-    }
-  };
-
-  const toggleCam = () => {
-    if (!stream) return;
-    const track = stream.getVideoTracks()[0];
-    if (track) {
-      const next = !track.enabled;
-      track.enabled = next;
-      setCamEnabled(next);
-      sessionStorage.setItem('camEnabled', String(next));
-      onToggleCam?.();
-    }
-  };
+const Controls = ({
+  stream,
+  isScreenSharing,
+  onShareScreen,
+  onLeave,
+  onToggleMic,
+  onToggleCam,
+  onOpenWhiteboard,
+}: ControlsProps) => {
+  // Use the stream to determine mic/cam state directly
+  const isMicOn = !!stream?.getAudioTracks()[0]?.enabled;
+  const isCamOn = !!stream?.getVideoTracks()[0]?.enabled;
 
   return (
-    <div className="flex items-center justify-center gap-4 mt-8">
+    <div className="flex items-center justify-center gap-3">
+      {/* Mic */}
       <button
-        onClick={toggleMic}
-        className="w-12 h-12 rounded-full bg-[#E8B14F] text-black shadow hover:bg-yellow-500"
+        onClick={onToggleMic}
+        className="w-11 h-11 rounded-full bg-[#E8B14F] text-black shadow hover:bg-yellow-500"
+        title={isMicOn ? "Mute Microphone" : "Unmute Microphone"}
       >
-        {micEnabled ? <Mic className="w-5 h-5 mx-auto" /> : <MicOff className="w-5 h-5 mx-auto" />}
+        {isMicOn ? <Mic className="w-5 h-5 mx-auto" /> : <MicOff className="w-5 h-5 mx-auto" />}
       </button>
 
+      {/* Cam */}
       <button
-        onClick={toggleCam}
-        className="w-12 h-12 rounded-full bg-[#E8B14F] text-black shadow hover:bg-yellow-500"
+        onClick={onToggleCam}
+        className="w-11 h-11 rounded-full bg-[#E8B14F] text-black shadow hover:bg-yellow-500"
+        title={isCamOn ? "Turn Off Camera" : "Turn On Camera"}
       >
-        {camEnabled ? <Video className="w-5 h-5 mx-auto" /> : <VideoOff className="w-5 h-5 mx-auto" />}
+        {isCamOn ? <Video className="w-5 h-5 mx-auto" /> : <VideoOff className="w-5 h-5 mx-auto" />}
       </button>
 
+      {/* Screen Share */}
       {onShareScreen && (
         <button
           onClick={onShareScreen}
-          className={`w-12 h-12 rounded-full ${
-            isScreenSharing ? 'bg-blue-600' : 'bg-[#E8B14F]'
-          } text-white shadow hover:opacity-90`}
+          className={`w-11 h-11 rounded-full ${isScreenSharing ? 'bg-blue-600' : 'bg-[#E8B14F]'} text-white shadow hover:opacity-90`}
+          title={isScreenSharing ? "Stop Sharing Screen" : "Share Screen"}
         >
           <Monitor className="w-5 h-5 mx-auto" />
         </button>
       )}
 
+      {/* Whiteboard */}
+      {onOpenWhiteboard && (
+        <button
+          onClick={onOpenWhiteboard}
+          className="w-11 h-11 rounded-full bg-[#E8B14F] text-black shadow hover:bg-yellow-500"
+          title="Open Whiteboard"
+        >
+          <PenSquare className="w-5 h-5 mx-auto" />
+        </button>
+      )}
+
+      {/* Leave Button always LAST */}
       {onLeave && (
         <button
           onClick={onLeave}
-          className="w-12 h-12 rounded-full bg-red-600 text-white shadow hover:bg-red-700"
+          className="w-11 h-11 rounded-full bg-red-600 text-white shadow hover:bg-red-700 ml-2"
+          title="Leave Session"
         >
           <PhoneOff className="w-5 h-5 mx-auto" />
         </button>

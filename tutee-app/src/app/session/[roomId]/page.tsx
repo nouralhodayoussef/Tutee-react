@@ -4,10 +4,23 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { io, Socket } from 'socket.io-client';
 import Controls from '@/components/Controls';
+import Whiteboard from '@/components/Whiteboard';
+import ChatBox from '@/components/ChatBox';
 
 const iceServers = {
   iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
 };
+
+type SessionInfo = {
+  tutee_first_name: string;
+  tutee_last_name: string;
+  tutee_photo: string;
+  tutor_first_name: string;
+  tutor_last_name: string;
+  tutor_photo: string;
+};
+type UserRole = 'tutee' | 'tutor';
+type CurrentUser = { role: UserRole };
 
 export default function SessionRoom() {
   const { roomId } = useParams() as { roomId: string };
@@ -18,36 +31,105 @@ export default function SessionRoom() {
   const screenVideoRef = useRef<HTMLVideoElement>(null);
 
   const [stream, setStream] = useState<MediaStream | null>(null);
-  const [screenStream, setScreenStream] = useState<MediaStream | null>(null);
   const [isScreenActive, setIsScreenActive] = useState(false);
   const [joined, setJoined] = useState(false);
-  const [remoteAudioActive, setRemoteAudioActive] = useState(false);
-  const [localSpeaking, setLocalSpeaking] = useState(false);
   const [notifications, setNotifications] = useState<string[]>([]);
+  const [showWhiteboard, setShowWhiteboard] = useState(false);
+  const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+const [_, setForceUpdate] = useState(0); // for re-rendering on mic/cam changes
 
+  // Camera toggles
+  const [camOn, setCamOn] = useState(true);
+  const [remoteCamOn, setRemoteCamOn] = useState(true);
+
+  // Chat box toggle (always open for desktop)
+  const [showChat, setShowChat] = useState(true);
+
+  // For ICE
   const pendingCandidates: RTCIceCandidateInit[] = [];
-  const screenSenderRef = useRef<RTCRtpSender | null>(null);
+
+  // Camera toggle logic for local stream
+  const handleToggleCamera = () => {
+  if (!stream) return;
+  const videoTrack = stream.getVideoTracks()[0];
+  if (!videoTrack) return;
+  videoTrack.enabled = !videoTrack.enabled;
+  setCamOn(videoTrack.enabled);
+  socketRef.current?.emit('camera-status', { camOn: videoTrack.enabled, roomId });
+  setForceUpdate(val => val + 1); // <- This will trigger a re-render!
+};
+
+
+  // Mic toggle logic for local stream
+  const handleToggleMic = () => {
+  if (!stream) return;
+  const audioTrack = stream.getAudioTracks()[0];
+  if (!audioTrack) return;
+  audioTrack.enabled = !audioTrack.enabled;
+  sessionStorage.setItem('micEnabled', String(audioTrack.enabled));
+  setForceUpdate(val => val + 1); // <- This will trigger a re-render!
+};
+
+
+  // Screen sharing
+  const handleShareScreen = async () => {
+    if (!peerConnectionRef.current) return;
+    try {
+      const displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+      setIsScreenActive(true);
+      const screenTrack = displayStream.getVideoTracks()[0];
+      peerConnectionRef.current.addTrack(screenTrack, displayStream);
+      if (screenVideoRef.current) {
+        screenVideoRef.current.srcObject = displayStream;
+      }
+      screenTrack.onended = () => {
+        setIsScreenActive(false);
+        if (screenVideoRef.current) screenVideoRef.current.srcObject = null;
+      };
+      if (peerConnectionRef.current.signalingState === 'stable') {
+        const offer = await peerConnectionRef.current.createOffer();
+        await peerConnectionRef.current.setLocalDescription(offer);
+        socketRef.current?.emit('offer', { roomId, offer });
+      }
+    } catch (err) {
+      setIsScreenActive(false);
+      if (screenVideoRef.current) screenVideoRef.current.srcObject = null;
+      alert('Failed to share screen');
+      console.error(err);
+    }
+  };
+
+  const handleLeave = () => {
+    fetch('http://localhost:4000/session/whoami', { credentials: 'include' })
+      .then((res) => res.json())
+      .then((data) => {
+        const role = data.role;
+        if (role === 'tutee') window.location.href = '/tutee/booked-sessions';
+        else if (role === 'tutor') window.location.href = '/tutor/bookedSessions';
+        else window.location.href = '/';
+      });
+  };
+
+  const handleOpenWhiteboard = () => {
+    setShowWhiteboard(true);
+    socketRef.current?.emit('open-whiteboard', { roomId });
+  };
+
+  useEffect(() => {
+    fetch(`http://localhost:4000/session/${roomId}/access`, { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        setSessionInfo(data.session);
+        setCurrentUser({ role: data.currentUserRole });
+      });
+  }, [roomId]);
 
   const showNotification = (msg: string) => {
     setNotifications((prev) => [...prev, msg]);
     setTimeout(() => {
       setNotifications((prev) => prev.slice(1));
     }, 4000);
-  };
-
-  const setupLocalVolumeDetection = (stream: MediaStream) => {
-    const ctx = new AudioContext();
-    const src = ctx.createMediaStreamSource(stream);
-    const analyser = ctx.createAnalyser();
-    const data = new Uint8Array(analyser.frequencyBinCount);
-    src.connect(analyser);
-    const detect = () => {
-      analyser.getByteFrequencyData(data);
-      const avg = data.reduce((a, b) => a + b, 0) / data.length;
-      setLocalSpeaking(avg > 5);
-      requestAnimationFrame(detect);
-    };
-    detect();
   };
 
   useEffect(() => {
@@ -68,38 +150,49 @@ export default function SessionRoom() {
     socket.on('user-left', () => showNotification('The other user has left the session'));
     socket.on('disconnect', () => console.log('🔴 Socket disconnected'));
 
+    // Whiteboard Events
+    socket.on('open-whiteboard', () => setShowWhiteboard(true));
+    socket.on('close-whiteboard', () => setShowWhiteboard(false));
+
+    // Listen for remote camera toggling
+    socket.on('camera-status', ({ camOn }) => {
+      setRemoteCamOn(camOn);
+    });
+
     const setupConnection = async (mediaStream: MediaStream) => {
       const micEnabled = sessionStorage.getItem('micEnabled') !== 'false';
       const camEnabled = sessionStorage.getItem('camEnabled') !== 'false';
+      setCamOn(camEnabled);
 
+      // Enable/disable local tracks
       mediaStream.getAudioTracks().forEach((t) => (t.enabled = micEnabled));
       mediaStream.getVideoTracks().forEach((t) => (t.enabled = camEnabled));
       setStream(mediaStream);
+
       if (localVideoRef.current) localVideoRef.current.srcObject = mediaStream;
-      setupLocalVolumeDetection(mediaStream);
 
       const pc = new RTCPeerConnection(iceServers);
       peerConnectionRef.current = pc;
 
-      // Send camera and mic to peer
       mediaStream.getTracks().forEach((track) => {
         pc.addTrack(track, mediaStream);
       });
 
-      // Always renegotiate for both offerer and listener
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
       socketRef.current?.emit('offer', { roomId, offer });
 
-      // --- Track/Stream handlers (remote) ---
+      // --- Listen for remote tracks (camera, mic, screen) ---
+
       pc.ontrack = (event) => {
         const track = event.track;
-        const isScreen = track.kind === 'video' && (track.label.toLowerCase().includes('screen') ||
-          track.getSettings().displaySurface !== undefined);
 
-        // 🟡 SCREEN SHARING LOGIC
+        // Screen sharing
+        const isScreen = track.kind === 'video' && (
+          track.label.toLowerCase().includes('screen') ||
+          track.getSettings().displaySurface !== undefined
+        );
         if (track.kind === 'video' && isScreen) {
-          // Both the local sharer and the remote user handle this identically!
           let screenMedia: MediaStream;
           if (screenVideoRef.current?.srcObject instanceof MediaStream) {
             screenMedia = screenVideoRef.current.srcObject as MediaStream;
@@ -107,13 +200,11 @@ export default function SessionRoom() {
             screenMedia = new MediaStream();
             if (screenVideoRef.current) screenVideoRef.current.srcObject = screenMedia;
           }
-          // Don't add duplicate tracks
           if (!screenMedia.getTracks().some((t) => t.id === track.id)) {
             screenMedia.addTrack(track);
           }
           setIsScreenActive(true);
 
-          // Remove the screen when the track ends (stops sharing)
           track.onended = () => {
             if (screenVideoRef.current?.srcObject instanceof MediaStream) {
               const ms = screenVideoRef.current.srcObject as MediaStream;
@@ -126,6 +217,7 @@ export default function SessionRoom() {
           };
           return;
         }
+
         // Camera
         if (track.kind === 'video' && !isScreen) {
           let camStream = remoteVideoRef.current?.srcObject as MediaStream;
@@ -136,8 +228,16 @@ export default function SessionRoom() {
           if (!camStream.getTracks().some(t => t.id === track.id)) {
             camStream.addTrack(track);
           }
+          setRemoteCamOn(track.enabled);
+
+          // Listen for track enabled/disabled (mute/unmute video)
+          track.onmute = () => setRemoteCamOn(false);
+          track.onunmute = () => setRemoteCamOn(track.enabled);
+          track.onended = () => setRemoteCamOn(false);
+          track.addEventListener?.('enabled', () => setRemoteCamOn(track.enabled));
           return;
         }
+
         // Audio
         if (track.kind === 'audio') {
           let remote = remoteVideoRef.current?.srcObject as MediaStream;
@@ -148,8 +248,6 @@ export default function SessionRoom() {
           if (!remote.getTracks().some(t => t.id === track.id)) {
             remote.addTrack(track);
           }
-          track.onunmute = () => setRemoteAudioActive(true);
-          track.onmute = () => setRemoteAudioActive(false);
           return;
         }
       };
@@ -162,9 +260,9 @@ export default function SessionRoom() {
 
       socket.on('offer', async ({ offer }) => {
         if (!peerConnectionRef.current) return;
-        await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(offer));
+        await peerConnectionRef.current.setRemoteDescription(new window.RTCSessionDescription(offer));
         for (const c of pendingCandidates) {
-          await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(c));
+          await peerConnectionRef.current.addIceCandidate(new window.RTCIceCandidate(c));
         }
         pendingCandidates.length = 0;
         const answer = await peerConnectionRef.current.createAnswer();
@@ -174,9 +272,9 @@ export default function SessionRoom() {
 
       socket.on('answer', async ({ answer }) => {
         if (!peerConnectionRef.current) return;
-        await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(answer));
+        await peerConnectionRef.current.setRemoteDescription(new window.RTCSessionDescription(answer));
         for (const c of pendingCandidates) {
-          await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(c));
+          await peerConnectionRef.current.addIceCandidate(new window.RTCIceCandidate(c));
         }
         pendingCandidates.length = 0;
       });
@@ -186,15 +284,17 @@ export default function SessionRoom() {
         if (!peerConnectionRef.current.remoteDescription) {
           pendingCandidates.push(candidate);
         } else {
-          await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+          await peerConnectionRef.current.addIceCandidate(new window.RTCIceCandidate(candidate));
         }
       });
     };
 
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(setupConnection).catch((err) => {
-      alert('Camera/Mic permission needed');
-      console.error(err);
-    });
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+      .then(setupConnection)
+      .catch((err) => {
+        alert('Camera/Mic permission needed');
+        console.error(err);
+      });
 
     return () => {
       [localVideoRef, remoteVideoRef, screenVideoRef].forEach((ref) => {
@@ -204,72 +304,31 @@ export default function SessionRoom() {
         }
       });
       stream?.getTracks().forEach((t) => t.stop());
-      screenStream?.getTracks().forEach((t) => t.stop());
       peerConnectionRef.current?.getSenders().forEach((s) => s.track?.stop());
       peerConnectionRef.current?.close();
       socket.disconnect();
     };
+    // eslint-disable-next-line
   }, [roomId]);
 
-  // ====== SCREEN SHARING LOGIC (multi-track, NOT replace!) ======
-  const handleShareScreen = async () => {
-    if (!peerConnectionRef.current || !socketRef.current) return;
+  const hasLocalVideo =
+    stream &&
+    stream.getVideoTracks &&
+    stream.getVideoTracks().some((t) => t.enabled);
 
-    // Stop sharing
-    if (isScreenActive && screenStream && screenSenderRef.current) {
-      peerConnectionRef.current.removeTrack(screenSenderRef.current);
-      screenStream.getTracks().forEach(track => track.stop());
-      setScreenStream(null);
-      setIsScreenActive(false);
-      if (screenVideoRef.current) screenVideoRef.current.srcObject = null;
-      screenSenderRef.current = null;
-      return;
-    }
-
-    try {
-      const displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-      setScreenStream(displayStream);
-      setIsScreenActive(true);
-
-      // Add the screen track as a new track (multi-track!)
-      const screenTrack = displayStream.getVideoTracks()[0];
-      const sender = peerConnectionRef.current.addTrack(screenTrack, displayStream);
-      screenSenderRef.current = sender;
-
-      // Locally show your shared screen
-      if (screenVideoRef.current) {
-        screenVideoRef.current.srcObject = displayStream;
-      }
-
-      displayStream.getTracks()[0].onended = () => handleShareScreen();
-
-      // Renegotiate
-      if (peerConnectionRef.current.signalingState === 'stable') {
-        const offer = await peerConnectionRef.current.createOffer();
-        await peerConnectionRef.current.setLocalDescription(offer);
-        socketRef.current?.emit('offer', { roomId, offer });
-      }
-    } catch (err) {
-      console.error('❌ Error sharing screen:', err);
-      showNotification('Failed to share screen');
-    }
-  };
-
-  const handleLeave = () => {
-    fetch('http://localhost:4000/session/whoami', { credentials: 'include' })
-      .then((res) => res.json())
-      .then((data) => {
-        const role = data.role;
-        if (role === 'tutee') window.location.href = '/tutee/booked-sessions';
-        else if (role === 'tutor') window.location.href = '/tutor/bookedSessions';
-        else window.location.href = '/';
-      });
-  };
-
+  // --- JSX ---
   return (
-    <div className="min-h-screen bg-[#f5f5ef] flex flex-col items-center justify-between py-8 px-4">
-      <h1 className="text-2xl font-bold mb-4">Tutee Live Session</h1>
-      {/* 🔔 Toast */}
+    <div className="relative min-h-screen bg-[#f5f5ef] flex flex-col font-montserrat">
+      {/* Logo and Title Bar */}
+      <div className="flex items-center justify-between px-8 pt-6 pb-2">
+        <img src="/imgs/logo.png" alt="Tutee" className="h-12" />
+        <span className="text-2xl font-bold ml-8">
+          Class<span className="text-[#E8B14F]">room</span>
+        </span>
+        <div className="w-12" /> {/* For spacing/alignment */}
+      </div>
+
+      {/* Toast Notifications */}
       <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 space-y-2">
         {notifications.map((msg, i) => (
           <div
@@ -280,70 +339,150 @@ export default function SessionRoom() {
           </div>
         ))}
       </div>
-      <div className={`w-full max-w-[1400px] flex ${isScreenActive
-        ? 'flex-row' : 'flex-col items-center'} justify-center gap-6`}>
-        {isScreenActive && screenStream && (
-          <div className="flex-1 bg-black rounded-lg overflow-hidden h-[500px] relative">
-            <video
-              ref={screenVideoRef}
-              autoPlay
-              playsInline
-              muted
-              className="w-full h-full object-contain"
-              onLoadedMetadata={() => {
-                if (screenVideoRef.current) {
-                  screenVideoRef.current.play().catch((e) =>
-                    console.warn('🟡 Screen video play error:', e)
-                  );
-                }
-              }}
-            />
-            <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-3 py-1 rounded-full">
-              Someone is sharing screen
-            </div>
-          </div>
-        )}
 
-        <div className={`flex ${isScreenActive
-          ? 'flex-col' : 'flex-row'} items-center justify-center gap-6`}>
-          <div className="flex flex-col items-center">
-            <h2 className="text-sm font-medium">You</h2>
-            <div className={`relative ${localSpeaking ? 'ring-4 ring-green-400' : ''} rounded-lg`}>
+      {/* MAIN LAYOUT */}
+      <div className="flex-1 flex flex-row justify-center items-stretch w-full max-w-[1700px] mx-auto gap-8 px-4 pb-28">
+        {/* Main "presentation" (screen share) area */}
+        <div className="flex-1 flex flex-col items-center justify-center pt-2">
+          {/* Presentation container */}
+          <div className="w-full max-w-4xl aspect-[16/9] bg-[#fcfcfa] rounded-2xl shadow-xl flex items-center justify-center text-center relative border border-gray-200">
+            {/* Screen Share video (only shows if someone is sharing) */}
+            {isScreenActive ? (
               <video
-                ref={localVideoRef}
+                ref={screenVideoRef}
                 autoPlay
-                muted
                 playsInline
-                className={`rounded-lg bg-black ${isScreenActive
-                  ? 'w-40 h-28' : 'w-72 h-48'}`}
+                className="w-full h-full rounded-2xl object-contain bg-black"
               />
+            ) : (
+              <span className="text-2xl font-semibold text-black/70">Presentation here</span>
+            )}
+          </div>
+        </div>
+
+        {/* RIGHT SIDEBAR */}
+        <div className="w-[380px] flex flex-col items-center">
+          {/* User video/photo containers */}
+          <div className="flex flex-row justify-end gap-8 w-full mb-5 mt-2">
+            {/* LOCAL USER */}
+            <div className="flex flex-col items-center w-[110px]">
+              <div className="rounded-2xl bg-[#F7F7F5] shadow-md w-[110px] h-[110px] flex items-center justify-center overflow-hidden relative">
+                {hasLocalVideo ? (
+                  <video
+                    ref={localVideoRef}
+                    autoPlay
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover rounded-2xl bg-black"
+                  />
+                ) : (
+                  <img
+                    src={
+                      currentUser?.role === 'tutee'
+                        ? sessionInfo?.tutee_photo || '/imgs/default-profile.png'
+                        : sessionInfo?.tutor_photo || '/imgs/default-profile.png'
+                    }
+                    alt="Your profile"
+                    className="w-full h-full object-cover rounded-2xl"
+                  />
+                )}
+              </div>
+              <span className="mt-2 bg-white border border-[#E8B14F] px-3 py-1 rounded-full text-xs font-medium shadow text-gray-800 max-w-[100px] truncate text-center">
+                {currentUser?.role === 'tutee'
+                  ? `${sessionInfo?.tutee_first_name ?? ''} ${sessionInfo?.tutee_last_name ?? ''}`
+                  : `${sessionInfo?.tutor_first_name ?? ''} ${sessionInfo?.tutor_last_name ?? ''}`}
+              </span>
+            </div>
+            {/* REMOTE USER */}
+            <div className="flex flex-col items-center w-[110px]">
+              <div className="rounded-2xl bg-[#F7F7F5] shadow-md w-[110px] h-[110px] flex items-center justify-center overflow-hidden relative">
+                {remoteCamOn ? (
+                  <video
+                    ref={remoteVideoRef}
+                    autoPlay
+                    playsInline
+                    className="w-full h-full object-cover rounded-2xl bg-black"
+                  />
+                ) : (
+                  <img
+                    src={
+                      currentUser?.role === 'tutee'
+                        ? sessionInfo?.tutor_photo || '/imgs/default-profile.png'
+                        : sessionInfo?.tutee_photo || '/imgs/default-profile.png'
+                    }
+                    alt="Other profile"
+                    className="w-full h-full object-cover rounded-2xl"
+                  />
+                )}
+              </div>
+              <span className="mt-2 bg-white border border-[#E8B14F] px-3 py-1 rounded-full text-xs font-medium shadow text-gray-800 max-w-[100px] truncate text-center">
+                {currentUser?.role === 'tutee'
+                  ? `${sessionInfo?.tutor_first_name ?? ''} ${sessionInfo?.tutor_last_name ?? ''}`
+                  : `${sessionInfo?.tutee_first_name ?? ''} ${sessionInfo?.tutee_last_name ?? ''}`}
+              </span>
             </div>
           </div>
-          <div className="flex flex-col items-center">
-            <h2 className="text-sm font-medium">Other</h2>
-            <div className={`relative ${remoteAudioActive ? 'ring-4 ring-green-400' : ''} rounded-lg`}>
-              <video
-                ref={remoteVideoRef}
-                autoPlay
-                playsInline
-                className={`rounded-lg bg-gray-800 ${isScreenActive
-                  ? 'w-40 h-28' : 'w-72 h-48'}`}
-              />
-              {!remoteAudioActive && (
-                <span className="absolute bottom-1 right-1 bg-black text-white text-xs px-2 py-0.5 rounded-full">Muted</span>
+
+          {/* Chat Box */}
+          <div className="w-full flex-1 flex flex-col rounded-2xl bg-white shadow-xl border border-[#e8b14f]/40 overflow-hidden min-h-[420px]">
+            <div className="bg-[#E8B14F] px-4 py-2 font-bold text-black flex items-center sticky top-0 z-10 rounded-t-2xl text-base">
+              Chats
+              <span className="ml-2 text-xs font-normal text-black/60">
+                {/* Count */}
+              </span>
+            </div>
+            <div className="flex-1 flex flex-col">
+              {socketRef.current && sessionInfo && currentUser && (
+                <ChatBox
+                  socket={socketRef.current}
+                  currentUser={{
+                    role: currentUser.role,
+                    name:
+                      currentUser.role === "tutee"
+                        ? sessionInfo.tutee_first_name
+                        : sessionInfo.tutor_first_name,
+                    avatar:
+                      currentUser.role === "tutee"
+                        ? sessionInfo.tutee_photo
+                        : sessionInfo.tutor_photo,
+                  }}
+                />
               )}
             </div>
           </div>
         </div>
       </div>
-      <div className="mt-6">
-        <Controls
-          stream={stream}
-          onShareScreen={handleShareScreen}
-          isScreenSharing={isScreenActive}
-          onLeave={handleLeave}
-        />
+
+      {/* Controls (bottom, fixed, pill-shaped) */}
+      <div
+        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50
+    bg-[#E8B14F]/90 rounded-[28px]
+    px-4 py-2 shadow-lg flex flex-row items-center min-w-[330px] max-w-[500px]"
+      >
+      <Controls
+  stream={stream}
+  onShareScreen={handleShareScreen}
+  isScreenSharing={isScreenActive}
+  onLeave={handleLeave}
+  onOpenWhiteboard={handleOpenWhiteboard}
+  onToggleMic={handleToggleMic}
+  onToggleCam={handleToggleCamera}
+/>
+
       </div>
+
+      {/* Whiteboard overlay */}
+      {socketRef.current && (
+        <Whiteboard
+          visible={showWhiteboard}
+          onClose={() => {
+            setShowWhiteboard(false);
+            socketRef.current?.emit('close-whiteboard', { roomId });
+          }}
+          socket={socketRef.current}
+          roomId={roomId}
+        />
+      )}
     </div>
   );
 }
