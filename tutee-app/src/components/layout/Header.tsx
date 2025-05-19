@@ -72,7 +72,7 @@ const Header = () => {
             <Link href="#about" onClick={() => setMobileMenuOpen(false)}>ABOUT US</Link>
             <Link href="#tutors" onClick={() => setMobileMenuOpen(false)}>OUR TUTORS</Link>
             <Link href="#courses" onClick={() => setMobileMenuOpen(false)}>COURSES & UNIVERSITIES</Link>
-            <Link href="#how-it-works" onClick={() => setMobileMenuOpen(false)}>HOW IT WORKS</Link>
+            <Link href="#contact-us" onClick={() => setMobileMenuOpen(false)}>CONTACT US</Link>
 
             <hr className="border-t border-black/10" />
 
