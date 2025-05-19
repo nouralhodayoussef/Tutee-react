@@ -51,6 +51,8 @@ const tutorBookedSessions = require("./routes/tutor/bookedSessions");
 const tuteeBookedSessionsRoute = require("./routes/tutee-booked-sessions");
 const addCourseToTutorRoute = require("./routes/add-course-to-tutor");
 const sessionRoute = require("./routes/session");
+const visitorTutors = require('./routes/visitor/visitorTutors');
+const feedbackRoute = require('./routes/visitor/feedback');
 
 //Routes for forget-password
 const forgotPasswordRoute = require('./routes/forget-password/forgotpassword');
@@ -138,6 +140,8 @@ app.use("/schedule-session", scheduleSessionRoute);
 app.use("/tutor/booked-sessions", tutorBookedSessions);
 app.use("/tutee/booked-sessions", tuteeBookedSessionsRoute);
 app.use("/session", sessionRoute);
+app.use('/api/visitor', visitorTutors);
+app.use('/api/visitor', feedbackRoute);
 
 // Routes for forget-password
 app.use('/forgot-password', forgotPasswordRoute);

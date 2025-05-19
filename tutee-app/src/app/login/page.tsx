@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import { useState } from 'react';
@@ -57,7 +58,9 @@ export default function LoginPage() {
         {/* Left Panel */}
         <div className="md:w-1/2 p-8 hidden md:flex flex-col justify-start items-center bg-secondary-bg relative">
           <div className="absolute top-6 left-6">
-            <Image src="/imgs/logo.png" alt="Tutee Logo" width={128} height={61} />
+            <Link href="/">
+              <Image src="/imgs/logo.png" alt="Tutee Logo" width={128} height={61} className="cursor-pointer" />
+            </Link>
           </div>
           <div className="mt-24">
             <Image

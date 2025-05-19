@@ -126,7 +126,7 @@ export default function Whiteboard({ visible, onClose, socket, roomId }: Props) 
         if (points.length < 2 && tool !== 'text') return;
         const stroke: Stroke = {
             tool: tool as Exclude<Stroke['tool'], 'text'>,
-            color: tool === 'eraser' ? '#fff' : color,
+            color: tool === 'eraser' ? '#f9f9f9' : color,
             points: [...points],
             size,
         };
@@ -371,7 +371,7 @@ export default function Whiteboard({ visible, onClose, socket, roomId }: Props) 
 
     if (!visible) return null;
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-50">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md">
             <div className="bg-white rounded-xl p-3 shadow-lg flex flex-col items-center relative">
                 {/* Toolbar */}
                 <div className="flex gap-2 mb-2">
@@ -389,7 +389,6 @@ export default function Whiteboard({ visible, onClose, socket, roomId }: Props) 
                     <button onClick={() => setTool('line')} title="Line" className={tool === 'line' ? 'ring-2' : ''}>{TOOL_LABELS.line}</button>
                     <button onClick={() => setTool('rect')} title="Rectangle" className={tool === 'rect' ? 'ring-2' : ''}>{TOOL_LABELS.rect}</button>
                     <button onClick={() => setTool('circle')} title="Circle" className={tool === 'circle' ? 'ring-2' : ''}>{TOOL_LABELS.circle}</button>
-                    <button onClick={() => setTool('text')} title="Text" className={tool === 'text' ? 'ring-2' : ''}>{TOOL_LABELS.text}</button>
                     <input
                         type="range"
                         min={1}

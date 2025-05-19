@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -73,104 +74,104 @@ export default function RegisterPage() {
   };
 
   const validateStepByStep = async () => {
-    
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$%&_.!*])[A-Za-z\d@#$%&_.!*]{8,18}$/;
 
-  // First Name Validation
-  if (form.firstName.length > 25) {
-    setErrors({ firstName: 'First name must be at most 25 characters' });
-    return false;
-  }
-  if (!/^[A-Za-z\s]+$/.test(form.firstName)) {
-    setErrors({ firstName: 'First name must contain letters and spaces only' });
-    return false;
-  }
-  if (form.firstName.length < 2) {
-    setErrors({ firstName: 'First name must be at least 2 characters' });
-    return false;
-  }
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$%&_.!*])[A-Za-z\d@#$%&_.!*]{8,18}$/;
 
-  // Last Name Validation
-  if (form.lastName.length > 30) {
-    setErrors({ lastName: 'Last name must be at most 30 characters' });
-    return false;
-  }
-  if (!/^[A-Za-z\s]+$/.test(form.lastName)) {
-    setErrors({ lastName: 'Last name must contain letters and spaces only' });
-    return false;
-  }
-  if (form.lastName.length < 2) {
-    setErrors({ lastName: 'Last name must be at least 2 characters' });
-    return false;
-  }
-  if (!form.lastName) {
-    setErrors({ lastName: 'Last name is required' });
-    return false;
-  }
-
-  // Email
-  if (!form.email) {
-    setErrors({ email: 'Email is required' });
-    return false;
-  } else {
-    try {
-      const res = await fetch('http://localhost:4000/check-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: form.email }),
-      });
-      const data = await res.json();
-      if (data.exists) {
-        setErrors({ email: 'User already exists' });
-        return false;
-      }
-    } catch {
-      setErrors({ email: 'Server error. Please check your connection.' });
+    // First Name Validation
+    if (form.firstName.length > 25) {
+      setErrors({ firstName: 'First name must be at most 25 characters' });
       return false;
     }
-  }
+    if (!/^[A-Za-z\s]+$/.test(form.firstName)) {
+      setErrors({ firstName: 'First name must contain letters and spaces only' });
+      return false;
+    }
+    if (form.firstName.length < 2) {
+      setErrors({ firstName: 'First name must be at least 2 characters' });
+      return false;
+    }
 
-  // University and Major
-  if (!form.university) {
-    setErrors({ university: 'University is required' });
-    return false;
-  }
-  if (!form.major) {
-    setErrors({ major: 'Major is required' });
-    return false;
-  }
+    // Last Name Validation
+    if (form.lastName.length > 30) {
+      setErrors({ lastName: 'Last name must be at most 30 characters' });
+      return false;
+    }
+    if (!/^[A-Za-z\s]+$/.test(form.lastName)) {
+      setErrors({ lastName: 'Last name must contain letters and spaces only' });
+      return false;
+    }
+    if (form.lastName.length < 2) {
+      setErrors({ lastName: 'Last name must be at least 2 characters' });
+      return false;
+    }
+    if (!form.lastName) {
+      setErrors({ lastName: 'Last name is required' });
+      return false;
+    }
 
-  // DOB and Gender
-  if (!form.dob) {
-    setErrors({ dob: 'Date of birth is required' });
-    return false;
-  }
-  if (!form.gender) {
-    setErrors({ gender: 'Gender is required' });
-    return false;
-  }
+    // Email
+    if (!form.email) {
+      setErrors({ email: 'Email is required' });
+      return false;
+    } else {
+      try {
+        const res = await fetch('http://localhost:4000/check-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: form.email }),
+        });
+        const data = await res.json();
+        if (data.exists) {
+          setErrors({ email: 'User already exists' });
+          return false;
+        }
+      } catch {
+        setErrors({ email: 'Server error. Please check your connection.' });
+        return false;
+      }
+    }
 
-  // Password
-  if (!passwordRegex.test(form.password)) {
-    setErrors({
-      password:
-        'Password must be 8–18 chars, include uppercase, lowercase, digit, and special (@#$%&_.!*)',
-    });
-    return false;
-  }
-  if (form.password !== form.confirmPassword) {
-    setErrors({ confirmPassword: 'Passwords do not match' });
-    return false;
-  }
+    // University and Major
+    if (!form.university) {
+      setErrors({ university: 'University is required' });
+      return false;
+    }
+    if (!form.major) {
+      setErrors({ major: 'Major is required' });
+      return false;
+    }
 
-  // Role
-  if (!form.role) {
-    setErrors({ role: 'Please select your account type' });
-    return false;
-  }
+    // DOB and Gender
+    if (!form.dob) {
+      setErrors({ dob: 'Date of birth is required' });
+      return false;
+    }
+    if (!form.gender) {
+      setErrors({ gender: 'Gender is required' });
+      return false;
+    }
 
-  return true;
-};
+    // Password
+    if (!passwordRegex.test(form.password)) {
+      setErrors({
+        password:
+          'Password must be 8–18 chars, include uppercase, lowercase, digit, and special (@#$%&_.!*)',
+      });
+      return false;
+    }
+    if (form.password !== form.confirmPassword) {
+      setErrors({ confirmPassword: 'Passwords do not match' });
+      return false;
+    }
+
+    // Role
+    if (!form.role) {
+      setErrors({ role: 'Please select your account type' });
+      return false;
+    }
+
+    return true;
+  };
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
@@ -195,8 +196,15 @@ export default function RegisterPage() {
       <div className="w-full max-w-[1200px] bg-white rounded-2xl shadow-lg flex flex-col md:flex-row overflow-hidden">
         {/* Left Panel */}
         <div className="md:w-1/2 p-8 hidden md:flex flex-col justify-center items-center bg-secondary-bg relative">
-          <Image src="/imgs/logo.png" alt="Tutee Logo" width={128} height={61} className="absolute top-6 left-6" />
-          <div className="mt-24">
+          <Link href="/">
+            <Image
+              src="/imgs/logo.png"
+              alt="Tutee Logo"
+              width={128}
+              height={61}
+              className="absolute top-6 left-6 cursor-pointer"
+            />
+          </Link>          <div className="mt-24">
             <Image src="/imgs/login-img.png" alt="Register Illustration" width={400} height={400} />
           </div>
         </div>
@@ -320,15 +328,15 @@ export default function RegisterPage() {
               email={form.email}
               userData={otpUserData}
               onVerify={() => {
-                
+
                 console.log('✅ Verified successfully! Redirecting...');
-              
-              
+
+
                 setTimeout(() => {
                   router.push('/login');
-                }, 2000); 
+                }, 2000);
               }}
-             
+
               onClose={() => setOtpModalVisible(false)}
             />
           )}

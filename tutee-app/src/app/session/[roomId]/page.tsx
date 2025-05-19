@@ -32,66 +32,72 @@ export default function SessionRoom() {
 
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isScreenActive, setIsScreenActive] = useState(false);
+  const [isRemoteScreenActive, setIsRemoteScreenActive] = useState(false); // remote
+
   const [joined, setJoined] = useState(false);
   const [notifications, setNotifications] = useState<string[]>([]);
   const [showWhiteboard, setShowWhiteboard] = useState(false);
   const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
-const [_, setForceUpdate] = useState(0); // for re-rendering on mic/cam changes
+  const [_, setForceUpdate] = useState(0); // for re-rendering on mic/cam changes
 
   // Camera toggles
   const [camOn, setCamOn] = useState(true);
   const [remoteCamOn, setRemoteCamOn] = useState(true);
 
-  // Chat box toggle (always open for desktop)
-  const [showChat, setShowChat] = useState(true);
-
   // For ICE
   const pendingCandidates: RTCIceCandidateInit[] = [];
 
-  // Camera toggle logic for local stream
+  // --- Camera toggle logic for local stream
   const handleToggleCamera = () => {
-  if (!stream) return;
-  const videoTrack = stream.getVideoTracks()[0];
-  if (!videoTrack) return;
-  videoTrack.enabled = !videoTrack.enabled;
-  setCamOn(videoTrack.enabled);
-  socketRef.current?.emit('camera-status', { camOn: videoTrack.enabled, roomId });
-  setForceUpdate(val => val + 1); // <- This will trigger a re-render!
-};
+    if (!stream) return;
+    const videoTrack = stream.getVideoTracks()[0];
+    if (!videoTrack) return;
+    videoTrack.enabled = !videoTrack.enabled;
+    setCamOn(videoTrack.enabled);
+    socketRef.current?.emit('camera-status', { camOn: videoTrack.enabled, roomId });
+    setForceUpdate(val => val + 1);
+  };
 
-
-  // Mic toggle logic for local stream
+  // --- Mic toggle logic for local stream
   const handleToggleMic = () => {
-  if (!stream) return;
-  const audioTrack = stream.getAudioTracks()[0];
-  if (!audioTrack) return;
-  audioTrack.enabled = !audioTrack.enabled;
-  sessionStorage.setItem('micEnabled', String(audioTrack.enabled));
-  setForceUpdate(val => val + 1); // <- This will trigger a re-render!
-};
+    if (!stream) return;
+    const audioTrack = stream.getAudioTracks()[0];
+    if (!audioTrack) return;
+    audioTrack.enabled = !audioTrack.enabled;
+    sessionStorage.setItem('micEnabled', String(audioTrack.enabled));
+    setForceUpdate(val => val + 1);
+  };
 
-
-  // Screen sharing
+  // --- Screen sharing
   const handleShareScreen = async () => {
     if (!peerConnectionRef.current) return;
     try {
       const displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
       setIsScreenActive(true);
+
       const screenTrack = displayStream.getVideoTracks()[0];
       peerConnectionRef.current.addTrack(screenTrack, displayStream);
+
+      // Always set the screen video ref's srcObject
       if (screenVideoRef.current) {
         screenVideoRef.current.srcObject = displayStream;
+        console.log('Set screenVideoRef.current.srcObject (local):', screenVideoRef.current.srcObject);
+      } else {
+        console.log('screenVideoRef.current is null during handleShareScreen');
       }
+
       screenTrack.onended = () => {
         setIsScreenActive(false);
         if (screenVideoRef.current) screenVideoRef.current.srcObject = null;
+
       };
-      if (peerConnectionRef.current.signalingState === 'stable') {
-        const offer = await peerConnectionRef.current.createOffer();
-        await peerConnectionRef.current.setLocalDescription(offer);
-        socketRef.current?.emit('offer', { roomId, offer });
-      }
+
+      // Always create an offer (no signalingState check)
+      const offer = await peerConnectionRef.current.createOffer();
+      await peerConnectionRef.current.setLocalDescription(offer);
+      socketRef.current?.emit('offer', { roomId, offer });
+
     } catch (err) {
       setIsScreenActive(false);
       if (screenVideoRef.current) screenVideoRef.current.srcObject = null;
@@ -131,6 +137,15 @@ const [_, setForceUpdate] = useState(0); // for re-rendering on mic/cam changes
       setNotifications((prev) => prev.slice(1));
     }, 4000);
   };
+
+  // --- Keeps screen ref synced for remote or local
+  useEffect(() => {
+    if (!screenVideoRef.current) return;
+    // If isScreenActive and srcObject not set, keep it in sync
+    if (!isScreenActive && screenVideoRef.current.srcObject) {
+      screenVideoRef.current.srcObject = null;
+    }
+  }, [isScreenActive]);
 
   useEffect(() => {
     if (joined) return;
@@ -178,12 +193,12 @@ const [_, setForceUpdate] = useState(0); // for re-rendering on mic/cam changes
         pc.addTrack(track, mediaStream);
       });
 
+      // Initial offer
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
       socketRef.current?.emit('offer', { roomId, offer });
 
       // --- Listen for remote tracks (camera, mic, screen) ---
-
       pc.ontrack = (event) => {
         const track = event.track;
 
@@ -203,20 +218,29 @@ const [_, setForceUpdate] = useState(0); // for re-rendering on mic/cam changes
           if (!screenMedia.getTracks().some((t) => t.id === track.id)) {
             screenMedia.addTrack(track);
           }
-          setIsScreenActive(true);
+          setIsRemoteScreenActive(true);
+
+          // Debug
+          console.log('Screen track received and added:', track);
+          if (screenVideoRef.current) {
+            screenVideoRef.current.onloadedmetadata = () => {
+              console.log('Screen video metadata loaded', screenVideoRef.current?.videoWidth, screenVideoRef.current?.videoHeight);
+            };
+          }
 
           track.onended = () => {
             if (screenVideoRef.current?.srcObject instanceof MediaStream) {
               const ms = screenVideoRef.current.srcObject as MediaStream;
               ms.removeTrack(track);
               if (ms.getTracks().length === 0) {
-                setIsScreenActive(false);
+                setIsRemoteScreenActive(false);
                 if (screenVideoRef.current) screenVideoRef.current.srcObject = null;
               }
             }
           };
           return;
         }
+
 
         // Camera
         if (track.kind === 'video' && !isScreen) {
@@ -346,16 +370,25 @@ const [_, setForceUpdate] = useState(0); // for re-rendering on mic/cam changes
         <div className="flex-1 flex flex-col items-center justify-center pt-2">
           {/* Presentation container */}
           <div className="w-full max-w-4xl aspect-[16/9] bg-[#fcfcfa] rounded-2xl shadow-xl flex items-center justify-center text-center relative border border-gray-200">
-            {/* Screen Share video (only shows if someone is sharing) */}
-            {isScreenActive ? (
-              <video
-                ref={screenVideoRef}
-                autoPlay
-                playsInline
-                className="w-full h-full rounded-2xl object-contain bg-black"
-              />
-            ) : (
-              <span className="text-2xl font-semibold text-black/70">Presentation here</span>
+            {/* --- Always render the screen video element for ref assignment! --- */}
+            <video
+              ref={screenVideoRef}
+              autoPlay
+              playsInline
+              style={{
+                display: (isScreenActive || isRemoteScreenActive) ? 'block' : 'none',
+                width: '100%',
+                height: '100%',
+                background: 'black',
+                borderRadius: '1rem',
+                objectFit: 'contain',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+              }}
+            />
+            {!(isScreenActive || isRemoteScreenActive) && (
+              <span className="text-2xl font-semibold text-black/70 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">Presentation here</span>
             )}
           </div>
         </div>
@@ -459,16 +492,15 @@ const [_, setForceUpdate] = useState(0); // for re-rendering on mic/cam changes
     bg-[#E8B14F]/90 rounded-[28px]
     px-4 py-2 shadow-lg flex flex-row items-center min-w-[330px] max-w-[500px]"
       >
-      <Controls
-  stream={stream}
-  onShareScreen={handleShareScreen}
-  isScreenSharing={isScreenActive}
-  onLeave={handleLeave}
-  onOpenWhiteboard={handleOpenWhiteboard}
-  onToggleMic={handleToggleMic}
-  onToggleCam={handleToggleCamera}
-/>
-
+        <Controls
+          stream={stream}
+          onShareScreen={handleShareScreen}
+          isScreenSharing={isScreenActive}
+          onLeave={handleLeave}
+          onOpenWhiteboard={handleOpenWhiteboard}
+          onToggleMic={handleToggleMic}
+          onToggleCam={handleToggleCamera}
+        />
       </div>
 
       {/* Whiteboard overlay */}

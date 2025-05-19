@@ -46,7 +46,7 @@ const HeroBanner = () => {
             </h1>
             <p className="text-black text-[15px] leading-relaxed">
               Tutee connects students with peer tutors for personalized,
-              interactive learning sessions. Whether you're seeking academic
+              interactive learning sessions. Whether you&apos;re seeking academic
               support or looking to share your knowledge, Tutee is your platform
               for collaborative growth.
             </p>

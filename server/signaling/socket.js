@@ -80,10 +80,8 @@ function setupSocket(server) {
 
     socket.on("chat-message", (msg) => {
       if (msg.roomId) {
-        // Broadcast to everyone else in this room
         socket.to(msg.roomId).emit("chat-message", msg);
       } else {
-        // fallback: just broadcast to everyone except sender
         socket.broadcast.emit("chat-message", msg);
       }
     });

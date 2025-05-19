@@ -73,12 +73,16 @@ export default function ChatBox({ socket, currentUser }: ChatBoxProps) {
 
   return (
     <div className="flex flex-col flex-1 w-full h-full bg-white rounded-2xl shadow">
-      
+
       {/* Messages */}
       <div
         ref={chatRef}
-        className="flex-1 px-4 py-2 space-y-4 overflow-y-auto"
-        style={{ background: "transparent", height: 406 }}
+        className="px-4 py-2 space-y-4 overflow-y-auto"
+        style={{
+          background: "transparent",
+          height: 320, // Or any fixed height you want (e.g. 320, 350, 400)
+          maxHeight: 320, // Prevents the box from growing infinitely
+        }}
       >
         {messages.map((msg, idx) => {
           const isMe = msg.user === currentUser.role;
