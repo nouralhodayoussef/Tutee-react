@@ -34,7 +34,6 @@ export default function LoginPage() {
         return;
       }
 
-      // Redirect user based on role
       switch (data.role) {
         case 'admin':
           router.push('/admin');
@@ -48,7 +47,7 @@ export default function LoginPage() {
         default:
           setError('Unknown user role');
       }
-    } catch (err) {
+    } catch {
       setError('Something went wrong. Please try again.');
     }
   };
@@ -80,9 +79,7 @@ export default function LoginPage() {
             <Image src="/imgs/logo.png" alt="Tutee Logo" width={100} height={50} />
           </div>
 
-          <h3 className="text-lg font-normal text-center text-black mb-6">
-            Welcome to Tutee!
-          </h3>
+          <h3 className="text-lg font-normal text-center text-black mb-6">Welcome to Tutee!</h3>
 
           {/* Toggle Login/Register */}
           <div className="flex justify-center mb-6">

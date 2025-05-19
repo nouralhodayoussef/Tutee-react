@@ -20,7 +20,6 @@ router.post('/', (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(401).json({ error: 'User does not exist.' });
 
-    // Determine which table to query for profile_id
     let profileTable = '';
     if (user.role === 'tutee') profileTable = 'tutees';
     else if (user.role === 'tutor') profileTable = 'tutors';
@@ -33,25 +32,33 @@ router.post('/', (req, res) => {
 
       const profile_id = profileResult[0].id;
 
-      // Save both user.id and profile_id in the session
+      // Store session user info
       req.session.user = {
-        id: user.id,             // users.id
+        id: user.id,
         role: user.role,
-        profile_id: profile_id   // tutees.id / tutors.id / admins.id
+        profile_id: profile_id
       };
 
-      // Handle remember me
+      // Handle "Remember Me"
       if (remember) {
         req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 days
       } else {
-        req.session.cookie.expires = false;
+        req.session.cookie.expires = false; // session-only cookie
       }
 
-      return res.status(200).json({
-        message: 'Login successful',
-        user_id: user.id,
-        profile_id: profile_id,
-        role: user.role
+      // ✅ Ensure session is saved before sending response
+      req.session.save((saveErr) => {
+        if (saveErr) {
+          console.error('Session save error:', saveErr);
+          return res.status(500).json({ error: 'Session save failed' });
+        }
+
+        return res.status(200).json({
+          message: 'Login successful',
+          user_id: user.id,
+          profile_id: profile_id,
+          role: user.role
+        });
       });
     });
   });
