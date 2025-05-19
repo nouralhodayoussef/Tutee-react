@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { motion } from 'framer-motion';
 
 const universities = [
   { src: '/imgs/LIU.png', alt: 'LIU', width: 269, height: 270 },
@@ -8,6 +9,15 @@ const universities = [
   { src: '/imgs/BAU.png', alt: 'BAU', width: 236, height: 255 },
   { src: '/imgs/LAU.png', alt: 'LAU', width: 282, height: 282 },
 ];
+
+const logoVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: 0.12 + i * 0.13, duration: 0.6, ease: 'easeOut' },
+  }),
+};
 
 const CoursesAndUniversitiesSection = () => {
   return (
@@ -33,13 +43,25 @@ const CoursesAndUniversitiesSection = () => {
       </div>
 
       {/* Titles */}
-      <div className="relative z-20 text-center mt-8">
+      <motion.div
+        className="relative z-20 text-center mt-8"
+        initial={{ opacity: 0, y: -40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.85, ease: 'easeOut' }}
+      >
         <h2 className="text-3xl md:text-4xl font-bold text-white">COURSES AND UNIVERSITIES</h2>
         <h3 className="text-3xl font-light text-white mt-2">ON TUTEE</h3>
-      </div>
+      </motion.div>
 
       {/* Chevron Button */}
-      <div className="relative z-20 mt-10 flex justify-center items-center">
+      <motion.div
+        className="relative z-20 mt-10 flex justify-center items-center"
+        initial={{ scale: 0.85, opacity: 0 }}
+        whileInView={{ scale: 1, opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.7, delay: 0.2, ease: 'easeOut' }}
+      >
         <div className="w-[100px] h-[100px] bg-black/30 rounded-full flex items-center justify-center">
           <div className="w-[70px] h-[70px] bg-gradient-to-r from-[#C89D50] to-[#E8B14F] rounded-full flex items-center justify-center">
             <div className="w-[60px] h-[60px] border-4 border-white rounded-full flex items-center justify-center">
@@ -55,12 +77,22 @@ const CoursesAndUniversitiesSection = () => {
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* University Logos */}
-      <div className="relative z-20 mt-16 grid grid-cols-2 md:grid-cols-4 gap-6 justify-items-center">
+      <motion.div
+        className="relative z-20 mt-16 grid grid-cols-2 md:grid-cols-4 gap-6 justify-items-center"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.25 }}
+      >
         {universities.map((uni, idx) => (
-          <div key={idx} className="drop-shadow-md">
+          <motion.div
+            key={idx}
+            className="drop-shadow-md"
+            variants={logoVariants}
+            custom={idx}
+          >
             <Image
               src={uni.src}
               alt={uni.alt}
@@ -68,9 +100,9 @@ const CoursesAndUniversitiesSection = () => {
               height={uni.height}
               className="object-contain"
             />
-          </div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </section>
   );
 };

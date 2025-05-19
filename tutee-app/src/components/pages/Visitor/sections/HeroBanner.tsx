@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight,
   MapPin,
@@ -9,7 +11,6 @@ import {
   ChevronRight,
 } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
 
 const HeroBanner = () => {
   const contactItems = [
@@ -28,9 +29,16 @@ const HeroBanner = () => {
   ];
 
   const [currentItem, setCurrentItem] = useState(0);
+  const [direction, setDirection] = useState(1); // 1 for next, -1 for prev
 
-  const nextItem = () => setCurrentItem((prev) => (prev + 1) % contactItems.length);
-  const prevItem = () => setCurrentItem((prev) => (prev - 1 + contactItems.length) % contactItems.length);
+  const nextItem = () => {
+    setDirection(1);
+    setCurrentItem((prev) => (prev + 1) % contactItems.length);
+  };
+  const prevItem = () => {
+    setDirection(-1);
+    setCurrentItem((prev) => (prev - 1 + contactItems.length) % contactItems.length);
+  };
 
   return (
     <>
@@ -38,7 +46,12 @@ const HeroBanner = () => {
       <section className="relative w-full bg-[#F5F5EF] px-4 md:px-24 pt-10 pb-16 overflow-hidden">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
           {/* Left Text */}
-          <div className="max-w-xl w-full text-center lg:text-left space-y-6">
+          <motion.div
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="max-w-xl w-full text-center lg:text-left space-y-6"
+          >
             <h1 className="text-[32px] sm:text-[36px] md:text-[46px] font-bold text-black leading-snug">
               Transforming <span className="text-[#E8B14F]">Education</span>
               <br className="hidden sm:block" />
@@ -51,14 +64,23 @@ const HeroBanner = () => {
               for collaborative growth.
             </p>
             <div className="flex justify-center lg:justify-start">
-              <button className="flex items-center gap-2 px-6 py-3 rounded-full bg-[#E8B14F] text-black font-bold text-sm shadow hover:bg-yellow-500 transition">
+              <motion.button
+                whileHover={{ scale: 1.07 }}
+                whileTap={{ scale: 0.97 }}
+                className="flex items-center gap-2 px-6 py-3 rounded-full bg-[#E8B14F] text-black font-bold text-sm shadow hover:bg-yellow-500 transition"
+              >
                 Start with Tutee <ArrowRight className="w-4 h-4" />
-              </button>
+              </motion.button>
             </div>
-          </div>
+          </motion.div>
 
           {/* Right Image */}
-          <div className="relative w-full max-w-[500px] h-[400px]">
+          <motion.div
+            initial={{ scale: 0.92, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
+            className="relative w-full max-w-[500px] h-[400px]"
+          >
             <div className="absolute top-0 left-0 w-full h-full rounded-[100px_100px_100px_240px] bg-black/10 z-0" />
             <Image
               src="/imgs/pexels-hero.png"
@@ -66,25 +88,50 @@ const HeroBanner = () => {
               fill
               className="object-cover rounded-[100px_100px_100px_240px] z-10"
             />
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Contact Info Section */}
-      <section className="w-full px-4 md:px-24 pb-12">
+      <motion.section
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
+        className="w-full px-4 md:px-24 pb-12"
+      >
         <div className="w-full max-w-7xl mx-auto bg-gradient-to-r from-[#E8B14F]/60 to-[#E8B14F] rounded-[60px] px-6 md:px-12 py-8 shadow-lg">
-          {/* Mobile View */}
-          <div className="md:hidden flex items-center justify-between">
-            <button onClick={prevItem} className="bg-white/40 rounded-full p-2 hover:bg-white/60">
+          {/* Mobile View (Animated Slider) */}
+          <div className="md:hidden flex items-center justify-between min-h-[48px]">
+            <button
+              onClick={prevItem}
+              className="bg-white/40 rounded-full p-2 hover:bg-white/60"
+              aria-label="Previous contact"
+            >
               <ChevronLeft className="w-4 h-4 text-white" />
             </button>
-            <div className="flex items-center gap-3">
-              {contactItems[currentItem].icon}
-              <p className="text-black text-sm font-medium">
-                {contactItems[currentItem].label}
-              </p>
+            <div className="w-[230px] flex items-center justify-center overflow-hidden relative h-12">
+              <AnimatePresence initial={false} custom={direction}>
+                <motion.div
+                  key={currentItem}
+                  custom={direction}
+                  initial={{ x: direction > 0 ? 90 : -90, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: direction > 0 ? -90 : 90, opacity: 0 }}
+                  transition={{ duration: 0.32, ease: "easeInOut" }}
+                  className="absolute left-0 top-0 w-full h-full flex items-center justify-center gap-3"
+                >
+                  {contactItems[currentItem].icon}
+                  <p className="text-black text-sm font-medium">
+                    {contactItems[currentItem].label}
+                  </p>
+                </motion.div>
+              </AnimatePresence>
             </div>
-            <button onClick={nextItem} className="bg-white/40 rounded-full p-2 hover:bg-white/60">
+            <button
+              onClick={nextItem}
+              className="bg-white/40 rounded-full p-2 hover:bg-white/60"
+              aria-label="Next contact"
+            >
               <ChevronRight className="w-4 h-4 text-white" />
             </button>
           </div>
@@ -117,7 +164,7 @@ const HeroBanner = () => {
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
     </>
   );
 };

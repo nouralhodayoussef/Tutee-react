@@ -1,5 +1,7 @@
 "use client";
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+
 export default function ContactUsSection() {
   const [form, setForm] = useState({
     firstName: "",
@@ -49,16 +51,22 @@ export default function ContactUsSection() {
   };
 
   return (
-    <section
+    <motion.section
       className="w-full flex justify-center items-center py-12 px-4"
-
+      initial={{ opacity: 0, y: 48 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.15 }}
+      transition={{ duration: 0.8, ease: "easeOut" }}
     >
-      <form
-       style={{
-        background: "radial-gradient(circle at 60% 10%, #f3cc7b 0%, #E8B14F 100%)",
-      }}
+      <motion.form
+        style={{
+          background: "radial-gradient(circle at 60% 10%, #f3cc7b 0%, #E8B14F 100%)",
+        }}
         className="w-full max-w-2xl rounded-[48px] bg-[#E8B14F]/90 px-6 py-8 sm:px-12 shadow-lg flex flex-col items-center"
         onSubmit={handleSubmit}
+        initial={{ scale: 0.97, opacity: 0.9 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
       >
         <h2 className="text-2xl sm:text-3xl font-bold text-black text-center mb-2">Contact Us</h2>
         <hr className="w-24 border-black mb-3" />
@@ -113,16 +121,40 @@ export default function ContactUsSection() {
           className="rounded-3xl border border-black px-6 py-4 text-base w-full h-32 bg-transparent placeholder-black focus:outline-none mb-4 resize-none"
           required
         />
-        <button
+        <motion.button
           type="submit"
           className="bg-white text-black font-bold rounded-full px-8 py-2 mt-2 shadow-sm transition hover:bg-black hover:text-white"
           disabled={loading}
+          whileHover={{ scale: 1.07 }}
+          whileTap={{ scale: 0.96 }}
         >
           {loading ? "Sending..." : "Send Feedback"}
-        </button>
-        {success && <div className="text-green-600 mt-4">{success}</div>}
-        {error && <div className="text-red-600 mt-4">{error}</div>}
-      </form>
-    </section>
+        </motion.button>
+        <AnimatePresence>
+          {success && (
+            <motion.div
+              className="text-green-600 mt-4"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ duration: 0.36 }}
+            >
+              {success}
+            </motion.div>
+          )}
+          {error && (
+            <motion.div
+              className="text-red-600 mt-4"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ duration: 0.36 }}
+            >
+              {error}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.form>
+    </motion.section>
   );
 }
