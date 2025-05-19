@@ -36,6 +36,12 @@ interface Tutor {
 
 export default function TuteeTutorProfile() {
   const [tutor, setTutor] = useState<Tutor | null>(null);
+  const uniqueCourses = tutor?.courses
+    ? tutor.courses.filter(
+      (course, idx, arr) =>
+        arr.findIndex(c => c.course_code === course.course_code) === idx
+    )
+    : [];
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [showModal, setShowModal] = useState(false);
   const searchParams = useSearchParams();
@@ -102,8 +108,8 @@ export default function TuteeTutorProfile() {
                   disabled={!selectedCourse}
                   onClick={() => setShowModal(true)}
                   className={`${selectedCourse
-                      ? 'bg-[#E8B14F] text-white'
-                      : 'bg-gray-400 text-white cursor-not-allowed'
+                    ? 'bg-[#E8B14F] text-white'
+                    : 'bg-gray-400 text-white cursor-not-allowed'
                     } px-6 py-2 rounded-xl font-bold text-sm shadow`}
                 >
                   Schedule
@@ -115,7 +121,7 @@ export default function TuteeTutorProfile() {
                 <p>👤 {tutor?.tutee_count || 0} Tutee</p>
                 <p>📚 {tutor?.course_count || 0} Course</p>
                 <p>💰 ${Number(tutor?.price_per_hour).toFixed(2)} / hour</p>
-                </div>
+              </div>
 
             </div>
           </div>
@@ -127,14 +133,14 @@ export default function TuteeTutorProfile() {
         <div className="md:col-span-2">
           <h2 className="text-3xl font-bold mb-6">Courses</h2>
           <div className="flex flex-wrap gap-4 mb-12">
-            {tutor?.courses?.map((course, idx) => (
+            {uniqueCourses.map((course) => (
               <button
-                key={idx}
+                key={course.course_code}
                 onClick={() => setSelectedCourse(course)}
                 title={course.course_name}
                 className={`px-6 py-2 rounded-xl font-bold text-sm transition shadow whitespace-nowrap ${selectedCourse?.course_code === course.course_code
-                    ? 'bg-[#E8B14F] text-white'
-                    : 'bg-black/10 text-black'
+                  ? 'bg-[#E8B14F] text-white'
+                  : 'bg-black/10 text-black'
                   }`}
               >
                 {course.course_code}
@@ -165,8 +171,8 @@ export default function TuteeTutorProfile() {
             disabled={!selectedCourse}
             onClick={() => setShowModal(true)}
             className={`${selectedCourse
-                ? 'bg-[#E8B14F] hover:bg-yellow-500'
-                : 'bg-gray-400 cursor-not-allowed'
+              ? 'bg-[#E8B14F] hover:bg-yellow-500'
+              : 'bg-gray-400 cursor-not-allowed'
               } px-6 py-3 rounded-full text-white font-bold text-sm`}
           >
             Continue to Scheduling
