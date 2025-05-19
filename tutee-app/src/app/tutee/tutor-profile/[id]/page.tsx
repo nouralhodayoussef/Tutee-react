@@ -38,13 +38,14 @@ export default function TuteeTutorProfile() {
   const [tutor, setTutor] = useState<Tutor | null>(null);
   const uniqueCourses = tutor?.courses
     ? tutor.courses.filter(
-      (course, idx, arr) =>
-        arr.findIndex(c => c.course_code === course.course_code) === idx
-    )
+        (course, idx, arr) =>
+          arr.findIndex(c => c.course_code === course.course_code) === idx
+      )
     : [];
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [showModal, setShowModal] = useState(false);
   const searchParams = useSearchParams();
+  const [skillsToShow, setSkillsToShow] = useState(10);
 
   useEffect(() => {
     const fetchTutor = async () => {
@@ -107,10 +108,11 @@ export default function TuteeTutorProfile() {
                 <button
                   disabled={!selectedCourse}
                   onClick={() => setShowModal(true)}
-                  className={`${selectedCourse
-                    ? 'bg-[#E8B14F] text-white'
-                    : 'bg-gray-400 text-white cursor-not-allowed'
-                    } px-6 py-2 rounded-xl font-bold text-sm shadow`}
+                  className={`${
+                    selectedCourse
+                      ? 'bg-[#E8B14F] text-white'
+                      : 'bg-gray-400 text-white cursor-not-allowed'
+                  } px-6 py-2 rounded-xl font-bold text-sm shadow`}
                 >
                   Schedule
                 </button>
@@ -122,7 +124,6 @@ export default function TuteeTutorProfile() {
                 <p>📚 {tutor?.course_count || 0} Course</p>
                 <p>💰 ${Number(tutor?.price_per_hour).toFixed(2)} / hour</p>
               </div>
-
             </div>
           </div>
         </div>
@@ -138,10 +139,11 @@ export default function TuteeTutorProfile() {
                 key={course.course_code}
                 onClick={() => setSelectedCourse(course)}
                 title={course.course_name}
-                className={`px-6 py-2 rounded-xl font-bold text-sm transition shadow whitespace-nowrap ${selectedCourse?.course_code === course.course_code
-                  ? 'bg-[#E8B14F] text-white'
-                  : 'bg-black/10 text-black'
-                  }`}
+                className={`px-6 py-2 rounded-xl font-bold text-sm transition shadow whitespace-nowrap ${
+                  selectedCourse?.course_code === course.course_code
+                    ? 'bg-[#E8B14F] text-white'
+                    : 'bg-black/10 text-black'
+                }`}
               >
                 {course.course_code}
               </button>
@@ -150,7 +152,7 @@ export default function TuteeTutorProfile() {
 
           <h2 className="text-3xl font-bold mb-6">Skills</h2>
           <div className="flex flex-wrap gap-4">
-            {tutor?.skills?.map((skill, idx) => (
+            {tutor?.skills?.slice(0, skillsToShow).map((skill, idx) => (
               <span
                 key={idx}
                 className="px-6 py-2 rounded-xl bg-black/10 text-black text-sm font-bold shadow whitespace-nowrap"
@@ -159,8 +161,29 @@ export default function TuteeTutorProfile() {
               </span>
             ))}
           </div>
+          {tutor?.skills && tutor.skills.length > 10 && (
+  <div className="mt-4">
+    {skillsToShow < tutor.skills.length ? (
+      <button
+        className="bg-[#E8B14F] hover:bg-yellow-500 text-white px-6 py-2 rounded-full font-bold text-sm"
+        onClick={() => setSkillsToShow(skillsToShow + 10)}
+      >
+        Show More
+      </button>
+    ) : (
+      <button
+        className="bg-gray-400 hover:bg-gray-600 text-white px-6 py-2 rounded-full font-bold text-sm"
+        onClick={() => setSkillsToShow(10)}
+      >
+        Show Less
+      </button>
+    )}
+  </div>
+)}
+
         </div>
 
+        {/* This is the other column */}
         <div className="w-full bg-white rounded-2xl shadow p-8 text-center h-fit">
           <p className="text-lg text-black mb-6">
             {selectedCourse
@@ -170,10 +193,11 @@ export default function TuteeTutorProfile() {
           <button
             disabled={!selectedCourse}
             onClick={() => setShowModal(true)}
-            className={`${selectedCourse
-              ? 'bg-[#E8B14F] hover:bg-yellow-500'
-              : 'bg-gray-400 cursor-not-allowed'
-              } px-6 py-3 rounded-full text-white font-bold text-sm`}
+            className={`${
+              selectedCourse
+                ? 'bg-[#E8B14F] hover:bg-yellow-500'
+                : 'bg-gray-400 cursor-not-allowed'
+            } px-6 py-3 rounded-full text-white font-bold text-sm`}
           >
             Continue to Scheduling
           </button>
