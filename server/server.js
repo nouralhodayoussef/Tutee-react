@@ -41,7 +41,6 @@ const requestSessionRoute = require("./routes/requestsession");
 const tutorRoutes = require("./routes/tutorhome");
 const changePasswordRoute = require("./routes/changepassword");
 const dropdownInfoRoute = require("./routes/dropdowninfo");
-const forgotPasswordRoute = require("./routes/forgotpassword");
 const logoutRoute = require("./routes/logout");
 const tutorRequestsRoutes = require("./routes/tutorrequests");
 const updateTuteeRoute = require("./routes/update-tutee");
@@ -52,6 +51,11 @@ const tutorBookedSessions = require("./routes/tutor/bookedSessions");
 const tuteeBookedSessionsRoute = require("./routes/tutee-booked-sessions");
 const addCourseToTutorRoute = require("./routes/add-course-to-tutor");
 const sessionRoute = require("./routes/session");
+
+//Routes for forget-password
+const forgotPasswordRoute = require('./routes/forget-password/forgotpassword');
+const verifyResetOtpRoute = require('./routes/forget-password/verify-reset-otp');
+const resetPasswordFinalRoute = require('./routes/forget-password/reset-password-final');
 
 const app = express();
 const server = http.createServer(app);
@@ -128,13 +132,17 @@ app.use("/tutor/requests", tutorRequestsRoutes);
 app.use("/tutor/respond-session", respondSessionRoute);
 app.use("/dropdowninfo", dropdownInfoRoute);
 app.use("/change-password", changePasswordRoute);
-app.use("/forgot-password", forgotPasswordRoute);
 app.use("/logout", logoutRoute);
 app.use("/update-tutee", updateTuteeRoute);
 app.use("/schedule-session", scheduleSessionRoute);
 app.use("/tutor/booked-sessions", tutorBookedSessions);
 app.use("/tutee/booked-sessions", tuteeBookedSessionsRoute);
 app.use("/session", sessionRoute);
+
+// Routes for forget-password
+app.use('/forgot-password', forgotPasswordRoute);
+app.use('/verify-reset-otp', verifyResetOtpRoute);
+app.use('/reset-password-final', resetPasswordFinalRoute);
 
 // Sockets
 setupSocket(server);

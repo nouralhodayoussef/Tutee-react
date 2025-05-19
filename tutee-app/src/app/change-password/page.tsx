@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import 'bootstrap-icons/font/bootstrap-icons.css';
+import { validatePassword } from '@/utils/passwordValidator';
 
 export default function ChangePasswordPage() {
   const [oldPassword, setOldPassword] = useState('');
@@ -13,14 +14,6 @@ export default function ChangePasswordPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const router = useRouter();
-
-  const validatePassword = (password: string) => {
-    const lengthOk = password.length >= 8 && password.length <= 18;
-    const hasUpper = /[A-Z]/.test(password);
-    const hasLower = /[a-z]/.test(password);
-    const hasSpecial = /[#@$.&%]/.test(password);
-    return lengthOk && hasUpper && hasLower && hasSpecial;
-  };
 
   const handleUpdate = async () => {
     setErrorMsg('');
@@ -36,8 +29,9 @@ export default function ChangePasswordPage() {
       return;
     }
 
-    if (!validatePassword(newPassword)) {
-      setErrorMsg('Password must be 8–18 chars, include upper/lowercase and one of: # $ @ . & %');
+    const { valid, errors } = validatePassword(newPassword);
+    if (!valid) {
+      setErrorMsg(errors[0]);
       return;
     }
 
@@ -56,7 +50,27 @@ export default function ChangePasswordPage() {
         setOldPassword('');
         setNewPassword('');
         setConfirmPassword('');
-        setTimeout(() => router.push('/tutee'), 1500);
+
+        // ✅ Secure role-based redirect using backend session
+        fetch('http://localhost:4000/check-session', {
+          credentials: 'include',
+        })
+          .then(res => res.json())
+          .then(data => {
+            const role = data.role;
+            console.log('✅ Redirecting based on role:', role);
+
+            setTimeout(() => {
+              if (role === 'tutor') {
+                router.push('/tutor-edit-profile');
+              } else if (role === 'tutee') {
+                router.push('/tutee-edit-profile');
+              } else {
+                router.push('/login');
+              }
+            }, 1500);
+          })
+          .catch(() => router.push('/login'));
       } else {
         setErrorMsg(data.error || 'Old password is incorrect');
       }
@@ -111,9 +125,18 @@ export default function ChangePasswordPage() {
           />
         </div>
 
-        {/* Error / Success Messages */}
-        {errorMsg && <p className="text-red-600 text-sm mb-4 flex items-center"><i className="bi bi-x-circle mr-2"></i>{errorMsg}</p>}
-        {successMsg && <p className="text-green-600 text-sm mb-4">{successMsg}</p>}
+        {/* Error */}
+        {errorMsg && (
+          <p className="text-red-600 text-sm mb-4 flex items-center">
+            <i className="bi bi-x-circle mr-2"></i>
+            {errorMsg}
+          </p>
+        )}
+
+        {/* Success */}
+        {successMsg && (
+          <p className="text-green-600 text-sm mb-4">{successMsg}</p>
+        )}
 
         {/* Submit Button */}
         <button
