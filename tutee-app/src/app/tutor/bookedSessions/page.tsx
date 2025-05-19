@@ -294,14 +294,6 @@ export default function TutorBookedSessionsPage() {
                   key={session.session_id}
                   className="relative bg-[#F9F9F9] rounded-xl px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
                 >
-                  <button
-                    className="absolute top-4 right-4 text-[#DE5462]"
-                    onClick={() => handleCancelClick(session)}
-                    title="Cancel Session"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
-
                   <div className="space-y-2">
                     <p className="font-bold text-[14px]">
                       <span className="font-extrabold text-black">{session.course_code}</span> - {session.course_name}
