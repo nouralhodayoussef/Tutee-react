@@ -3,6 +3,7 @@ import HeroBanner from "@/components/pages/Visitor/sections/HeroBanner";
 import AboutSection from "@/components/pages/Visitor/sections/AboutSection";
 import TutorsSection from "@/components/pages/Visitor/sections/TutorsSection";
 import CoursesAndUniversitiesSection from "./sections/CoursesAndUniversitiesSection";
+import ContactUsSection from "./sections/ContactUsSection";
 
 export default function Home() {
   return (
@@ -12,6 +13,7 @@ export default function Home() {
       <AboutSection/>
       <TutorsSection/>
       <CoursesAndUniversitiesSection/>
+      <ContactUsSection/>
     </>
   );
 }
