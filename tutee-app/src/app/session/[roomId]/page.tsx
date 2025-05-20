@@ -23,6 +23,8 @@ type SessionInfo = {
 };
 type UserRole = 'tutee' | 'tutor';
 type CurrentUser = { role: UserRole };
+const videoSenderRef = { current: null as RTCRtpSender | null };
+const cameraVideoTrackRef = { current: null as MediaStreamTrack | null };
 
 export default function SessionRoom() {
   const { roomId } = useParams() as { roomId: string };
@@ -55,30 +57,24 @@ export default function SessionRoom() {
       showNotification('The other user is already sharing their screen.');
       return;
     }
-    if (!peerConnectionRef.current) return;
+    if (!peerConnectionRef.current || !videoSenderRef.current) return;
+
     try {
       const displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
       setLocalScreenStream(displayStream);
       setIsLocalSharing(true);
 
-      // Add track to peer connection (does NOT remove camera)
       const screenTrack = displayStream.getVideoTracks()[0];
-      const sender = peerConnectionRef.current.addTrack(screenTrack, displayStream);
+      await videoSenderRef.current.replaceTrack(screenTrack);
 
-      // Notify remote user via socket
       socketRef.current?.emit('screen-share-started', { roomId });
 
       screenTrack.onended = () => {
         handleStopShareScreen();
       };
 
-      // Update for local preview
+      // Update preview
       setLocalScreenStream(displayStream);
-
-      // Force renegotiate
-      const offer = await peerConnectionRef.current.createOffer();
-      await peerConnectionRef.current.setLocalDescription(offer);
-      socketRef.current?.emit('offer', { roomId, offer });
 
     } catch (err) {
       setIsLocalSharing(false);
@@ -88,38 +84,22 @@ export default function SessionRoom() {
     }
   };
 
-  const handleStopShareScreen = () => {
+  const handleStopShareScreen = async () => {
     setIsLocalSharing(false);
+
     if (localScreenStream) {
       localScreenStream.getTracks().forEach((track) => track.stop());
     }
+
     setLocalScreenStream(null);
 
-    // Remove screen track from peer connection
-    if (peerConnectionRef.current) {
-      const senders = peerConnectionRef.current.getSenders();
-      senders.forEach((sender) => {
-        if (
-          sender.track &&
-          sender.track.kind === 'video' &&
-          sender.track.label.toLowerCase().includes('screen')
-        ) {
-          peerConnectionRef.current?.removeTrack(sender);
-        }
-      });
+    if (videoSenderRef.current && cameraVideoTrackRef.current) {
+      await videoSenderRef.current.replaceTrack(cameraVideoTrackRef.current);
     }
 
     socketRef.current?.emit('screen-share-stopped', { roomId });
-
-    // Renegotiate to remove screen track
-    if (peerConnectionRef.current) {
-      peerConnectionRef.current.createOffer().then((offer) => {
-        return peerConnectionRef.current!.setLocalDescription(offer).then(() => {
-          socketRef.current?.emit('offer', { roomId, offer });
-        });
-      });
-    }
   };
+
 
   const handleLeave = () => {
     fetch('http://localhost:4000/session/whoami', { credentials: 'include' })
@@ -205,56 +185,88 @@ export default function SessionRoom() {
 
       const pc = new RTCPeerConnection(iceServers);
       peerConnectionRef.current = pc;
-pc.onnegotiationneeded = () => {
-  renegotiate();
-};
-      // Add all camera/audio tracks to connection
-      mediaStream.getTracks().forEach((track) => {
-        pc.addTrack(track, mediaStream);
-      });
+
+      // Reserve transceivers for audio & video
+      pc.addTransceiver('audio', { direction: 'sendrecv' });
+      pc.addTransceiver('video', { direction: 'sendrecv' });
+
+      // --- Define renegotiate FIRST ---
+      let isNegotiating = false;
 
       const renegotiate = async () => {
-        if (!peerConnectionRef.current) return;
+        if (!peerConnectionRef.current || isNegotiating) return;
+        if (peerConnectionRef.current.signalingState !== 'stable') return;
+
         try {
+          isNegotiating = true;
           const offer = await peerConnectionRef.current.createOffer();
           await peerConnectionRef.current.setLocalDescription(offer);
           socketRef.current?.emit('offer', { roomId, offer });
         } catch (err) {
           console.error('Renegotiation failed:', err);
+        } finally {
+          isNegotiating = false;
         }
       };
 
-      pc.ontrack = (event) => {
-        const track = event.track;
-        if (track.kind === 'video') {
-          // Distinguish screen from camera
-          const isScreen =
-            track.label.toLowerCase().includes('screen') ||
-            track.getSettings().displaySurface !== undefined;
 
-          if (isScreen) {
+      // Then assign the callback
+      pc.onnegotiationneeded = () => {
+        renegotiate();
+      };
+
+      mediaStream.getAudioTracks().forEach((track) => {
+        pc.addTrack(track, mediaStream);
+      });
+
+      const videoTrack = mediaStream.getVideoTracks()[0];
+      cameraVideoTrackRef.current = videoTrack;
+      videoSenderRef.current = pc.addTrack(videoTrack, mediaStream);
+
+      pc.ontrack = (event) => {
+        const incomingStream = event.streams?.[0];
+        if (!incomingStream) return;
+
+        const track = event.track;
+        const settings = track.getSettings();
+        const isScreenTrack =
+          settings.displaySurface !== undefined ||
+          track.label.toLowerCase().includes('screen') ||
+          incomingStream.id.toLowerCase().includes('screen');
+
+        console.log('🧭 ontrack:', {
+          kind: track.kind,
+          label: track.label,
+          isScreenTrack,
+          streamId: incomingStream.id,
+        });
+
+        if (track.kind === 'video') {
+          if (isScreenTrack) {
             setRemoteScreenStream((prev) => {
-              const stream = prev ?? new MediaStream();
-              if (!stream.getTracks().some((t) => t.id === track.id)) {
-                stream.addTrack(track);
-              }
-              return stream;
+              if (!incomingStream || prev?.id === incomingStream.id) return prev;
+              return incomingStream;
             });
             setIsRemoteSharing(true);
+
             track.onended = () => {
+              console.log('🛑 Remote screen share ended');
               setRemoteScreenStream(null);
               setIsRemoteSharing(false);
             };
           } else {
             setRemoteStream((prev) => {
-              const stream = prev ?? new MediaStream();
-              if (!stream.getTracks().some((t) => t.id === track.id)) {
-                stream.addTrack(track);
-              }
-              return stream;
+              if (!incomingStream || prev?.id === incomingStream.id) return prev;
+              return incomingStream;
             });
+
+            track.onended = () => {
+              console.log('🛑 Remote camera ended');
+              setRemoteStream(null);
+            };
           }
         }
+
         if (track.kind === 'audio') {
           setRemoteStream((prev) => {
             const stream = prev ?? new MediaStream();
@@ -265,6 +277,8 @@ pc.onnegotiationneeded = () => {
           });
         }
       };
+
+
 
       pc.onicecandidate = (e) => {
         if (e.candidate) {

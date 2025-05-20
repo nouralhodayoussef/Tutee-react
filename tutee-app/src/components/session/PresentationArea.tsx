@@ -1,4 +1,5 @@
-import React from "react";
+'use client';
+import React, { useEffect, useRef } from "react";
 
 type PresentationAreaProps = {
   localScreenStream: MediaStream | null;
@@ -15,17 +16,35 @@ export default function PresentationArea({
   isRemoteSharing,
   onStopSharing,
 }: PresentationAreaProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
   const streamToShow = isRemoteSharing
     ? remoteScreenStream
     : isLocalSharing
     ? localScreenStream
     : null;
 
+  useEffect(() => {
+    if (videoRef.current && streamToShow) {
+      console.log("🎥 Presentation video element updated with stream:", streamToShow.id);
+      videoRef.current.srcObject = streamToShow;
+    }
+  }, [streamToShow]);
+
+  console.log('📡 PresentationArea props:', {
+    isLocalSharing,
+    isRemoteSharing,
+    localScreenStream,
+    remoteScreenStream,
+    streamToShow,
+  });
+
   return (
     <div className="w-full max-w-4xl aspect-[16/9] bg-[#fcfcfa] rounded-2xl shadow-xl flex items-center justify-center text-center relative border border-gray-200">
       {streamToShow ? (
         <>
           <video
+            ref={videoRef}
             autoPlay
             playsInline
             controls={false}
@@ -38,9 +57,6 @@ export default function PresentationArea({
               position: "absolute",
               top: 0,
               left: 0,
-            }}
-            ref={el => {
-              if (el) el.srcObject = streamToShow;
             }}
           />
           {isLocalSharing && (
