@@ -20,19 +20,23 @@ router.get('/courses', (req, res) => {
       t.first_name AS tutor_first,
       t.last_name AS tutor_last,
       t.photo,
-      AVG(r.stars) AS avg_rating
+      (
+        SELECT ROUND(AVG(tr2.stars), 1)
+        FROM scheduled_sessions ss2
+        JOIN session_slots sl2 ON ss2.slot_id = sl2.id
+        JOIN tutor_availability ta2 ON sl2.availability_id = ta2.id
+        JOIN tutor_ratings tr2 ON tr2.scheduled_session_id = ss2.id
+        WHERE ta2.tutor_id = t.id
+      ) AS avg_rating
     FROM courses c
     JOIN tutor_courses tc ON tc.course_id = c.id
     JOIN tutors t ON t.id = tc.tutor_id
-    LEFT JOIN scheduled_sessions ss ON ss.course_id = c.id AND ss.tutor_id = t.id
-    LEFT JOIN tutor_ratings r ON r.scheduled_session_id = ss.id
     WHERE c.major_id = ?
       AND c.university_id = ?
       AND (
         c.course_name LIKE ?
         OR c.course_code LIKE ?
       )
-    GROUP BY c.id, t.id
   `;
 
   db.query(sql, [major_id, university_id, likeSearch, likeSearch], (err, result) => {
