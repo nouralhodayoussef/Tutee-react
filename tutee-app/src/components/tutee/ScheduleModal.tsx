@@ -41,7 +41,7 @@ export default function ScheduleModal({ onClose, tutorId, courseId }: ScheduleMo
         setBookedSlots(data.booked || []);
       })
       .catch(() => console.error("Failed to fetch slots"));
-    }, [tutorId]);
+  }, [tutorId]);
 
   const getDayIndex = (date: Date) => (date.getDay() === 0 ? 7 : date.getDay());
 
@@ -116,6 +116,25 @@ export default function ScheduleModal({ onClose, tutorId, courseId }: ScheduleMo
       setError("");
     }
   };
+  // Add this utility function in your component (or outside if you wish)
+  function isSlotInPast(slot: string, selectedDate: Date) {
+    const now = new Date();
+    // If not today, always return false (slot is NOT in past)
+    if (
+      selectedDate.getFullYear() !== now.getFullYear() ||
+      selectedDate.getMonth() !== now.getMonth() ||
+      selectedDate.getDate() !== now.getDate()
+    ) {
+      return false;
+    }
+    // Parse slot as "HH:mm"
+    const [slotHour, slotMinute] = slot.split(":").map(Number);
+    const slotDate = new Date(selectedDate);
+    slotDate.setHours(slotHour, slotMinute, 0, 0);
+
+    // Compare to current time
+    return slotDate < now;
+  }
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -202,14 +221,15 @@ export default function ScheduleModal({ onClose, tutorId, courseId }: ScheduleMo
                 {availableSlots[getDayIndex(selectedDate)]?.map((slot, idx) => {
                   const dateStr = selectedDate.toLocaleDateString("en-CA");
                   const isBooked = bookedSlots.some(b => b.date === dateStr && b.time === slot);
+                  const isPast = isSlotInPast(slot, selectedDate);
 
                   return (
                     <button
                       key={idx}
-                      onClick={() => !isBooked && toggleTime(slot)}
-                      disabled={isBooked}
-                      className={`px-4 py-2 rounded-full text-sm font-medium shadow 
-                        ${isBooked
+                      onClick={() => !isBooked && !isPast && toggleTime(slot)}
+                      disabled={isBooked || isPast}
+                      className={`px-4 py-2 rounded-full text-sm font-medium shadow
+              ${isBooked || isPast
                           ? "bg-gray-300 text-gray-500 cursor-not-allowed line-through"
                           : selectedTimes.includes(slot)
                             ? "bg-[#E8B14F] text-white"
