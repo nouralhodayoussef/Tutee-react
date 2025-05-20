@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import SummaryCard from "@/components/admin/SummaryCard";
+import RoleProtected from "@/components/security/RoleProtected";
 import {
   Users,
   GraduationCap,
@@ -142,6 +143,7 @@ export default function AdminDashboardPage() {
 
   // --------- UI ---------
   return (
+    <RoleProtected requiredRole="admin">
     <motion.div
       className="flex min-h-screen bg-[#F5F5EF] font-sans"
       initial={{ opacity: 0 }}
@@ -448,6 +450,7 @@ export default function AdminDashboardPage() {
         {/* More sections can be added here */}
       </main>
     </motion.div>
+    </RoleProtected>
   );
 }
 
