@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import TuteeHeader from '@/components/layout/TuteeHeader';
 
 export default function FindTutorPage() {
@@ -22,17 +23,25 @@ export default function FindTutorPage() {
         setUniversities(data.universities);
         setSelectedMajor(data.selectedMajor);
         setSelectedUniversity(data.selectedUniversity);
-
-        // default fetch with selected major/university
-        fetchTutors(data.selectedMajor, data.selectedUniversity, ratingSort, searchTerm, null, null);
+        fetchTutors(data.selectedMajor, data.selectedUniversity, ratingSort, '', null, null);
       });
   }, []);
 
   useEffect(() => {
     if (selectedMajor !== null && selectedUniversity !== null) {
-      fetchTutors(selectedMajor, selectedUniversity, ratingSort, searchTerm, minPrice || null, maxPrice || null);
+      fetchTutors(selectedMajor, selectedUniversity, ratingSort, searchTerm, minPrice, maxPrice);
     }
   }, [selectedMajor, selectedUniversity, ratingSort, minPrice, maxPrice]);
+
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      if (selectedMajor !== null && selectedUniversity !== null) {
+        fetchTutors(selectedMajor, selectedUniversity, ratingSort, searchTerm, minPrice, maxPrice);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm]);
 
   const fetchTutors = (
     major: number | null,
@@ -56,15 +65,23 @@ export default function FindTutorPage() {
       .then(data => setTutors(data));
   };
 
-  useEffect(() => {
-    const delayDebounce = setTimeout(() => {
-      if (selectedMajor !== null && selectedUniversity !== null) {
-        fetchTutors(selectedMajor, selectedUniversity, ratingSort, searchTerm, minPrice || null, maxPrice || null);
-      }
-    }, 300);
+  const renderStars = (rating: number) => {
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating - fullStars >= 0.25 && rating - fullStars < 0.75;
+    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
 
-    return () => clearTimeout(delayDebounce);
-  }, [searchTerm]);
+    return (
+      <div className="flex gap-0.5 mt-1 text-[18px]">
+        {Array.from({ length: fullStars }).map((_, i) => (
+          <span key={`full-${i}`} className="text-yellow-400">★</span>
+        ))}
+        {hasHalfStar && <span className="text-yellow-400">⯪</span>}
+        {Array.from({ length: emptyStars }).map((_, i) => (
+          <span key={`empty-${i}`} className="text-gray-300">☆</span>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-[#f5f5ef] pb-10">
@@ -79,7 +96,7 @@ export default function FindTutorPage() {
             <div className="relative z-10 flex w-full justify-between items-center bg-white rounded-[10px] h-[60px] px-6 mb-6 max-w-[1050px] mx-auto">
               <input
                 type="text"
-                placeholder="Search for a Tutor"
+                placeholder="Search by first name, last name, or skill"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="flex-1 bg-transparent text-[18px] text-[#83839A] focus:outline-none"
@@ -134,37 +151,28 @@ export default function FindTutorPage() {
           <h2 className="mt-20 text-3xl font-bold text-black mb-6">Tutors</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
             {tutors.map((tutor) => (
-              <div
+              <Link
                 key={tutor.id}
-                className="bg-white rounded-[18px] shadow-md overflow-hidden w-[220px] mx-auto text-center transition hover:shadow-lg"
+                href={`/tutee/tutor-profile/${tutor.id}`}
+                className="bg-white rounded-[18px] shadow-md overflow-hidden w-[220px] mx-auto text-center transition hover:shadow-lg hover:scale-[1.02]"
               >
-                <img
-                  src={tutor.photo}
-                  alt={tutor.first_name}
-                  className="w-[120px] h-[120px] object-cover rounded-full mx-auto mt-4"
-                />
-                <div className="p-4">
-                  <h2 className="text-[18px] font-semibold text-[#333]">
-                    {tutor.first_name} {tutor.last_name}
-                  </h2>
-                  <p className="text-[#A3A3A3] text-sm mt-1 leading-tight">
-                    {tutor.university_name} – {tutor.major_name}
-                  </p>
-                  <div className="flex items-center justify-center mt-2">
-                    {[...Array(5)].map((_, i) => (
-                      <svg
-                        key={i}
-                        className="w-4 h-4 mr-1"
-                        fill={i < Math.floor(tutor.avg_rating || 0) ? '#E8B14F' : '#e0e0e0'}
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M12 .587l3.668 7.568L24 9.75l-6 5.84L19.335 24 12 19.897 4.665 24 6 15.59 0 9.75l8.332-1.595z" />
-                      </svg>
-                    ))}
-                    <span className="ml-1 text-[#828282] text-sm">({tutor.rating_count})</span>
+                <div>
+                  <img
+                    src={tutor.photo}
+                    alt={tutor.first_name}
+                    className="w-[120px] h-[120px] object-cover rounded-full mx-auto mt-4"
+                  />
+                  <div className="p-4">
+                    <h2 className="text-[18px] font-semibold text-[#333]">
+                      {tutor.first_name} {tutor.last_name}
+                    </h2>
+                    <p className="text-[#A3A3A3] text-sm mt-1 leading-tight">
+                      {tutor.university_name} – {tutor.major_name}
+                    </p>
+                    {!isNaN(Number(tutor.avg_rating)) && renderStars(Number(tutor.avg_rating))}
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
