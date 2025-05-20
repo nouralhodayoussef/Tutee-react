@@ -1,9 +1,12 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import { Mic, MicOff, Video, VideoOff, Monitor, PhoneOff, PenSquare } from 'lucide-react';
 
 interface ControlsProps {
   stream: MediaStream | null;
+  micOn: boolean;
+  camOn: boolean;
   isScreenSharing?: boolean;
   onShareScreen?: () => void;
   onLeave?: () => void;
@@ -14,6 +17,8 @@ interface ControlsProps {
 
 const Controls = ({
   stream,
+  micOn,
+  camOn,
   isScreenSharing,
   onShareScreen,
   onLeave,
@@ -21,28 +26,24 @@ const Controls = ({
   onToggleCam,
   onOpenWhiteboard,
 }: ControlsProps) => {
-  // Use the stream to determine mic/cam state directly
-  const isMicOn = !!stream?.getAudioTracks()[0]?.enabled;
-  const isCamOn = !!stream?.getVideoTracks()[0]?.enabled;
-
   return (
     <div className="flex items-center justify-center gap-3">
       {/* Mic */}
       <button
         onClick={onToggleMic}
         className="w-11 h-11 rounded-full bg-[#E8B14F] text-black shadow hover:bg-yellow-500"
-        title={isMicOn ? "Mute Microphone" : "Unmute Microphone"}
+        title={micOn ? "Mute Microphone" : "Unmute Microphone"}
       >
-        {isMicOn ? <Mic className="w-5 h-5 mx-auto" /> : <MicOff className="w-5 h-5 mx-auto" />}
+        {micOn ? <Mic className="w-5 h-5 mx-auto" /> : <MicOff className="w-5 h-5 mx-auto" />}
       </button>
 
       {/* Cam */}
       <button
         onClick={onToggleCam}
         className="w-11 h-11 rounded-full bg-[#E8B14F] text-black shadow hover:bg-yellow-500"
-        title={isCamOn ? "Turn Off Camera" : "Turn On Camera"}
+        title={camOn ? "Turn Off Camera" : "Turn On Camera"}
       >
-        {isCamOn ? <Video className="w-5 h-5 mx-auto" /> : <VideoOff className="w-5 h-5 mx-auto" />}
+        {camOn ? <Video className="w-5 h-5 mx-auto" /> : <VideoOff className="w-5 h-5 mx-auto" />}
       </button>
 
       {/* Screen Share */}
