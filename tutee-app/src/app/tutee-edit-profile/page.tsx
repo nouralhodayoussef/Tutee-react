@@ -199,6 +199,7 @@ export default function TuteeEditProfile() {
     if (res.ok) {
       setPhoto(data.photo);
       setCropModalOpen(false);
+      window.location.reload();
     } else {
       alert("❌ Upload failed: " + data.error);
     }
