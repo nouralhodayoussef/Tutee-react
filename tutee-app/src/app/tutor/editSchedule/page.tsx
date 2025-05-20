@@ -1,30 +1,42 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import { useEffect, useState } from 'react';
 import TutorHeader from '@/components/layout/TutorHeader';
 
-const daysOfWeek = [
-  { id: 1, name: 'Monday' },
-  { id: 2, name: 'Tuesday' },
-  { id: 3, name: 'Wednesday' },
-  { id: 4, name: 'Thursday' },
-  { id: 5, name: 'Friday' },
-  { id: 6, name: 'Saturday' },
-  { id: 7, name: 'Sunday' },
-];
+// ---- Types ----
+type TimeRange = { start: string; end: string };
 
-const toMinutes = (t: string) => {
+type ConflictSession = {
+  session_id: number;
+  scheduled_date: string;
+  day_id: number;
+  slot_time: string;
+  tutee_first_name: string;
+  tutee_last_name: string;
+  course_code: string;
+  course_name: string;
+};
+
+type ConflictModalProps = {
+  sessions: ConflictSession[];
+  onCancel: () => void;
+  onConfirm: () => void;
+};
+
+// ---- Utilities ----
+const toMinutes = (t: string): number => {
   const [h, m] = t.split(':').map(Number);
   return h * 60 + m;
 };
 
-const toTimeString = (mins: number) => {
+const toTimeString = (mins: number): string => {
   const h = Math.floor(mins / 60).toString().padStart(2, '0');
   const m = (mins % 60).toString().padStart(2, '0');
   return `${h}:${m}`;
 };
 
-const checkOverlap = (ranges: { start: string; end: string }[]) => {
+const checkOverlap = (ranges: TimeRange[]): boolean => {
   const sorted = [...ranges].sort((a, b) => toMinutes(a.start) - toMinutes(b.start));
   for (let i = 0; i < sorted.length - 1; i++) {
     if (toMinutes(sorted[i].end) > toMinutes(sorted[i + 1].start)) return true;
@@ -32,7 +44,7 @@ const checkOverlap = (ranges: { start: string; end: string }[]) => {
   return false;
 };
 
-const findNextAvailableRange = (ranges: { start: string; end: string }[]) => {
+const findNextAvailableRange = (ranges: TimeRange[]): TimeRange => {
   const sorted = [...ranges].sort((a, b) => toMinutes(a.start) - toMinutes(b.start));
   let start = 8 * 60;
   for (const r of sorted) {
@@ -51,9 +63,53 @@ const findNextAvailableRange = (ranges: { start: string; end: string }[]) => {
   };
 };
 
+const daysOfWeek = [
+  { id: 1, name: 'Monday' },
+  { id: 2, name: 'Tuesday' },
+  { id: 3, name: 'Wednesday' },
+  { id: 4, name: 'Thursday' },
+  { id: 5, name: 'Friday' },
+  { id: 6, name: 'Saturday' },
+  { id: 7, name: 'Sunday' },
+];
+
+// ---- Modal ----
+function ConflictModal({ sessions, onCancel, onConfirm }: ConflictModalProps) {
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+      <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-8 relative">
+        <h2 className="text-xl font-bold mb-2 text-red-600">Warning</h2>
+        <p className="mb-4">The following sessions will be cancelled if you remove this slot:</p>
+        <ul className="mb-6 max-h-64 overflow-y-auto">
+          {sessions.map((s) => (
+            <li key={s.session_id} className="mb-2 p-2 bg-yellow-50 rounded">
+              <div>
+                <b>{s.tutee_first_name} {s.tutee_last_name}</b>
+              </div>
+              <div className="text-sm text-gray-600">
+                {daysOfWeek.find(d => d.id === s.day_id)?.name || `Day ${s.day_id}`}, {s.scheduled_date?.slice(0, 10)} at {s.slot_time?.slice(0, 5)}<br />
+                <b>{s.course_code}:</b> {s.course_name}
+              </div>
+            </li>
+          ))}
+        </ul>
+        <div className="flex gap-3 justify-end">
+          <button onClick={onCancel} className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 font-semibold">Cancel</button>
+          <button onClick={onConfirm} className="px-4 py-2 rounded bg-[#E8B14F] text-white font-semibold hover:bg-yellow-500">Confirm</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---- Main Component ----
 export default function TutorScheduleEditor() {
-  const [availability, setAvailability] = useState<{ [dayId: number]: { start: string; end: string }[] }>({});
+  const [availability, setAvailability] = useState<{ [dayId: number]: TimeRange[] }>({});
   const [errors, setErrors] = useState<{ [dayId: number]: string }>({});
+  const [showModal, setShowModal] = useState(false);
+  const [modalSessions, setModalSessions] = useState<ConflictSession[]>([]);
+  const [modalDay, setModalDay] = useState<number | null>(null);
+  const [modalIndex, setModalIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchAvailability = async () => {
@@ -90,10 +146,91 @@ export default function TutorScheduleEditor() {
     }));
   };
 
-  const removeRange = (dayId: number, index: number) => {
+  // Key: on remove, check conflicts, show modal if needed
+  const removeRange = async (dayId: number, index: number) => {
+    const rangeToRemove = (availability[dayId] || [])[index];
+    if (!rangeToRemove) return;
+
+    // Get current tutorId (should be from session, or backend can use req.session.user.profile_id)
+    const tutorId = 1; // Replace this with session value if you have one
+
+    // Check backend for conflicts
+    const ranges = [{
+      day_id: dayId,
+      start: rangeToRemove.start,
+      end: rangeToRemove.end,
+    }];
+
+    try {
+      const res = await fetch('http://localhost:4000/tutor/check-schedule-conflicts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ tutor_id: tutorId, ranges }),
+      });
+      const data = await res.json();
+
+      if (data.sessions && data.sessions.length > 0) {
+        // Show modal listing sessions
+        setModalSessions(data.sessions);
+        setShowModal(true);
+        setModalDay(dayId);
+        setModalIndex(index);
+      } else {
+        // No conflicts, just remove
+        actuallyRemoveRange(dayId, index);
+      }
+    } catch (err) {
+      alert('Error checking for session conflicts.');
+    }
+  };
+
+  // Actually remove the slot
+  const actuallyRemoveRange = (dayId: number, index: number) => {
     const updated = (availability[dayId] || []).filter((_, i) => i !== index);
     setAvailability((prev) => ({ ...prev, [dayId]: updated }));
     setErrors((prev) => ({ ...prev, [dayId]: '' }));
+    setShowModal(false);
+    setModalSessions([]);
+    setModalDay(null);
+    setModalIndex(null);
+  };
+
+  // Modal: cancel/confirm handlers
+  const handleModalCancel = () => {
+    setShowModal(false);
+    setModalSessions([]);
+    setModalDay(null);
+    setModalIndex(null);
+  };
+
+  const handleModalConfirm = async () => {
+    // On confirm: cancel sessions & remove availability in backend, then update state
+    const tutorId = 1; // Replace with session or actual value as above
+    const rangeToRemove = modalDay !== null && modalIndex !== null ? (availability[modalDay] || [])[modalIndex] : null;
+    try {
+      await fetch('http://localhost:4000/tutor/cancel-sessions-and-remove-availability', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          tutor_id: tutorId,
+          ranges: [{
+            day_id: modalDay,
+            start: rangeToRemove?.start,
+            end: rangeToRemove?.end,
+          }],
+          session_ids: modalSessions.map(s => s.session_id),
+          reason: "Schedule edited by tutor"
+        }),
+      });
+      if (modalDay !== null && modalIndex !== null) {
+        actuallyRemoveRange(modalDay, modalIndex);
+      }
+      // (Optionally show success message or reload)
+    } catch (err) {
+      alert('Error cancelling sessions.');
+    }
   };
 
   const updateRange = (dayId: number, index: number, field: 'start' | 'end', value: string) => {
@@ -211,6 +348,15 @@ export default function TutorScheduleEditor() {
           </button>
         </div>
       </div>
+
+      {/* Conflict Modal */}
+      {showModal && (
+        <ConflictModal
+          sessions={modalSessions}
+          onCancel={handleModalCancel}
+          onConfirm={handleModalConfirm}
+        />
+      )}
     </main>
   );
 }

@@ -6,7 +6,6 @@ import TutorHeader from '@/components/layout/TutorHeader';
 import CheckMaterialModal from '@/components/CheckMaterialModal';
 import CancelSessionModal from '@/components/CancelSessionModal';
 import ModalPortal from '@/components/ModalPortal';
-import { Trash2 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { tuteeLogoBase64 } from '@/utils/pdfLogo';
