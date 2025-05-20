@@ -61,6 +61,13 @@ const forgotPasswordRoute = require('./routes/forget-password/forgotpassword');
 const verifyResetOtpRoute = require('./routes/forget-password/verify-reset-otp');
 const resetPasswordFinalRoute = require('./routes/forget-password/reset-password-final');
 
+//admin
+const adminSummaryCards = require('./routes/admin/summary-cards');
+const adminUserGrowth = require('./routes/admin/user-growth');
+const adminSessionStatus = require('./routes/admin/session-status');
+const adminTopTutors = require('./routes/admin/top-tutors');
+const sessionsByUniversity = require('./routes/admin/sessions-by-university');
+
 const app = express();
 const server = http.createServer(app);
 
@@ -151,6 +158,13 @@ app.use('/tutor/cancel-sessions-and-remove-availability', cancelSessionsAndRemov
 app.use('/forgot-password', forgotPasswordRoute);
 app.use('/verify-reset-otp', verifyResetOtpRoute);
 app.use('/reset-password-final', resetPasswordFinalRoute);
+
+//admin
+app.use('/api/admin/summary-cards', adminSummaryCards);
+app.use('/api/admin/user-growth', adminUserGrowth);
+app.use('/api/admin/session-status', adminSessionStatus);
+app.use('/api/admin/top-tutors', adminTopTutors);
+app.use('/api/admin/sessions-by-university', sessionsByUniversity);
 
 // Sockets
 setupSocket(server);
