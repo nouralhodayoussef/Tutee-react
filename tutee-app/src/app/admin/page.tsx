@@ -143,7 +143,7 @@ export default function AdminDashboardPage() {
 
   // --------- UI ---------
   return (
-    <RoleProtected requiredRole="admin">
+    <RoleProtected requiredRoles={['admin']}>
     <motion.div
       className="flex min-h-screen bg-[#F5F5EF] font-sans"
       initial={{ opacity: 0 }}

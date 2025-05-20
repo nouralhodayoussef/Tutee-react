@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import TuteeHeader from '@/components/layout/TuteeHeader';
 import CancelSessionModal from '@/components/CancelSessionModal'; // reuse modal
 import { Trash2 } from 'lucide-react';
+import RoleProtected from "@/components/security/RoleProtected";
 
 interface Session {
   session_id: number;
@@ -68,6 +69,7 @@ export default function TuteeBookedSessions() {
   };
 
   return (
+    <RoleProtected requiredRoles={['tutee']}>
     <main className="bg-[#F5F5EF] min-h-screen">
       <TuteeHeader />
 
@@ -186,5 +188,6 @@ export default function TuteeBookedSessions() {
         />
       )}
     </main>
+    </RoleProtected>
   );
 }

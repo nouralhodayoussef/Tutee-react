@@ -11,6 +11,7 @@ import { Plus, X } from "lucide-react";
 import { getDefaultPhoto } from "@/constants/imagePaths";
 import ConfirmModal from "@/components/ConfirmRemovalModal";
 import CropModal from "@/components/CropModal";
+import RoleProtected from "@/components/security/RoleProtected";
 export default function TutorEditProfile() {
   const router = useRouter();
 
@@ -288,6 +289,8 @@ export default function TutorEditProfile() {
   );
   return (
     <>
+    <RoleProtected requiredRoles={['tutor']}>
+
       <TutorHeader />
       <div className="min-h-screen bg-[#FAFAF5] font-poppins px-4 py-12 md:px-6">
         <div className="max-w-[1354px] bg-white mx-auto shadow-md rounded-[15px] px-6 md:px-12 pt-10 pb-8">
@@ -613,6 +616,7 @@ export default function TutorEditProfile() {
 )}
 
       </div>
+      </RoleProtected>
     </>
   );
 }

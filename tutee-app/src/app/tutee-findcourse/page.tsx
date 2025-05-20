@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import TuteeHeader from "@/components/layout/TuteeHeader";
 import Link from "next/link";
+import RoleProtected from "@/components/security/RoleProtected";
 
 type Major = {
   id: number;
@@ -101,6 +102,7 @@ export default function TuteeFindCourse() {
 
   return (
     <>
+    <RoleProtected requiredRoles={['tutee']}>
       <TuteeHeader />
       <section className="w-full flex justify-center py-10 bg-[#f5f5ef] font-poppins">
         <div className="w-full max-w-[1057px] px-4">
@@ -259,6 +261,7 @@ export default function TuteeFindCourse() {
           </div>
         </div>
       </section>
+      </RoleProtected>
     </>
   );
 }

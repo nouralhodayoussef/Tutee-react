@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { validatePassword } from '@/utils/passwordValidator';
+import RoleProtected from "@/components/security/RoleProtected";
 
 export default function ChangePasswordPage() {
   const [oldPassword, setOldPassword] = useState('');
@@ -80,6 +81,7 @@ export default function ChangePasswordPage() {
   };
 
   return (
+<RoleProtected requiredRoles={['tutee', 'tutor']}>
     <div className="min-h-screen bg-[#f5f5f5] flex items-center justify-center font-poppins">
       <div className="bg-white p-10 rounded-xl shadow-md w-full max-w-md">
         <h2 className="text-center text-2xl font-bold mb-6">Change Password</h2>
@@ -158,5 +160,6 @@ export default function ChangePasswordPage() {
         </p>
       </div>
     </div>
+  </RoleProtected>
   );
 }

@@ -3,6 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import TutorHeader from '@/components/layout/TutorHeader';
+import RoleProtected from "@/components/security/RoleProtected";
+import CompleteProfileModal from '@/components/Tutor/CompleteProfileModal';
+import SetScheduleModal from '@/components/Tutor/SetScheduleModal';
 import CheckMaterialModal from '@/components/CheckMaterialModal';
 import CancelSessionModal from '@/components/CancelSessionModal';
 import ModalPortal from '@/components/ModalPortal';
@@ -237,7 +240,12 @@ export default function TutorBookedSessionsPage() {
 
 
   return (
+    <RoleProtected requiredRoles={['tutor']}>
+
+      
     <main className="bg-[#F5F5EF] min-h-screen">
+      <CompleteProfileModal />
+      <SetScheduleModal />
       <TutorHeader />
 
       <section className="max-w-6xl mx-auto px-6 py-12">
@@ -386,5 +394,6 @@ export default function TutorBookedSessionsPage() {
         </ModalPortal>
       )}
     </main>
+    </RoleProtected>
   );
 }

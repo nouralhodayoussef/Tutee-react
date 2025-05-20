@@ -7,7 +7,7 @@ import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import CompleteProfileModal from '@/components/Tutor/CompleteProfileModal';
 import SetScheduleModal from '@/components/Tutor/SetScheduleModal';
-
+import RoleProtected from "@/components/security/RoleProtected";
 interface Tutee {
   name: string;
   photo?: string;
@@ -59,6 +59,7 @@ export default function TutorHomePage() {
   }, []);
 
   return (
+    <RoleProtected requiredRoles={['tutor']}>
     <main className="min-h-screen bg-[#F5F5EF]">
       <CompleteProfileModal />
       <SetScheduleModal />
@@ -206,5 +207,6 @@ export default function TutorHomePage() {
         </div>
       </section>
     </main>
+    </RoleProtected>
   );
 }

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import TuteeHeader from '@/components/layout/TuteeHeader';
 import dynamic from 'next/dynamic';
+import RoleProtected from "@/components/security/RoleProtected";
 
 const ScheduleModal = dynamic(() => import('@/components/tutee/ScheduleModal'), { ssr: false });
 
@@ -84,6 +85,8 @@ export default function TuteeTutorProfile() {
   };
 
   return (
+    <RoleProtected requiredRoles={['tutee']}>
+
     <main className="bg-[#F5F5EF] min-h-screen font-montserrat relative z-0">
       <TuteeHeader />
 
@@ -291,5 +294,6 @@ export default function TuteeTutorProfile() {
         />
       )}
     </main>
+    </RoleProtected>
   );
 }

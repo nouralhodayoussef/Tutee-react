@@ -6,6 +6,9 @@ import TutorHeader from "@/components/layout/TutorHeader";
 import TimeSlotsModal from "@/components/Tutor/TimeSlotModal";
 import MaterialModal from "@/components/Tutor/MaterialModal";
 import ModalPortal from "@/components/ModalPortal";
+import RoleProtected from "@/components/security/RoleProtected";
+import CompleteProfileModal from '@/components/Tutor/CompleteProfileModal';
+import SetScheduleModal from '@/components/Tutor/SetScheduleModal';
 
 export default function TutorRequests() {
   const [requests, setRequests] = useState<any[]>([]);
@@ -30,7 +33,12 @@ export default function TutorRequests() {
   }, []);
 
   return (
+    <RoleProtected requiredRoles={['tutor']}>
+      
+
     <div className="min-h-screen bg-[#f5f5ef]">
+      <CompleteProfileModal />
+      <SetScheduleModal />
       <TutorHeader />
 
       <div className="relative mx-auto mt-20 w-[90%] max-w-[1292px] rounded-[15px] bg-white p-10 shadow-md flex flex-col gap-10 md:flex-row md:items-start md:justify-between">
@@ -203,5 +211,6 @@ export default function TutorRequests() {
         </ModalPortal>
       )}
     </div>
+    </RoleProtected>
   );
 }

@@ -3,7 +3,8 @@
 
 import { useEffect, useState } from 'react';
 import TutorHeader from '@/components/layout/TutorHeader';
-
+import RoleProtected from "@/components/security/RoleProtected";
+import CompleteProfileModal from '@/components/Tutor/CompleteProfileModal';
 // ---- Types ----
 type TimeRange = { start: string; end: string };
 
@@ -287,7 +288,11 @@ export default function TutorScheduleEditor() {
   };
 
   return (
+    
+<RoleProtected requiredRoles={['tutor']}>
+  
     <main className="min-h-screen bg-[#F5F5EF]">
+      <CompleteProfileModal />
       <TutorHeader />
 
       <div className="p-6 max-w-4xl mx-auto mt-8 w-full">
@@ -358,5 +363,6 @@ export default function TutorScheduleEditor() {
         />
       )}
     </main>
+</RoleProtected>
   );
 }

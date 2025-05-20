@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import TuteeHeader from '@/components/layout/TuteeHeader';
+import RoleProtected from '@/components/security/RoleProtected';
 
 export default function FindTutorPage() {
   const [majors, setMajors] = useState<any[]>([]);
@@ -84,6 +85,7 @@ export default function FindTutorPage() {
   };
 
   return (
+    <RoleProtected requiredRoles={['tutee']}>
     <div className="min-h-screen bg-[#f5f5ef] pb-10">
       <TuteeHeader />
       <div className="w-full flex justify-center py-10 font-poppins px-4">
@@ -178,5 +180,6 @@ export default function FindTutorPage() {
         </div>
       </div>
     </div>
+    </RoleProtected>
   );
 }

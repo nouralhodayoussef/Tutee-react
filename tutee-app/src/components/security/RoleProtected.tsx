@@ -4,14 +4,11 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface RoleProtectedProps {
-  requiredRole: 'tutee' | 'tutor' | 'admin';
+  requiredRoles: ('tutee' | 'tutor' | 'admin')[];
   children: React.ReactNode;
 }
 
-export default function RoleProtected({
-  requiredRole,
-  children,
-}: RoleProtectedProps) {
+export default function RoleProtected({ requiredRoles, children }: RoleProtectedProps) {
   const [authorized, setAuthorized] = useState(false);
   const [checked, setChecked] = useState(false);
   const [userInfo, setUserInfo] = useState<{ id: number | null; role: string | null }>({
@@ -33,7 +30,7 @@ export default function RoleProtected({
         }
 
         const data = await res.json();
-        if (data.role === requiredRole) {
+        if (requiredRoles.includes(data.role)) {
           setAuthorized(true);
         } else {
           setUserInfo({ id: data.id, role: data.role });
@@ -46,7 +43,7 @@ export default function RoleProtected({
     };
 
     checkAuth();
-  }, [requiredRole]);
+  }, [requiredRoles.join()]); // triggers re-check if role list changes
 
   useEffect(() => {
     if (checked && !authorized) {
@@ -55,7 +52,7 @@ export default function RoleProtected({
         setPhase('done');
 
         if (!userInfo.id) {
-          router.push('/login');
+          router.push('/');
         } else if (userInfo.role === 'tutor') {
           router.push('/tutor');
         } else if (userInfo.role === 'tutee') {
@@ -63,7 +60,7 @@ export default function RoleProtected({
         } else if (userInfo.role === 'admin') {
           router.push('/admin');
         } else {
-          router.push('/login');
+          router.push('/');
         }
       }, 2000);
 

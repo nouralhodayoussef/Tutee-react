@@ -221,7 +221,7 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
   return (
     <>
-      <RoleProtected requiredRole="tutee">
+      <RoleProtected requiredRoles={['tutee']}>
         <TuteeHeader />
         <div className="min-h-screen bg-[#FAFAF5] font-poppins px-6 py-12">
           <div className="max-w-[1354px] min-h-[659px] bg-white mx-auto shadow-md rounded-[15px] px-12 pt-10 flex flex-col lg:flex-row justify-between">
