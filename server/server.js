@@ -79,6 +79,8 @@ const activeUsersRoute = require('./routes/admin/active-users');
 const repeatBookingRateRoute = require('./routes/admin/repeat-booking-rate');
 const unratedSessionsRoute = require('./routes/admin/unrated-sessions');
 const cancellationReasonsRoute = require('./routes/admin/cancellation-reasons');
+const sessionsExplorerRoute = require("./routes/admin/sessions-explorer");
+
 const app = express();
 const server = http.createServer(app);
 
@@ -185,6 +187,9 @@ app.use('/api/admin/active-users', activeUsersRoute);
 app.use('/api/admin/repeat-booking-rate', repeatBookingRateRoute);
 app.use('/api/admin/unrated-sessions', unratedSessionsRoute);
 app.use('/api/admin/cancellation-reasons', cancellationReasonsRoute);
+app.use('/api/admin', require('./routes/admin/feedback'));
+app.use("/api/admin/sessions-explorer", sessionsExplorerRoute);
+
 // Sockets
 setupSocket(server);
 

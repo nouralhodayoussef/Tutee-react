@@ -35,7 +35,8 @@ const dateRanges = [
 // Section tabs
 const dashboardSections = [
   { label: "Platform Growth", value: "growth", icon: <BarChart2 size={18} /> },
-  { label: "Engagement Analysis", value: "engagement", icon: <Flame size={18} /> }
+  { label: "Engagement Analysis", value: "engagement", icon: <Flame size={18} /> },
+  { label: "Sessions Overview", value: "sessions", icon: <CalendarCheck size={18} /> },
 ];
 
 type SummaryCardsData = {
@@ -67,6 +68,11 @@ export default function AdminDashboardPage() {
   const [cancellationReasons, setCancellationReasons] = useState<any[]>([]);
   const [sidebarMin, setSidebarMin] = useState(false);
 
+  // Sessions table state
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [sessionsLoading, setSessionsLoading] = useState(false);
+  const [sessionsRange, setSessionsRange] = useState<'today' | 'week' | 'upcoming'>('today');
+
   // Color palettes
   const universityColors = [
     "#A78BFA", "#FBBF24", "#60A5FA", "#34D399", "#F87171", "#E8B14F", "#7C3AED", "#06B6D4", "#F472B6", "#4ADE80"
@@ -86,7 +92,8 @@ export default function AdminDashboardPage() {
       fetch(`${API_BASE}/active-users${qs}`).then(r => r.json()),
       fetch(`${API_BASE}/repeat-booking-rate${qs}`).then(r => r.json()),
       fetch(`${API_BASE}/unrated-sessions${qs}`).then(r => r.json()),
-      fetch(`${API_BASE}/cancellation-reasons${qs}`).then(r => r.json())
+      fetch(`${API_BASE}/cancellation-reasons${qs}`).then(r => r.json()),
+      fetch(`${API_BASE}/sessions-explorer${qs}`).then(r => r.json()),
     ]).then(
       ([
         cards, userGrowth, sessionStatus, topTutors, sessionsByUniversity,
@@ -105,6 +112,18 @@ export default function AdminDashboardPage() {
       }
     );
   }, [dateFilter]);
+
+  // Fetch sessions table
+  useEffect(() => {
+    if (section !== "sessions") return;
+    setSessionsLoading(true);
+    fetch(`http://localhost:4000/api/admin/sessions-explorer?range=${sessionsRange}`)
+      .then(r => r.json())
+      .then(data => {
+        setSessions(Array.isArray(data) ? data : []);
+        setSessionsLoading(false);
+      });
+  }, [section, sessionsRange]);
 
   // Pivot growth data for chart
   const chartData = (() => {
@@ -143,14 +162,14 @@ export default function AdminDashboardPage() {
         {/* Main Content */}
         <main
           className={`
-    flex-1
-    pt-16      // <--- add this line (or pt-[64px] if you want exact pixel)
-    px-2 py-4
-    sm:px-6 sm:py-6
-    md:px-10 md:py-10
-    transition-all duration-300
-    ${!sidebarMin ? "md:ml-60" : ""}
-  `}
+            flex-1
+            pt-16
+            px-2 py-4
+            sm:px-6 sm:py-6
+            md:px-10 md:py-10
+            transition-all duration-300
+            ${!sidebarMin ? "md:ml-60" : ""}
+          `}
         >
           {/* Section Selector & Date Filter */}
           <div className="flex flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-8">
@@ -159,14 +178,14 @@ export default function AdminDashboardPage() {
                 key={sec.value}
                 onClick={() => setSection(sec.value)}
                 className={`
-        flex items-center gap-2
-        px-3 py-2 sm:px-6 sm:py-2
-        rounded-xl font-semibold
-        text-sm sm:text-base shadow
-        ${section === sec.value
+                  flex items-center gap-2
+                  px-3 py-2 sm:px-6 sm:py-2
+                  rounded-xl font-semibold
+                  text-sm sm:text-base shadow
+                  ${section === sec.value
                     ? "bg-[#E8B14F] text-black"
                     : "bg-white text-gray-700 hover:bg-[#fdf7ea]"}
-      `}
+                `}
                 whileTap={{ scale: 0.97 }}
                 animate={section === sec.value ? { scale: 1.08 } : { scale: 1 }}
                 transition={{ type: "spring", stiffness: 340 }}
@@ -175,25 +194,27 @@ export default function AdminDashboardPage() {
                 {sec.label}
               </motion.button>
             ))}
-            {/* Date Range Filter */}
-            <div className="flex gap-1 md:gap-3 bg-white px-2 md:px-4 py-2 rounded-xl shadow ml-auto">
-              {dateRanges.map(opt => (
-                <motion.button
-                  key={opt.value}
-                  onClick={() => setDateFilter(opt.value)}
-                  className={`px-2 md:px-4 py-1 rounded-full text-xs md:text-sm font-semibold transition-all
-                    ${dateFilter === opt.value
-                      ? "bg-[#E8B14F] text-black shadow"
-                      : "text-gray-600 hover:bg-[#FDE68A]"}
-                  `}
-                  whileTap={{ scale: 0.93 }}
-                  animate={dateFilter === opt.value ? { scale: 1.13 } : { scale: 1 }}
-                  transition={{ type: "spring", stiffness: 350 }}
-                >
-                  {opt.label}
-                </motion.button>
-              ))}
-            </div>
+            {/* Date Range Filter: hide in Sessions Overview */}
+            {section !== "sessions" && (
+              <div className="flex gap-1 md:gap-3 bg-white px-2 md:px-4 py-2 rounded-xl shadow ml-auto">
+                {dateRanges.map(opt => (
+                  <motion.button
+                    key={opt.value}
+                    onClick={() => setDateFilter(opt.value)}
+                    className={`px-2 md:px-4 py-1 rounded-full text-xs md:text-sm font-semibold transition-all
+          ${dateFilter === opt.value
+                        ? "bg-[#E8B14F] text-black shadow"
+                        : "text-gray-600 hover:bg-[#FDE68A]"}
+        `}
+                    whileTap={{ scale: 0.93 }}
+                    animate={dateFilter === opt.value ? { scale: 1.13 } : { scale: 1 }}
+                    transition={{ type: "spring", stiffness: 350 }}
+                  >
+                    {opt.label}
+                  </motion.button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Section Content */}
@@ -317,7 +338,6 @@ export default function AdminDashboardPage() {
                 exit="exit"
                 transition={{ duration: 0.7 }}
               >
-                {/* Engagement Section */}
                 <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 mb-8 md:mb-12">
                   {loading
                     ? Array.from({ length: 4 }).map((_, i) => (
@@ -353,7 +373,6 @@ export default function AdminDashboardPage() {
                     )
                   }
                 </div>
-                {/* Charts & Insights */}
                 <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                   {/* Top Tutors */}
                   <motion.div className="bg-white rounded-2xl shadow-md p-4 md:p-6 min-h-[260px] md:min-h-[300px] flex flex-col">
@@ -494,6 +513,115 @@ export default function AdminDashboardPage() {
                     )
                   }
                 </div>
+              </motion.div>
+            )}
+
+            {section === "sessions" && (
+              <motion.div
+                key="sessions"
+                variants={sectionVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={{ duration: 0.7 }}
+              >
+                {/* Header and Filters */}
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
+                  <h2 className="font-bold text-xl md:text-2xl flex items-center gap-3">
+                    <CalendarCheck className="text-[#E8B14F]" size={28} />
+                    Sessions Overview
+                  </h2>
+                  <div className="flex gap-3">
+                    <button
+                      className={`px-4 py-2 rounded-full font-semibold text-sm transition-all shadow
+                        ${sessionsRange === "today" ? "bg-[#E8B14F] text-black" : "bg-white text-gray-700 hover:bg-[#fdf7ea]"}
+                      `}
+                      onClick={() => setSessionsRange("today")}
+                    >
+                      Today
+                    </button>
+                    <button
+                      className={`px-4 py-2 rounded-full font-semibold text-sm transition-all shadow
+                        ${sessionsRange === "week" ? "bg-[#E8B14F] text-black" : "bg-white text-gray-700 hover:bg-[#fdf7ea]"}
+                      `}
+                      onClick={() => setSessionsRange("week")}
+                    >
+                      This Week
+                    </button>
+                    <button
+                      className={`px-4 py-2 rounded-full font-semibold text-sm transition-all shadow
+                        ${sessionsRange === "upcoming" ? "bg-[#E8B14F] text-black" : "bg-white text-gray-700 hover:bg-[#fdf7ea]"}
+                      `}
+                      onClick={() => setSessionsRange("upcoming")}
+                    >
+                      Future
+                    </button>
+                  </div>
+                </div>
+                {/* Sessions Table */}
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="bg-white rounded-2xl shadow-md p-6"
+                >
+                  {sessionsLoading ? (
+                    <Spinner />
+                  ) : sessions.length === 0 ? (
+                    <div className="text-gray-400 text-center py-16">
+                      No sessions found for this filter!
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left">
+                        <thead>
+                          <tr className="text-[#E8B14F] font-semibold text-xs md:text-sm">
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Tutor</th>
+                            <th>Tutee</th>
+                            <th>Course</th>
+                            <th>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {sessions.map((s, i) => (
+                            <tr key={s.id || i} className="border-t">
+                              <td className="py-2">
+                                {new Date(s.scheduled_date).toLocaleDateString('en-GB')}
+                              </td>
+                              <td className="py-2">
+                                {new Date(s.scheduled_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </td>
+                              <td className="py-2">
+                                <div className="flex items-center gap-2">
+                                  <img
+                                    src={s.tutor_photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.tutor_first + " " + (s.tutor_last || ""))}`}
+                                    alt="tutor"
+                                    className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                                  />
+                                  <span>{s.tutor_first} {s.tutor_last}</span>
+                                </div>
+                              </td>
+                              <td className="py-2">
+                                <div className="flex items-center gap-2">
+                                  <img
+                                    src={s.tutee_photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.tutee_first + " " + (s.tutee_last || ""))}`}
+                                    alt="tutee"
+                                    className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                                  />
+                                  <span>{s.tutee_first} {s.tutee_last}</span>
+                                </div>
+                              </td>
+                              <td className="py-2">{s.course_code} - {s.course_name}</td>
+                              <td className="py-2 capitalize">{s.status}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </motion.div>
               </motion.div>
             )}
           </AnimatePresence>
