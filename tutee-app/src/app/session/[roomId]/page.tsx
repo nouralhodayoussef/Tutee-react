@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
@@ -14,6 +15,7 @@ const iceServers = {
 };
 
 type SessionInfo = {
+  session_id: number;
   tutee_first_name: string;
   tutee_last_name: string;
   tutee_photo: string;
@@ -25,7 +27,18 @@ type UserRole = 'tutee' | 'tutor';
 type CurrentUser = { role: UserRole };
 const videoSenderRef = { current: null as RTCRtpSender | null };
 const cameraVideoTrackRef = { current: null as MediaStreamTrack | null };
-
+function getOnlyCameraStream(remoteStream: MediaStream | null): MediaStream | null {
+  if (!remoteStream) return null;
+  const cameraTracks = remoteStream.getVideoTracks().filter(track => {
+    const label = track.label.toLowerCase();
+    // Most browsers put "screen" or "window" or "display" in the label for screen tracks
+    const isScreen = label.includes("screen") || label.includes("window") || label.includes("display");
+    return !isScreen;
+  });
+  const audioTracks = remoteStream.getAudioTracks();
+  if (cameraTracks.length === 0 && audioTracks.length === 0) return null;
+  return new MediaStream([...audioTracks, ...cameraTracks]);
+}
 export default function SessionRoom() {
   const { roomId } = useParams() as { roomId: string };
   const socketRef = useRef<Socket | null>(null);
@@ -49,9 +62,11 @@ export default function SessionRoom() {
   const [remoteCamOn, setRemoteCamOn] = useState(true);
   const [localVideoUpdate, setLocalVideoUpdate] = useState(0);
   const [remoteVideoUpdate, setRemoteVideoUpdate] = useState(0);
+  const screenSenderRef = useRef<RTCRtpSender | null>(null);
 
+  const videoSenderRef = useRef<RTCRtpSender | null>(null);
+  const cameraVideoTrackRef = useRef<MediaStreamTrack | null>(null);
 
-  // Screen sharing logic
   const handleShareScreen = async () => {
     if (isRemoteSharing) {
       showNotification('The other user is already sharing their screen.');
@@ -65,6 +80,8 @@ export default function SessionRoom() {
       setIsLocalSharing(true);
 
       const screenTrack = displayStream.getVideoTracks()[0];
+
+      // REPLACE camera with screen!
       await videoSenderRef.current.replaceTrack(screenTrack);
 
       socketRef.current?.emit('screen-share-started', { roomId });
@@ -72,10 +89,6 @@ export default function SessionRoom() {
       screenTrack.onended = () => {
         handleStopShareScreen();
       };
-
-      // Update preview
-      setLocalScreenStream(displayStream);
-
     } catch (err) {
       setIsLocalSharing(false);
       setLocalScreenStream(null);
@@ -87,15 +100,16 @@ export default function SessionRoom() {
   const handleStopShareScreen = async () => {
     setIsLocalSharing(false);
 
-    if (localScreenStream) {
-      localScreenStream.getTracks().forEach((track) => track.stop());
-    }
-
-    setLocalScreenStream(null);
-
+    // Restore camera track to the sender
     if (videoSenderRef.current && cameraVideoTrackRef.current) {
       await videoSenderRef.current.replaceTrack(cameraVideoTrackRef.current);
     }
+
+    // Stop the screen tracks
+    if (localScreenStream) {
+      localScreenStream.getTracks().forEach((track) => track.stop());
+    }
+    setLocalScreenStream(null);
 
     socketRef.current?.emit('screen-share-stopped', { roomId });
   };
@@ -106,11 +120,16 @@ export default function SessionRoom() {
       .then((res) => res.json())
       .then((data) => {
         const role = data.role;
-        if (role === 'tutee') window.location.href = '/tutee/booked-sessions';
-        else if (role === 'tutor') window.location.href = '/tutor/bookedSessions';
-        else window.location.href = '/';
+        if (role === 'tutee' && sessionInfo?.session_id) {
+          window.location.href = `/tutee/booked-sessions?rateSession=${sessionInfo.session_id}`;
+        } else if (role === 'tutor') {
+          window.location.href = '/tutor/bookedSessions';
+        } else {
+          window.location.href = '/';
+        }
       });
   };
+
 
   const handleOpenWhiteboard = () => {
     setShowWhiteboard(true);
@@ -224,59 +243,55 @@ export default function SessionRoom() {
       videoSenderRef.current = pc.addTrack(videoTrack, mediaStream);
 
       pc.ontrack = (event) => {
-        const incomingStream = event.streams?.[0];
-        if (!incomingStream) return;
-
         const track = event.track;
-        const settings = track.getSettings();
+        const kind = track.kind;
         const isScreenTrack =
-          settings.displaySurface !== undefined ||
-          track.label.toLowerCase().includes('screen') ||
-          incomingStream.id.toLowerCase().includes('screen');
+          track.label.toLowerCase().includes("screen") ||
+          track.label.toLowerCase().includes("window") ||
+          track.label.toLowerCase().includes("display") ||
+          (track.getSettings && track.getSettings().displaySurface);
 
-        console.log('🧭 ontrack:', {
-          kind: track.kind,
-          label: track.label,
-          isScreenTrack,
-          streamId: incomingStream.id,
-        });
-
-        if (track.kind === 'video') {
-          if (isScreenTrack) {
-            setRemoteScreenStream((prev) => {
-              if (!incomingStream || prev?.id === incomingStream.id) return prev;
-              return incomingStream;
-            });
-            setIsRemoteSharing(true);
-
-            track.onended = () => {
-              console.log('🛑 Remote screen share ended');
-              setRemoteScreenStream(null);
-              setIsRemoteSharing(false);
-            };
-          } else {
-            setRemoteStream((prev) => {
-              if (!incomingStream || prev?.id === incomingStream.id) return prev;
-              return incomingStream;
-            });
-
-            track.onended = () => {
-              console.log('🛑 Remote camera ended');
-              setRemoteStream(null);
-            };
-          }
+        if (kind === "video" && isScreenTrack) {
+          setRemoteScreenStream(new MediaStream([track]));
+          setIsRemoteSharing(true);
+          track.onended = () => {
+            setRemoteScreenStream(null);
+            setIsRemoteSharing(false);
+          };
+          return;
         }
 
-        if (track.kind === 'audio') {
-          setRemoteStream((prev) => {
-            const stream = prev ?? new MediaStream();
-            if (!stream.getTracks().some((t) => t.id === track.id)) {
-              stream.addTrack(track);
-            }
-            return stream;
+        if (kind === "video" && !isScreenTrack) {
+          setRemoteStream(prev => {
+            const audioTracks = prev ? prev.getAudioTracks() : [];
+            return new MediaStream([...audioTracks, track]);
           });
+          track.onended = () => {
+            setRemoteStream(prev => {
+              if (!prev) return null;
+              const tracks = prev.getTracks().filter((t) => t.id !== track.id);
+              return tracks.length ? new MediaStream(tracks) : null;
+            });
+          };
+          return;
+        }
+
+        if (kind === "audio") {
+          setRemoteStream(prev => {
+            const videoTracks = prev ? prev.getVideoTracks() : [];
+            return new MediaStream([...videoTracks, track]);
+          });
+          track.onended = () => {
+            setRemoteStream(prev => {
+              if (!prev) return null;
+              const tracks = prev.getTracks().filter((t) => t.id !== track.id);
+              return tracks.length ? new MediaStream(tracks) : null;
+            });
+          };
+          return;
         }
       };
+
 
 
 
