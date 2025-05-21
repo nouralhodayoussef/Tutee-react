@@ -12,6 +12,7 @@ export default function FooterWrapper() {
     "/register",
     "/session",
     "/setup",
+    "/admin",
   ];
 
   // Hide footer if path is exact or starts with these
