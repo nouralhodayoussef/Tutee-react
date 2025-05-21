@@ -338,7 +338,7 @@ export default function AdminDashboardPage() {
                 exit="exit"
                 transition={{ duration: 0.7 }}
               >
-                <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 mb-8 md:mb-12">
+                <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-8 mb-8 md:mb-12">
                   {loading
                     ? Array.from({ length: 4 }).map((_, i) => (
                       <div key={i} className="w-full h-[90px] md:h-[120px] rounded-2xl bg-gray-200 animate-pulse" />
@@ -368,6 +368,12 @@ export default function AdminDashboardPage() {
                           value={unratedSessions.length}
                           icon={<Star className="text-gray-400" size={28} />}
                           accent="#e5e7eb"
+                        />
+                        <SummaryCard
+                          title="Cancellation Rate"
+                          value={cards?.cancelledPercentage !== undefined ? `${cards.cancelledPercentage}%` : "..."}
+                          icon={<CalendarX className="text-[#e53333]" size={28} />}
+                          accent="#e53333"
                         />
                       </>
                     )

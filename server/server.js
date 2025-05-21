@@ -4,7 +4,7 @@ const session = require("express-session");
 const http = require("http");
 const setupSocket = require("./signaling/socket");
 require("dotenv").config();
-
+const db = require('./config/db')
 // Route imports
 
 
@@ -179,6 +179,12 @@ app.use('/api/visitor', visitorTutors);
 app.use('/api/visitor', feedbackRoute);
 app.use('/tutor/check-schedule-conflicts', checkScheduleConflicts);
 app.use('/tutor/cancel-sessions-and-remove-availability', cancelSessionsAndRemoveAvailability);
+app.use('/tutee/completed-sessions', require('./routes/tutee/completed-sessions'));
+app.use('/tutee/rate-tutor', require('./routes/tutee/rate-tutor'));
+app.use('/tutee/cancelled-sessions', require('./routes/tutee/cancelled-sessions'));
+app.use('/tutor/completed-sessions', require('./routes/tutor/completed-sessions'));
+app.use('/tutor/rate-tutee', require('./routes/tutor/rate-tutee'));
+app.use('/tutor/cancelled-sessions', require('./routes/tutor/cancelled-sessions'));
 
 // Routes for forget-password
 app.use('/forgot-password', forgotPasswordRoute);
@@ -202,6 +208,30 @@ app.use("/api/admin/sessions-explorer", sessionsExplorerRoute);
 setupSocket(server);
 
 // Start server
+async function setupMySQLEventScheduler() {
+  try {
+    // Enable event scheduler (if not already)
+    await db.promise().query('SET GLOBAL event_scheduler = ON');
+    // Create event to auto-complete sessions (edit query to fit your schema)
+    await db.promise().query(`
+      CREATE EVENT IF NOT EXISTS auto_complete_sessions
+      ON SCHEDULE EVERY 10 MINUTE
+      DO
+        UPDATE scheduled_sessions ss
+        JOIN session_slots sl ON ss.slot_id = sl.id
+        SET ss.status = 'completed'
+        WHERE ss.status = 'scheduled'
+          AND DATE_ADD(CONCAT(ss.scheduled_date, ' ', sl.slot_time), INTERVAL sl.duration_minutes MINUTE) < NOW()
+    `);
+    console.log('✅ MySQL event scheduler is enabled and auto-complete event set up');
+  } catch (err) {
+    console.error('❌ Error setting up MySQL event scheduler:', err);
+  }
+}
+
+// Call the setup BEFORE starting the server
+setupMySQLEventScheduler();
+
 const PORT = 4000;
 server.listen(PORT, () =>
   console.log(`🚀 Server running on http://localhost:${PORT}`)

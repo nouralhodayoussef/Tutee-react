@@ -9,10 +9,13 @@ import SetScheduleModal from '@/components/Tutor/SetScheduleModal';
 import CheckMaterialModal from '@/components/CheckMaterialModal';
 import CancelSessionModal from '@/components/CancelSessionModal';
 import ModalPortal from '@/components/ModalPortal';
+import RateTuteeModal from '@/components/Tutor/RateTuteeModal';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { Star } from 'lucide-react';
 import { tuteeLogoBase64 } from '@/utils/pdfLogo';
 
+type ViewType = 'scheduled' | 'completed' | 'cancelled';
 
 
 interface Session {
@@ -27,10 +30,22 @@ interface Session {
   materials: string[];
   tutee_avg_rating: number | null;
 }
+interface CompletedSession extends Session {
+  tutee_rating: number | null;
+}
 
-export default function TutorBookedSessionsPage() {
+interface CancelledSession extends Session {
+  canceled_by_role?: string | null;
+  reason_note?: string | null;
+  cancelled_at?: string | null;
+}
+
+export default function TutorSessionsPage() {
   const router = useRouter();
+  const [view, setView] = useState<ViewType>('scheduled');
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [completedSessions, setCompletedSessions] = useState<CompletedSession[]>([]);
+  const [cancelledSessions, setCancelledSessions] = useState<CancelledSession[]>([]);
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
@@ -38,31 +53,33 @@ export default function TutorBookedSessionsPage() {
   const [printOption, setPrintOption] = useState<'today' | 'week'>('today');
   const [tutorName, setTutorName] = useState<string>('');
 
-
+  // Rate Tutee Modal
+  const [rateModalOpen, setRateModalOpen] = useState(false);
+  const [sessionToRate, setSessionToRate] = useState<CompletedSession | null>(null);
 
   useEffect(() => {
-    const fetchSessions = async () => {
-      try {
-        const res = await fetch('http://localhost:4000/tutor/booked-sessions', {
-          credentials: 'include',
-        });
-        const data = await res.json();
-
+    // Scheduled Sessions
+    fetch('http://localhost:4000/tutor/booked-sessions', { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
         const sorted = (data.bookedSessions || []).sort((a: Session, b: Session) => {
           const dateA = new Date(a.scheduled_datetime.replace(' ', 'T')).getTime();
           const dateB = new Date(b.scheduled_datetime.replace(' ', 'T')).getTime();
           return dateA - dateB;
         });
-
         setSessions(sorted);
         setTutorName(data.tutorName || '');
-        console.log('✅ Tutor name loaded:', data.tutorName);
-        // ✅ Ensure this line is here
-      } catch (err) {
-        console.error('Failed to load booked sessions:', err);
-      }
-    };
-    fetchSessions();
+      });
+
+    // Completed Sessions
+    fetch('http://localhost:4000/tutor/completed-sessions', { credentials: 'include' })
+      .then(res => res.json())
+      .then(setCompletedSessions);
+
+    // Cancelled Sessions
+    fetch('http://localhost:4000/tutor/cancelled-sessions', { credentials: 'include' })
+      .then(res => res.json())
+      .then(setCancelledSessions);
   }, []);
 
 
@@ -108,6 +125,12 @@ export default function TutorBookedSessionsPage() {
     setCancelModalOpen(false);
     setSessionToCancel(null);
   };
+  // Tabs UI class
+  const tabClass = (type: ViewType) =>
+    "px-5 py-2 rounded-full font-semibold transition " +
+    (view === type
+      ? "bg-[#E8B14F] text-white shadow"
+      : "bg-gray-100 text-black hover:bg-gray-200");
 
   const getFilteredSessions = (type: 'today' | 'week') => {
     const today = new Date();
@@ -237,40 +260,27 @@ export default function TutorBookedSessionsPage() {
     const diff = date.getDate() - date.getDay() + 7;
     return new Date(date.setDate(diff)).toDateString();
   }
-
-
-  return (
-    <RoleProtected requiredRoles={['tutor']}>
-
-      
-    <main className="bg-[#F5F5EF] min-h-screen">
-      <CompleteProfileModal />
-      <SetScheduleModal />
-      <TutorHeader />
-
-      <section className="max-w-6xl mx-auto px-6 py-12">
-        <h1 className="text-4xl font-bold text-black mb-2">Your Sessions</h1>
-        <p className="text-lg text-black mb-6">You have these sessions to attend</p>
-
-        <div className="bg-white border border-gray-200 rounded-xl p-4 mb-6 shadow-sm flex flex-col sm:flex-row items-center gap-4">
-          <select
-            className="border border-gray-300 px-4 py-2 rounded-full text-sm"
-            value={printOption}
-            onChange={(e) => setPrintOption(e.target.value as 'today' | 'week')}
-          >
-            <option value="today">Print Today&apos;s Schedule</option>
-            <option value="week">Print This Week&apos;s Schedule</option>
-          </select>
-          <button
-            onClick={() => handlePrintSchedule(printOption)}
-            className="bg-[#E8B14F] text-white font-semibold px-6 py-2 rounded-full shadow hover:bg-yellow-500"
-          >
-            Download PDF
-          </button>
-        </div>
-
-
+  // --- RENDER SELECTED SESSIONS ---
+  function renderSessions() {
+    if (view === 'scheduled') {
+      return (
         <div className="bg-white rounded-xl p-6 shadow-md space-y-8">
+          <div className="border border-gray-200 rounded-xl p-4 mb-6 shadow-sm flex flex-col sm:flex-row items-center gap-4">
+            <select
+              className="border border-gray-300 px-4 py-2 rounded-full text-sm"
+              value={printOption}
+              onChange={(e) => setPrintOption(e.target.value as 'today' | 'week')}
+            >
+              <option value="today">Print Today&apos;s Schedule</option>
+              <option value="week">Print This Week&apos;s Schedule</option>
+            </select>
+            <button
+              onClick={() => handlePrintSchedule(printOption)}
+              className="bg-[#E8B14F] text-white font-semibold px-6 py-2 rounded-full shadow hover:bg-yellow-500"
+            >
+              Download PDF
+            </button>
+          </div>
           {sessions.length === 0 ? (
             <div className="text-center py-12">
               <h2 className="text-xl font-semibold text-gray-700 mb-6">
@@ -291,109 +301,265 @@ export default function TutorBookedSessionsPage() {
                 </a>
               </div>
             </div>
-          ) :
-            sessions.map((session) => {
-              const canJoin = !!session.room_link;
-              const formatted = formatDateTime(session.scheduled_datetime);
+          ) : sessions.map((session) => {
+            const canJoin = !!session.room_link;
+            const formatted = formatDateTime(session.scheduled_datetime);
 
-              return (
-                <div
-                  key={session.session_id}
-                  className="relative bg-[#F9F9F9] rounded-xl px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
-                >
-                  <div className="space-y-2">
-                    <p className="font-bold text-[14px]">
-                      <span className="font-extrabold text-black">{session.course_code}</span> - {session.course_name}
+            return (
+              <div
+                key={session.session_id}
+                className="relative bg-[#F9F9F9] rounded-xl px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+              >
+                <div className="space-y-2">
+                  <p className="font-bold text-[14px]">
+                    <span className="font-extrabold text-black">{session.course_code}</span> - {session.course_name}
+                  </p>
+                  <div className="flex items-center space-x-2 text-sm font-semibold text-black">
+                    <span className="text-[18px]">📅</span>
+                    <span>{formatted}</span>
+                  </div>
+                  <p className="text-sm font-bold text-black">With: {session.tutee_name}</p>
+                  {session.tutee_avg_rating !== null && !isNaN(Number(session.tutee_avg_rating)) && (
+                    <p className="text-sm font-bold text-black">
+                      Rating: {Number(session.tutee_avg_rating).toFixed(1)} ⭐
                     </p>
-                    <div className="flex items-center space-x-2 text-sm font-semibold text-black">
-                      <span className="text-[18px]">📅</span>
-                      <span>{formatted}</span>
-                    </div>
-                    <p className="text-sm font-bold text-black">With: {session.tutee_name}</p>
-                    {session.tutee_avg_rating !== null && !isNaN(Number(session.tutee_avg_rating)) && (
-                      <p className="text-sm font-bold text-black">
-                        Rating: {Number(session.tutee_avg_rating).toFixed(1)} ⭐
-                      </p>
+                  )}
+
+                  <div className="flex flex-wrap items-center gap-2 pt-2">
+                    {canJoin ? (
+                      <>
+                        <button
+                          onClick={() => router.push(`/session/setup/${session.room_link}`)}
+                          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full text-xs font-semibold"
+                        >
+                          Join Session
+                        </button>
+                        <span className="text-green-600 text-2xl font-bold">→</span>
+                      </>
+                    ) : (
+                      <div className="bg-black text-white font-bold text-xs px-6 py-2 rounded-full">
+                        You cannot join now
+                      </div>
                     )}
 
-                    <div className="flex flex-wrap items-center gap-2 pt-2">
-                      {canJoin ? (
-                        <>
-                          <button
-                            onClick={() => router.push(`/session/setup/${session.room_link}`)}
-                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full text-xs font-semibold"
-                          >
-                            Join Session
-                          </button>
-                          <span className="text-green-600 text-2xl font-bold">→</span>
-                        </>
-                      ) : (
-                        <div className="bg-black text-white font-bold text-xs px-6 py-2 rounded-full">
-                          You cannot join now
-                        </div>
-                      )}
+                    <button
+                      className="bg-[#E8B14F] px-4 py-2 rounded-full text-xs font-semibold"
+                      onClick={() => handleCheckMaterials(session.materials)}
+                    >
+                      Check Materials
+                    </button>
 
+                    {isCancelable(session.scheduled_datetime) ? (
                       <button
-                        className="bg-[#E8B14F] px-4 py-2 rounded-full text-xs font-semibold"
-                        onClick={() => handleCheckMaterials(session.materials)}
+                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-full text-xs font-semibold"
+                        onClick={() => handleCancelClick(session)}
                       >
-                        Check Materials
+                        Cancel Session
                       </button>
-
-                      {isCancelable(session.scheduled_datetime) ? (
-                        <button
-                          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-full text-xs font-semibold"
-                          onClick={() => handleCancelClick(session)}
-                        >
-                          Cancel Session
-                        </button>
-                      ) : (
-                        <p className="text-sm text-gray-600 italic">Cannot cancel within 24h</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="w-full flex justify-center sm:justify-end -space-x-4 mt-4 sm:mt-0">
-                    <img
-                      src={session.tutor_photo || '/imgs/default-profile.png'}
-                      alt="Tutor"
-                      className="w-16 h-16 rounded-full border-2 border-white object-cover"
-                    />
-                    <img
-                      src={session.tutee_photo || '/imgs/default-profile.png'}
-                      alt="Tutee"
-                      className="w-16 h-16 rounded-full border-2 border-white object-cover"
-                    />
+                    ) : (
+                      <p className="text-sm text-gray-600 italic">Cannot cancel within 24h</p>
+                    )}
                   </div>
                 </div>
-              );
-            })}
+                <div className="w-full flex justify-center sm:justify-end -space-x-4 mt-4 sm:mt-0">
+                  <img
+                    src={session.tutor_photo || '/imgs/default-profile.png'}
+                    alt="Tutor"
+                    className="w-16 h-16 rounded-full border-2 border-white object-cover"
+                  />
+                  <img
+                    src={session.tutee_photo || '/imgs/default-profile.png'}
+                    alt="Tutee"
+                    className="w-16 h-16 rounded-full border-2 border-white object-cover"
+                  />
+                </div>
+              </div>
+            );
+          })}
         </div>
-      </section>
+      );
+    }
+    if (view === 'completed') {
+      return (
+        <div className="bg-white rounded-xl p-6 shadow-md space-y-8">
+          {completedSessions.length === 0 ? (
+            <p className="text-center text-gray-600">You have no completed sessions yet.</p>
+          ) : completedSessions.map((session) => {
+            const formatted = formatDateTime(session.scheduled_datetime);
+            return (
+              <div
+                key={session.session_id}
+                className="relative bg-[#F9F9F9] rounded-xl px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+              >
+                <div className="space-y-2">
+                  <p className="font-bold text-[14px]">
+                    <span className="font-extrabold text-black">{session.course_code}</span> - {session.course_name}
+                  </p>
+                  <div className="flex items-center space-x-2 text-sm font-semibold text-black">
+                    <span className="text-[18px]">📅</span>
+                    <span>{formatted}</span>
+                  </div>
+                  <p className="text-sm font-bold text-black">With: {session.tutee_name}</p>
+                  <div className="flex flex-wrap items-center gap-2 pt-2">
+                    {session.tutee_rating == null ? (
+                      <button
+                        className="bg-[#E8B14F] text-black font-bold text-xs px-6 py-2 rounded-full"
+                        onClick={() => {
+                          setSessionToRate(session);
+                          setRateModalOpen(true);
+                        }}
+                      >
+                        Rate Tutee
+                      </button>
+                    ) : (
+                      <span className="text-yellow-500 font-bold text-sm flex items-center gap-1">
+                        <Star className="w-4 h-4 inline" />
+                        {session.tutee_rating} (You rated)
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="w-full flex justify-center sm:justify-end -space-x-4 mt-4 sm:mt-0">
+                  <img
+                    src={session.tutor_photo || '/imgs/default-profile.png'}
+                    alt="Tutor"
+                    className="w-16 h-16 rounded-full border-2 border-white object-cover"
+                  />
+                  <img
+                    src={session.tutee_photo || '/imgs/default-profile.png'}
+                    alt="Tutee"
+                    className="w-16 h-16 rounded-full border-2 border-white object-cover"
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+    if (view === 'cancelled') {
+      return (
+        <div className="bg-white rounded-xl p-6 shadow-md space-y-8">
+          {cancelledSessions.length === 0 ? (
+            <p className="text-center text-gray-600">You have no cancelled sessions yet.</p>
+          ) : cancelledSessions.map((session) => {
+            const formatted = formatDateTime(session.scheduled_datetime);
+            return (
+              <div
+                key={session.session_id}
+                className="relative bg-[#F9F9F9] rounded-xl px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 opacity-60"
+              >
+                <div>
+                  <p className="font-bold text-[14px]">
+                    <span className="font-extrabold text-black">{session.course_code}</span> - {session.course_name}
+                  </p>
+                  <div className="flex items-center space-x-2 text-sm font-semibold text-black">
+                    <span className="text-[18px]">📅</span>
+                    <span>{formatted}</span>
+                  </div>
+                  <p className="text-sm font-bold text-black">
+                    With: {session.tutee_name}
+                  </p>
+                  <p className="text-xs text-red-500 font-bold pt-2">
+                    Session Cancelled
+                    {session.canceled_by_role && <> by <span className="capitalize">{session.canceled_by_role}</span></>}
+                    {session.reason_note && <> — Reason: <span className="text-black font-medium">{session.reason_note}</span></>}
+                  </p>
+                </div>
+                <div className="w-full flex justify-center sm:justify-end -space-x-4 mt-4 sm:mt-0">
+                  <img
+                    src={session.tutor_photo || '/imgs/default-profile.png'}
+                    alt="Tutor"
+                    className="w-16 h-16 rounded-full border-2 border-white object-cover"
+                  />
+                  <img
+                    src={session.tutee_photo || '/imgs/default-profile.png'}
+                    alt="Tutee"
+                    className="w-16 h-16 rounded-full border-2 border-white object-cover"
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+    return null;
+  }
+  // --- MAIN RENDER ---
+  return (
+    <RoleProtected requiredRoles={['tutor']}>
+      <main className="bg-[#F5F5EF] min-h-screen">
+        <CompleteProfileModal />
+        <SetScheduleModal />
+        <TutorHeader />
 
-      {modalOpen && (
-        <ModalPortal>
-          <CheckMaterialModal
-            materials={selectedMaterials}
-            onClose={() => setModalOpen(false)}
-          />
-        </ModalPortal>
-      )}
+        <section className="max-w-6xl mx-auto px-6 py-12">
+          {/* Tabs Toggle */}
+          <div className="flex gap-3 mb-8">
+            <button className={tabClass('scheduled')} onClick={() => setView('scheduled')}>Scheduled</button>
+            <button className={tabClass('completed')} onClick={() => setView('completed')}>Completed</button>
+            <button className={tabClass('cancelled')} onClick={() => setView('cancelled')}>Cancelled</button>
+          </div>
 
-      {cancelModalOpen && sessionToCancel && (
-        <ModalPortal>
-          <CancelSessionModal
-            sessionId={sessionToCancel.session_id}
-            role="tutor"
-            onClose={() => {
-              setCancelModalOpen(false);
-              setSessionToCancel(null);
+          {/* Section Header */}
+          <h1 className="text-4xl font-bold text-black mb-2">
+            {view === 'scheduled' && 'Your Sessions'}
+            {view === 'completed' && 'Completed Sessions'}
+            {view === 'cancelled' && 'Cancelled Sessions'}
+          </h1>
+          <p className="text-lg text-black mb-10">
+            {view === 'scheduled' && 'You have these sessions to attend'}
+            {view === 'completed' && 'Your finished sessions'}
+            {view === 'cancelled' && 'Previously cancelled sessions'}
+          </p>
+
+          {/* Sessions */}
+          {renderSessions()}
+        </section>
+
+        {/* Check Materials Modal */}
+        {modalOpen && (
+          <ModalPortal>
+            <CheckMaterialModal
+              materials={selectedMaterials}
+              onClose={() => setModalOpen(false)}
+            />
+          </ModalPortal>
+        )}
+
+        {/* Cancel Modal */}
+        {cancelModalOpen && sessionToCancel && (
+          <ModalPortal>
+            <CancelSessionModal
+              sessionId={sessionToCancel.session_id}
+              role="tutor"
+              onClose={() => {
+                setCancelModalOpen(false);
+                setSessionToCancel(null);
+              }}
+              onCancelSuccess={handleCancelSuccess}
+            />
+          </ModalPortal>
+        )}
+
+        {/* Rate Tutee Modal */}
+        {rateModalOpen && sessionToRate && (
+          <RateTuteeModal
+            sessionId={sessionToRate.session_id}
+            tuteeName={sessionToRate.tutee_name}
+            onClose={() => setRateModalOpen(false)}
+            onSuccess={(stars) => {
+              setCompletedSessions(prev =>
+                prev.map(s => s.session_id === sessionToRate.session_id
+                  ? { ...s, tutee_rating: stars }
+                  : s
+                )
+              );
             }}
-            onCancelSuccess={handleCancelSuccess}
           />
-        </ModalPortal>
-      )}
-    </main>
+        )}
+      </main>
     </RoleProtected>
   );
 }
