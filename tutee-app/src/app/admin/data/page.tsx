@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import DeleteUserModal from '@/components/modals/DeleteUserModal';
 import SuccessModal from '@/components/modals/SuccessModal';
+import CoursesPage from './CoursesPage';
 
 interface User {
   id: number;
@@ -190,7 +191,7 @@ export default function AdminCurrentDataPage() {
             )}
           </motion.div>
         ) : (
-          <div className="text-gray-500 mt-4">Courses section coming soon...</div>
+          <CoursesPage />
         )}
 
         {selectedUser && (

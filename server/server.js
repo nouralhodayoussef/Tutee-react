@@ -117,6 +117,11 @@ app.use('/api/admin/all-tutees', allTutees);
 app.use('/api/admin', deleteTutorRoute);
 app.use('/api/admin', deleteTuteeRoute);
 
+app.use('/api/admin', require('./routes/admin/universities'));
+app.use('/api/admin', require('./routes/admin/majors'));
+app.use('/api/admin', require('./routes/admin/courses'));
+app.use('/api/admin', require('./routes/admin/update-course'));
+
 
 app.use("/login", loginRoute);
 app.use("/check-session", require("./routes/security/check-session"));
