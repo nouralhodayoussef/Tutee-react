@@ -6,8 +6,16 @@ const setupSocket = require("./signaling/socket");
 require("dotenv").config();
 
 // Route imports
+
+
+//Admin Api
+const allTutors = require('./routes/admin/all-tutors');
+const allTutees = require('./routes/admin/all-tutees');
+
+
+
+
 const loginRoute = require("./routes/login");
-// const checkUser = require('./routes/check-username'); // useless for now
 const sendOtp = require('./routes/sendotp')
 const registerUser = require('./routes/registeruser');
 const checkEmailRoute = require('./routes/check-email');
@@ -99,6 +107,11 @@ app.use(
 );
 
 // Route mounting
+
+app.use('/api/admin/all-tutors', allTutors);
+app.use('/api/admin/all-tutees', allTutees);
+
+
 app.use("/login", loginRoute);
 app.use("/check-session", require("./routes/security/check-session"));
 // app.use('/check-username', checkUser);//useless for now

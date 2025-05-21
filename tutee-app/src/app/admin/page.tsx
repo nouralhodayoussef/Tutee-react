@@ -170,7 +170,7 @@ export default function AdminDashboardPage() {
             <SidebarLink
               icon={<BookOpen size={20} />}
               text="Current Data"
-              href="#"
+              href="/admin/data"
             />
             <SidebarLink
               icon={<MessageCircle size={20} />}
