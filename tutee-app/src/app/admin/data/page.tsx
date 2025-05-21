@@ -3,14 +3,17 @@
 
 import { useEffect, useState } from 'react';
 import { Trash2 } from 'lucide-react';
-import AdminSidebar from '@/components/admin/AdminSidebar'; // Update this import path if needed
+import { motion } from 'framer-motion';
+import AdminSidebar from '@/components/admin/AdminSidebar';
+import DeleteUserModal from '@/components/modals/DeleteUserModal';
+import SuccessModal from '@/components/modals/SuccessModal';
 
-type User = {
+interface User {
   id: number;
   first_name: string;
   last_name: string;
   email: string;
-};
+}
 
 export default function AdminCurrentDataPage() {
   const [tab, setTab] = useState<'tutors' | 'tutees' | 'courses'>('tutors');
@@ -18,6 +21,11 @@ export default function AdminCurrentDataPage() {
   const [tutors, setTutors] = useState<User[]>([]);
   const [tutees, setTutees] = useState<User[]>([]);
   const [sidebarMin, setSidebarMin] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const usersPerPage = 15;
+
+  const [selectedUser, setSelectedUser] = useState<null | { id: number; name: string; email: string }>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -35,93 +43,110 @@ export default function AdminCurrentDataPage() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, tab]);
+
   const activeList = tab === 'tutors' ? tutors : tutees;
-  const filteredData = activeList.filter(user =>
-    `${user.first_name} ${user.last_name}`.toLowerCase().includes(search.toLowerCase())
-  );
 
-  const handleDelete = async (id: number) => {
-    const confirm = window.confirm('Are you sure you want to delete this user?');
-    if (!confirm) return;
+  const filteredData = activeList.filter(user => {
+    const fullName = `${user.first_name} ${user.last_name}`.toLowerCase();
+    const email = user.email.toLowerCase();
+    const query = search.toLowerCase();
+    return (
+      fullName.includes(query) ||
+      user.first_name.toLowerCase().includes(query) ||
+      user.last_name.toLowerCase().includes(query) ||
+      email.includes(query)
+    );
+  });
 
-    const endpoint =
-      tab === 'tutors'
-        ? `http://localhost:4000/api/admin/delete-tutor/${id}`
-        : `http://localhost:4000/api/admin/delete-tutee/${id}`;
-
-    const res = await fetch(endpoint, { method: 'DELETE' });
-    if (res.ok) {
-      if (tab === 'tutors') setTutors(prev => prev.filter(t => t.id !== id));
-      else setTutees(prev => prev.filter(t => t.id !== id));
-    } else {
-      alert('Failed to delete user.');
-    }
-  };
+  const paginatedData = filteredData.slice((currentPage - 1) * usersPerPage, currentPage * usersPerPage);
+  const totalPages = Math.ceil(filteredData.length / usersPerPage);
 
   return (
     <div className="flex min-h-screen bg-[#F5F5EF]">
-      {/* Sidebar */}
-      <AdminSidebar
-        minimized={sidebarMin}
-        setMinimized={setSidebarMin}
-        active="Current Data"
-      />
+      <AdminSidebar minimized={sidebarMin} setMinimized={setSidebarMin} active="Current Data" />
 
-      {/* Main Content */}
-      <main className={`flex-1 p-4 sm:p-8 md:p-10 transition-all duration-300 ${sidebarMin ? "md:ml-20" : "md:ml-60"}`}>
+      <main className={`flex-1 p-4 sm:p-8 md:p-10 transition-all duration-300 ${sidebarMin ? 'md:ml-20' : 'md:ml-60'}`}>
         <h1 className="text-2xl font-bold mb-6">Current Data</h1>
 
         {/* Tabs */}
-        <div className="flex gap-4 border-b mb-6">
-          {['tutors', 'courses', 'tutees'].map(key => (
-            <button
-              key={key}
-              onClick={() => setTab(key as any)}
-              className={`py-2 px-4 text-sm font-medium border-b-2 transition-all ${
-                tab === key ? 'border-[#E8B14F] text-black' : 'border-transparent text-gray-500'
-              }`}
-            >
-              {key === 'tutors' ? 'All Tutors' : key === 'tutees' ? 'All Tutees' : 'All Courses'}
-            </button>
-          ))}
+        <div className="flex gap-2 border-b mb-6">
+          {['tutors', 'courses', 'tutees'].map(key => {
+            const selected = tab === key;
+            return (
+              <button
+                key={key}
+                onClick={() => setTab(key as 'tutors' | 'tutees' | 'courses')}
+                className={`py-2 px-4 text-sm font-medium rounded-t-md transition-all
+                  ${selected ? 'bg-black text-[#E8B14F]' : 'text-gray-500 hover:text-black'}`}
+              >
+                {key === 'tutors' ? 'All Tutors' : key === 'tutees' ? 'All Tutees' : 'All Courses'}
+              </button>
+            );
+          })}
         </div>
 
         {/* Search */}
         {(tab === 'tutors' || tab === 'tutees') && (
-          <input
+          <motion.input
             type="text"
-            placeholder="Search by name..."
+            placeholder="Search by name or email..."
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="mb-4 w-72 px-3 py-2 border border-gray-300 rounded shadow-sm"
+            initial={{ opacity: 0, y: -10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            viewport={{ once: true }}
           />
         )}
 
         {/* Table */}
         {tab !== 'courses' ? (
-          <div className="bg-white rounded-lg shadow p-4 max-h-[500px] overflow-y-auto">
+          <motion.div
+            className="bg-white rounded-lg shadow p-4 max-h-[500px] overflow-y-auto"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+          >
             <table className="w-full table-auto">
               <thead>
-                <tr className="text-left text-sm text-gray-600 border-b">
-                  <th className="p-2 w-10"><input type="checkbox" /></th>
-                  <th className="p-2">{tab === "tutors" ? "Tutor" : "Tutee"} Name</th>
-                  <th className="p-2">Email</th>
-                  <th className="p-2 w-10"></th>
+                <tr className="text-left text-sm font-bold text-black border-b bg-[#FDFDFB]">
+                  <th className="p-4 w-10"><input type="checkbox" /></th>
+                  <th className="p-4">{tab === 'tutors' ? 'Tutor' : 'Tutee'} Name</th>
+                  <th className="p-4">Email</th>
+                  <th className="p-4 w-10"></th>
                 </tr>
               </thead>
               <tbody>
-                {filteredData.length > 0 ? filteredData.map(user => (
-                  <tr key={user.id} className="text-sm border-b hover:bg-gray-50">
-                    <td className="p-2"><input type="checkbox" /></td>
-                    <td className="p-2">{user.first_name} {user.last_name}</td>
-                    <td className="p-2">{user.email}</td>
+                {paginatedData.length > 0 ? paginatedData.map((user, index) => (
+                  <motion.tr
+                    key={user.id}
+                    className="text-sm border-b hover:bg-[#f9f8f5]"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.03, duration: 0.4 }}
+                    viewport={{ once: true, amount: 0.2 }}
+                  >
+                    <td className="p-4"><input type="checkbox" /></td>
+                    <td className="p-4">{user.first_name} {user.last_name}</td>
+                    <td className="p-4">{user.email}</td>
                     <td
-                      className="p-2 text-red-500 cursor-pointer hover:text-red-700"
-                      onClick={() => handleDelete(user.id)}
+                      className="p-4 text-red-500 cursor-pointer hover:text-red-700"
+                      onClick={() =>
+                        setSelectedUser({
+                          id: user.id,
+                          name: `${user.first_name} ${user.last_name}`,
+                          email: user.email,
+                        })
+                      }
                     >
                       <Trash2 size={16} />
                     </td>
-                  </tr>
+                  </motion.tr>
                 )) : (
                   <tr>
                     <td colSpan={4} className="text-center py-8 text-gray-500">No data found.</td>
@@ -129,9 +154,88 @@ export default function AdminCurrentDataPage() {
                 )}
               </tbody>
             </table>
-          </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between mt-4">
+                <span className="text-sm text-gray-600">
+                  Page {currentPage} of {totalPages}
+                </span>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className={`px-4 py-1 rounded text-sm font-medium border transition ${
+                      currentPage === 1
+                        ? 'bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed'
+                        : 'bg-black text-[#E8B14F] border-black hover:opacity-90'
+                    }`}
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(prev => (prev < totalPages ? prev + 1 : prev))}
+                    disabled={currentPage === totalPages}
+                    className={`px-4 py-1 rounded text-sm font-medium border transition ${
+                      currentPage === totalPages
+                        ? 'bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed'
+                        : 'bg-[#E8B14F] text-black border-[#E8B14F] hover:opacity-90'
+                    }`}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+          </motion.div>
         ) : (
           <div className="text-gray-500 mt-4">Courses section coming soon...</div>
+        )}
+
+        {selectedUser && (
+          <DeleteUserModal
+            userFullName={selectedUser.name}
+            email={selectedUser.email}
+            onClose={() => setSelectedUser(null)}
+            onConfirm={async (reason) => {
+              const endpoint =
+                tab === 'tutors'
+                  ? `http://localhost:4000/api/admin/delete-tutor/${selectedUser.id}`
+                  : `http://localhost:4000/api/admin/delete-tutee/${selectedUser.id}`;
+
+              try {
+                const res = await fetch(endpoint, {
+                  method: 'DELETE',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ reason, email: selectedUser.email }),
+                });
+
+                if (res.ok) {
+                  if (tab === 'tutors') {
+                    setTutors((prev) => prev.filter((u) => u.id !== selectedUser.id));
+                  } else {
+                    setTutees((prev) => prev.filter((u) => u.id !== selectedUser.id));
+                  }
+                  setSelectedUser(null);
+                  setShowSuccess(true);
+                } else {
+                  const data = await res.json();
+                  alert(data.error || 'Failed to delete user.');
+                }
+              } catch (err) {
+                console.error('Error:', err);
+                alert('Something went wrong.');
+              }
+            }}
+          />
+        )}
+
+        {showSuccess && (
+          <SuccessModal
+            message="User has been deleted successfully."
+            onClose={() => setShowSuccess(false)}
+          />
         )}
       </main>
     </div>
