@@ -14,11 +14,11 @@ router.post('/', (req, res) => {
   const userQuery = 'SELECT * FROM users WHERE email = ? LIMIT 1';
   db.query(userQuery, [email], async (err, results) => {
     if (err) return res.status(500).json({ error: 'Server error' });
-    if (results.length === 0) return res.status(401).json({ error: 'User does not exist.' });
+    if (results.length === 0) return res.status(401).json({ error: 'Email or password is incorrect!' });
 
     const user = results[0];
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ error: 'User does not exist.' });
+    if (!isMatch) return res.status(401).json({ error: 'Email or password is incorrect!' });
 
     let profileTable = '';
     if (user.role === 'tutee') profileTable = 'tutees';
@@ -28,7 +28,7 @@ router.post('/', (req, res) => {
     const profileQuery = `SELECT id FROM ${profileTable} WHERE user_id = ? LIMIT 1`;
     db.query(profileQuery, [user.id], (err, profileResult) => {
       if (err) return res.status(500).json({ error: 'Failed to get role profile' });
-      if (profileResult.length === 0) return res.status(404).json({ error: `No ${user.role} profile found.` });
+      if (profileResult.length === 0) return res.status(404).json({ error: `Your ${user.role} account has been suspended.` });
 
       const profile_id = profileResult[0].id;
 
