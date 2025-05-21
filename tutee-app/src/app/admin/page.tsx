@@ -142,7 +142,7 @@ export default function AdminDashboardPage() {
 
         {/* Main Content */}
         <main
-  className={`
+          className={`
     flex-1
     pt-16      // <--- add this line (or pt-[64px] if you want exact pixel)
     px-2 py-4
@@ -151,30 +151,30 @@ export default function AdminDashboardPage() {
     transition-all duration-300
     ${!sidebarMin ? "md:ml-60" : ""}
   `}
->
+        >
           {/* Section Selector & Date Filter */}
           <div className="flex flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-8">
-  {dashboardSections.map(sec => (
-    <motion.button
-      key={sec.value}
-      onClick={() => setSection(sec.value)}
-      className={`
+            {dashboardSections.map(sec => (
+              <motion.button
+                key={sec.value}
+                onClick={() => setSection(sec.value)}
+                className={`
         flex items-center gap-2
         px-3 py-2 sm:px-6 sm:py-2
         rounded-xl font-semibold
         text-sm sm:text-base shadow
         ${section === sec.value
-          ? "bg-[#E8B14F] text-black"
-          : "bg-white text-gray-700 hover:bg-[#fdf7ea]"}
+                    ? "bg-[#E8B14F] text-black"
+                    : "bg-white text-gray-700 hover:bg-[#fdf7ea]"}
       `}
-      whileTap={{ scale: 0.97 }}
-      animate={section === sec.value ? { scale: 1.08 } : { scale: 1 }}
-      transition={{ type: "spring", stiffness: 340 }}
-    >
-      {sec.icon}
-      {sec.label}
-    </motion.button>
-  ))}
+                whileTap={{ scale: 0.97 }}
+                animate={section === sec.value ? { scale: 1.08 } : { scale: 1 }}
+                transition={{ type: "spring", stiffness: 340 }}
+              >
+                {sec.icon}
+                {sec.label}
+              </motion.button>
+            ))}
             {/* Date Range Filter */}
             <div className="flex gap-1 md:gap-3 bg-white px-2 md:px-4 py-2 rounded-xl shadow ml-auto">
               {dateRanges.map(opt => (

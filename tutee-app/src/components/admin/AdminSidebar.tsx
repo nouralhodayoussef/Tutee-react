@@ -22,7 +22,7 @@ export default function AdminSidebar({
     // Sidebar Links
     const links = [
         { icon: <BarChart2 size={22} />, text: "Insights", href: "/admin" },
-        { icon: <BookOpen size={22} />, text: "Current Data", href: "#" },
+        { icon: <BookOpen size={22} />, text: "Current Data", href: "admin/data" },
         { icon: <MessageCircle size={22} />, text: "Feedbacks", href: "#", badge: feedbackCount ? String(feedbackCount) : undefined },
     ];
 
