@@ -75,7 +75,10 @@ const adminUserGrowth = require('./routes/admin/user-growth');
 const adminSessionStatus = require('./routes/admin/session-status');
 const adminTopTutors = require('./routes/admin/top-tutors');
 const sessionsByUniversity = require('./routes/admin/sessions-by-university');
-
+const activeUsersRoute = require('./routes/admin/active-users');
+const repeatBookingRateRoute = require('./routes/admin/repeat-booking-rate');
+const unratedSessionsRoute = require('./routes/admin/unrated-sessions');
+const cancellationReasonsRoute = require('./routes/admin/cancellation-reasons');
 const app = express();
 const server = http.createServer(app);
 
@@ -178,7 +181,10 @@ app.use('/api/admin/user-growth', adminUserGrowth);
 app.use('/api/admin/session-status', adminSessionStatus);
 app.use('/api/admin/top-tutors', adminTopTutors);
 app.use('/api/admin/sessions-by-university', sessionsByUniversity);
-
+app.use('/api/admin/active-users', activeUsersRoute);
+app.use('/api/admin/repeat-booking-rate', repeatBookingRateRoute);
+app.use('/api/admin/unrated-sessions', unratedSessionsRoute);
+app.use('/api/admin/cancellation-reasons', cancellationReasonsRoute);
 // Sockets
 setupSocket(server);
 
