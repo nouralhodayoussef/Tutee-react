@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { Trash2, Mail, Phone } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import RoleProtected from '@/components/security/RoleProtected';
 
 type Feedback = {
     id: number;
@@ -43,6 +44,8 @@ export default function AdminFeedbackPage() {
     );
 
     return (
+
+        <RoleProtected requiredRoles={['admin']}>
         <div className="flex min-h-screen bg-[#F5F5EF]">
             {/* Sidebar */}
             <AdminSidebar
@@ -151,5 +154,6 @@ export default function AdminFeedbackPage() {
             </main>
 
         </div>
+        </RoleProtected>
     );
 }

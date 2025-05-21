@@ -30,7 +30,7 @@ router.delete('/delete-tutee/:id', (req, res) => {
     }
 
     if (result[0].count > 0) {
-      return res.status(400).json({ error: 'Cannot delete tutees with scheduled sessions' });
+      return res.status(400).json({ error: 'Cannot suspend tutees with scheduled sessions' });
     }
 
     // Proceed to delete the tutee
@@ -45,8 +45,8 @@ router.delete('/delete-tutee/:id', (req, res) => {
       const mailOptions = {
         from: process.env.EMAIL_USER,
         to: email,
-        subject: 'Your Tutee Account Has Been Deleted',
-        text: `Hello,\n\nYour account has been deleted by an admin.\nReason: ${reason}\n\nIf you believe this is a mistake, please contact support.\n\n- Tutee Admin Team`,
+        subject: 'Your Tutee Account Has Been Suspended',
+        text: `Hello,\n\nYour account has been suspended by an admin.\nReason: ${reason}\n\nIf you believe this is a mistake, please contact support.\n\n- Tutee Admin Team`,
       };
 
       transporter.sendMail(mailOptions, (mailErr, info) => {

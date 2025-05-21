@@ -17,11 +17,11 @@ export default function DeleteUserModal({
   const [reason, setReason] = useState('');
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+<div className="fixed inset-0 bg-white bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
-        <h2 className="text-xl font-semibold mb-2">Delete {userFullName}?</h2>
+        <h2 className="text-xl font-semibold mb-2">Suspended {userFullName}?</h2>
         <p className="text-sm text-gray-600 mb-4">
-          Please provide a reason for deleting this user. An email will be sent to: <strong>{email}</strong>
+          Please provide a reason for suspending this user. An email will be sent to: <strong>{email}</strong>
         </p>
 
         <textarea
@@ -44,7 +44,7 @@ export default function DeleteUserModal({
             disabled={!reason.trim()}
             className="px-4 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 disabled:bg-red-300"
           >
-            Delete
+            Suspend
           </button>
         </div>
       </div>

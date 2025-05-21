@@ -8,12 +8,13 @@ import AdminSidebar from '@/components/admin/AdminSidebar';
 import DeleteUserModal from '@/components/modals/DeleteUserModal';
 import SuccessModal from '@/components/modals/SuccessModal';
 import CoursesPage from './CoursesPage';
-
+import RoleProtected from '@/components/security/RoleProtected';
 interface User {
   id: number;
   first_name: string;
   last_name: string;
   email: string;
+  photo?: string;
 }
 
 export default function AdminCurrentDataPage() {
@@ -23,7 +24,7 @@ export default function AdminCurrentDataPage() {
   const [tutees, setTutees] = useState<User[]>([]);
   const [sidebarMin, setSidebarMin] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const usersPerPage = 15;
+  const usersPerPage = 10;
 
   const [selectedUser, setSelectedUser] = useState<null | { id: number; name: string; email: string }>(null);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -66,6 +67,7 @@ export default function AdminCurrentDataPage() {
   const totalPages = Math.ceil(filteredData.length / usersPerPage);
 
   return (
+    <RoleProtected requiredRoles={['admin']}>
     <div className="flex min-h-screen bg-[#F5F5EF]">
       <AdminSidebar minimized={sidebarMin} setMinimized={setSidebarMin} active="Current Data" />
 
@@ -96,7 +98,7 @@ export default function AdminCurrentDataPage() {
             placeholder="Search by name or email..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="mb-4 w-72 px-3 py-2 border border-gray-300 rounded shadow-sm"
+className="mb-4 w-[320px] px-4 py-2 border border-[#E8B14F] rounded-full text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8B14F] bg-white shadow-sm"
             initial={{ opacity: 0, y: -10 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
@@ -116,7 +118,7 @@ export default function AdminCurrentDataPage() {
             <table className="w-full table-auto">
               <thead>
                 <tr className="text-left text-sm font-bold text-black border-b bg-[#FDFDFB]">
-                  <th className="p-4 w-10"><input type="checkbox" /></th>
+<th className="p-4 w-16">Photo</th>
                   <th className="p-4">{tab === 'tutors' ? 'Tutor' : 'Tutee'} Name</th>
                   <th className="p-4">Email</th>
                   <th className="p-4 w-10"></th>
@@ -132,7 +134,14 @@ export default function AdminCurrentDataPage() {
                     transition={{ delay: index * 0.03, duration: 0.4 }}
                     viewport={{ once: true, amount: 0.2 }}
                   >
-                    <td className="p-4"><input type="checkbox" /></td>
+                   <td className="p-4">
+  <img
+  src={user.photo || '/imgs/default-user.png'}
+  alt={`${user.first_name} ${user.last_name}`}
+  className="w-10 h-10 rounded-full object-cover border border-gray-300"
+/>
+</td>
+
                     <td className="p-4">{user.first_name} {user.last_name}</td>
                     <td className="p-4">{user.email}</td>
                     <td
@@ -234,11 +243,12 @@ export default function AdminCurrentDataPage() {
 
         {showSuccess && (
           <SuccessModal
-            message="User has been deleted successfully."
+            message="User has been suspended successfully."
             onClose={() => setShowSuccess(false)}
           />
         )}
       </main>
     </div>
+    </RoleProtected>
   );
 }
