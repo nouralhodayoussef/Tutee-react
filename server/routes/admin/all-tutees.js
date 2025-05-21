@@ -8,7 +8,8 @@ router.get('/', (req, res) => {
       tutees.id, 
       tutees.first_name, 
       tutees.last_name, 
-      users.email
+      users.email,
+      tutees.photo
     FROM tutees
     JOIN users ON users.id = tutees.user_id
     ORDER BY tutees.first_name

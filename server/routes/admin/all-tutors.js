@@ -8,7 +8,8 @@ router.get('/', (req, res) => {
       tutors.id, 
       tutors.first_name, 
       tutors.last_name, 
-      users.email
+      users.email,
+      tutors.photo
     FROM tutors
     JOIN users ON users.id = tutors.user_id
     ORDER BY tutors.first_name ASC
@@ -16,7 +17,7 @@ router.get('/', (req, res) => {
 
   db.query(sql, (err, results) => {
     if (err) {
-      console.error('❌ SQL ERROR:', err.sqlMessage); // Show real reason in terminal
+      console.error('❌ SQL ERROR:', err.sqlMessage);
       return res.status(500).json({ error: 'Internal server error' });
     }
     res.json(results);

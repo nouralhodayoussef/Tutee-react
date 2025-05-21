@@ -1,4 +1,3 @@
-/* admin/data/CoursesPage.tsx */
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -18,6 +17,7 @@ interface Course {
   id: number;
   course_code: string;
   course_name: string;
+  university_name?: string; // Only returned in unfiltered case
 }
 
 export default function CoursesPage() {
@@ -26,11 +26,17 @@ export default function CoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [selectedUniversity, setSelectedUniversity] = useState<number | null>(null);
   const [selectedMajor, setSelectedMajor] = useState<number | null>(null);
+  const [search, setSearch] = useState('');
   const [editCourseId, setEditCourseId] = useState<number | null>(null);
   const [editCode, setEditCode] = useState('');
   const [editName, setEditName] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const coursesPerPage = 10;
+  const [mounted, setMounted] = useState(false);
+  const coursesPerPage = 20;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     fetch('http://localhost:4000/api/admin/universities')
@@ -47,11 +53,22 @@ export default function CoursesPage() {
       fetch(`http://localhost:4000/api/admin/courses?university_id=${selectedUniversity}&major_id=${selectedMajor}`)
         .then(res => res.json())
         .then(setCourses);
+    } else {
+      fetch('http://localhost:4000/api/admin/courses')
+        .then(res => res.json())
+        .then(setCourses);
     }
   }, [selectedUniversity, selectedMajor]);
 
-  const paginatedCourses = courses.slice((currentPage - 1) * coursesPerPage, currentPage * coursesPerPage);
-  const totalPages = Math.ceil(courses.length / coursesPerPage);
+  const filteredCourses = Array.isArray(courses)
+    ? courses.filter(course =>
+        course.course_code.toLowerCase().includes(search.toLowerCase()) ||
+        course.course_name.toLowerCase().includes(search.toLowerCase())
+      )
+    : [];
+
+  const paginatedCourses = filteredCourses.slice((currentPage - 1) * coursesPerPage, currentPage * coursesPerPage);
+  const totalPages = Math.ceil(filteredCourses.length / coursesPerPage);
 
   const handleEdit = (course: Course) => {
     setEditCourseId(course.id);
@@ -73,13 +90,17 @@ export default function CoursesPage() {
     setEditCourseId(null);
   };
 
+  if (!mounted) return null;
+
+  const showUniversityColumn = !(selectedUniversity && selectedMajor);
+
   return (
-    <div className="">
-      <div className="flex gap-4 mb-6">
+    <div>
+      <div className="flex flex-wrap gap-4 mb-6 items-center">
         <select
           value={selectedUniversity ?? ''}
           onChange={e => setSelectedUniversity(Number(e.target.value))}
-          className="px-4 py-2 rounded border border-gray-300 shadow-sm"
+          className="px-4 py-2 rounded-full border border-yellow-400 shadow-sm focus:outline-none"
         >
           <option value="">Select University</option>
           {universities.map(u => (
@@ -90,13 +111,21 @@ export default function CoursesPage() {
         <select
           value={selectedMajor ?? ''}
           onChange={e => setSelectedMajor(Number(e.target.value))}
-          className="px-4 py-2 rounded border border-gray-300 shadow-sm"
+          className="px-4 py-2 rounded-full border border-yellow-400 shadow-sm focus:outline-none"
         >
           <option value="">Select Major</option>
           {majors.map(m => (
             <option key={m.id} value={m.id}>{m.major_name}</option>
           ))}
         </select>
+
+        <input
+          type="text"
+          placeholder="Search by Course Code or Name"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+className="px-4 py-2 border border-yellow-400 rounded-full shadow-sm w-80 focus:outline-none"
+            />
       </div>
 
       <div className="bg-white shadow rounded p-4">
@@ -105,6 +134,7 @@ export default function CoursesPage() {
             <tr className="text-left text-sm font-bold text-black border-b">
               <th className="p-3">Course Code</th>
               <th className="p-3">Course Name</th>
+              {showUniversityColumn && <th className="p-3">University</th>}
               <th className="p-3">Actions</th>
             </tr>
           </thead>
@@ -133,6 +163,11 @@ export default function CoursesPage() {
                     course.course_name
                   )}
                 </td>
+                {showUniversityColumn && (
+                  <td className="p-3">
+                    {course.university_name}
+                  </td>
+                )}
                 <td className="p-3">
                   {editCourseId === course.id ? (
                     <button onClick={saveEdit} className="text-green-600 font-medium">Save</button>
@@ -145,25 +180,29 @@ export default function CoursesPage() {
           </tbody>
         </table>
 
-        {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex justify-end mt-4 gap-2">
-            <button
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-1 text-sm border rounded bg-black text-[#E8B14F] disabled:opacity-50"
-            >
-              Previous
-            </button>
-            <button
-              onClick={() => setCurrentPage(prev => (prev < totalPages ? prev + 1 : prev))}
-              disabled={currentPage === totalPages}
-              className="px-3 py-1 text-sm border rounded bg-[#E8B14F] text-black disabled:opacity-50"
-            >
-              Next
-            </button>
-          </div>
-        )}
+  <div className="flex justify-end mt-4 gap-2 items-center">
+    <button
+      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+      disabled={currentPage === 1}
+      className="px-3 py-1 text-sm border rounded bg-black text-[#E8B14F] disabled:opacity-50"
+    >
+      Previous
+    </button>
+
+    <span className="text-sm text-gray-700 font-medium">
+      Page {currentPage} / {totalPages}
+    </span>
+
+    <button
+      onClick={() => setCurrentPage(prev => (prev < totalPages ? prev + 1 : prev))}
+      disabled={currentPage === totalPages}
+      className="px-3 py-1 text-sm border rounded bg-[#E8B14F] text-black disabled:opacity-50"
+    >
+      Next
+    </button>
+  </div>
+)}
       </div>
     </div>
   );
