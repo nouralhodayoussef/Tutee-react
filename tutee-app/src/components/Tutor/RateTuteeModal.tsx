@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { Star } from "lucide-react";
+import { useToast } from "@/components/Toast";
 
 interface RateTuteeModalProps {
   sessionId: number;
   tuteeName: string;
   onClose: () => void;
-  onSuccess: (stars: number) => void;
+  onSuccess: (stars: number, description: string) => void;
 }
 
 export default function RateTuteeModal({
@@ -17,16 +18,21 @@ export default function RateTuteeModal({
   onSuccess,
 }: RateTuteeModalProps) {
   const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const toast = useToast(); // ✅ initialize toast
 
   const handleRate = async () => {
     if (!rating) {
-      setError("Please select a rating.");
+      toast("Please select a rating.", "error");
       return;
     }
+    if (comment.length > 1000) {
+      toast("Comment too long (max 1000 characters).", "error");
+      return;
+    }
+
     setLoading(true);
-    setError(null);
 
     try {
       const res = await fetch("http://localhost:4000/tutor/rate-tutee", {
@@ -36,21 +42,23 @@ export default function RateTuteeModal({
         body: JSON.stringify({
           scheduled_session_id: sessionId,
           stars: rating,
+          description: comment,
         }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data?.error || "Something went wrong.");
+        toast(data?.error || "Something went wrong.", "error");
         setLoading(false);
         return;
       }
 
-      onSuccess(rating);
+      toast("Thank you for your feedback!", "success"); // ✅ success toast
+      onSuccess(rating, comment);
       onClose();
     } catch {
-      setError("Server error. Please try again.");
+      toast("Server error. Please try again.", "error");
       setLoading(false);
     }
   };
@@ -66,6 +74,7 @@ export default function RateTuteeModal({
           How would you rate your experience with <span className="font-semibold">{tuteeName}</span>?
         </p>
 
+        {/* Stars */}
         <div className="flex space-x-2 mb-4">
           {[1, 2, 3, 4, 5].map((star) => (
             <button
@@ -81,13 +90,23 @@ export default function RateTuteeModal({
           ))}
         </div>
 
-        {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
+        {/* Comment box */}
+        <textarea
+          className="w-full rounded-lg border border-gray-200 p-2 mb-3 min-h-[70px] focus:outline-none focus:ring-2 focus:ring-[#E8B14F] text-sm"
+          maxLength={1000}
+          placeholder="Leave a comment about your tutee (optional, max 1000 characters)..."
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          disabled={loading}
+        />
 
+        {/* Action buttons */}
         <div className="flex justify-end gap-2">
           <button
             onClick={onClose}
             className="px-4 py-2 rounded-full text-sm bg-gray-300 hover:bg-gray-400"
             type="button"
+            disabled={loading}
           >
             Close
           </button>

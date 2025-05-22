@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from "react";
+import { useToast } from "./Toast";
 
 interface CancelSessionModalProps {
   sessionId: number;
@@ -19,10 +20,9 @@ export default function CancelSessionModal({
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  const toast = useToast();
   const handleCancel = async () => {
     setLoading(true);
-    setError(null);
 
     try {
       const res = await fetch("http://localhost:4000/cancel-session", {
@@ -40,15 +40,16 @@ export default function CancelSessionModal({
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data?.error || "Something went wrong.");
+        toast(data?.error || "Something went wrong.", "error");
         setLoading(false);
         return;
       }
 
+      toast("Session cancelled successfully", "success");
       onCancelSuccess();
       onClose();
     } catch (err) {
-      setError("Server error. Please try again.");
+      toast("Server error. Please try again.", "error");
       setLoading(false);
     }
   };

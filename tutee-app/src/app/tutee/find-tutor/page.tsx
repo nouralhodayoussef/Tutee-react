@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -150,8 +151,8 @@ export default function FindTutorPage() {
             </div>
           </div>
 
-          <h2 className="mt-20 text-3xl font-bold text-black mb-6">Tutors</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+         <h2 className="mt-20 text-3xl font-bold text-black mb-6">Tutors</h2>
+           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
             {tutors.map((tutor) => (
               <Link
                 key={tutor.id}

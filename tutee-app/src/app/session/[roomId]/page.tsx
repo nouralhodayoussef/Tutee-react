@@ -39,6 +39,7 @@ function getOnlyCameraStream(remoteStream: MediaStream | null): MediaStream | nu
   if (cameraTracks.length === 0 && audioTracks.length === 0) return null;
   return new MediaStream([...audioTracks, ...cameraTracks]);
 }
+
 export default function SessionRoom() {
   const { roomId } = useParams() as { roomId: string };
   const socketRef = useRef<Socket | null>(null);
@@ -114,7 +115,7 @@ export default function SessionRoom() {
     socketRef.current?.emit('screen-share-stopped', { roomId });
   };
 
-
+  // UPDATED: Also redirect tutor to bookedSessions with ?rateSession param
   const handleLeave = () => {
     fetch('http://localhost:4000/session/whoami', { credentials: 'include' })
       .then((res) => res.json())
@@ -122,6 +123,8 @@ export default function SessionRoom() {
         const role = data.role;
         if (role === 'tutee' && sessionInfo?.session_id) {
           window.location.href = `/tutee/booked-sessions?rateSession=${sessionInfo.session_id}`;
+        } else if (role === 'tutor' && sessionInfo?.session_id) {
+          window.location.href = `/tutor/bookedSessions?rateSession=${sessionInfo.session_id}`;
         } else if (role === 'tutor') {
           window.location.href = '/tutor/bookedSessions';
         } else {
@@ -129,7 +132,6 @@ export default function SessionRoom() {
         }
       });
   };
-
 
   const handleOpenWhiteboard = () => {
     setShowWhiteboard(true);
@@ -228,7 +230,6 @@ export default function SessionRoom() {
         }
       };
 
-
       // Then assign the callback
       pc.onnegotiationneeded = () => {
         renegotiate();
@@ -291,9 +292,6 @@ export default function SessionRoom() {
           return;
         }
       };
-
-
-
 
       pc.onicecandidate = (e) => {
         if (e.candidate) {

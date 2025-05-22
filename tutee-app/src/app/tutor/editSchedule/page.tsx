@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import TutorHeader from '@/components/layout/TutorHeader';
 import RoleProtected from "@/components/security/RoleProtected";
 import CompleteProfileModal from '@/components/Tutor/CompleteProfileModal';
+import { useToast } from '@/components/Toast';
 // ---- Types ----
 type TimeRange = { start: string; end: string };
 
@@ -105,6 +106,8 @@ function ConflictModal({ sessions, onCancel, onConfirm }: ConflictModalProps) {
 
 // ---- Main Component ----
 export default function TutorScheduleEditor() {
+  const toast = useToast();
+
   const [availability, setAvailability] = useState<{ [dayId: number]: TimeRange[] }>({});
   const [errors, setErrors] = useState<{ [dayId: number]: string }>({});
   const [showModal, setShowModal] = useState(false);
@@ -254,6 +257,12 @@ export default function TutorScheduleEditor() {
   };
 
   const handleSubmit = async () => {
+    const hasErrors = Object.values(errors).some(err => err && err.trim().length > 0);
+    if (hasErrors) {
+      toast("You have unresolved schedule errors. Please fix them before saving.", "error");
+      return;
+    }
+
     const payload = Object.entries(availability).flatMap(([dayId, ranges]) =>
       ranges.map((r) => ({
         day_id: Number(dayId),
@@ -263,7 +272,7 @@ export default function TutorScheduleEditor() {
     );
 
     if (payload.length === 0) {
-      alert('Please add at least one valid time slot.');
+      toast('Please add at least one valid time slot.', "error");
       return;
     }
 
@@ -277,92 +286,92 @@ export default function TutorScheduleEditor() {
 
       const data = await res.json();
       if (res.ok) {
-        alert('Schedule saved successfully!');
+        toast('Schedule saved successfully!', "success");
       } else {
-        alert(data.error || 'Error saving schedule.');
+        toast(data.error || 'Error saving schedule.', "error");
       }
     } catch (err) {
       console.error(err);
-      alert('Network error.');
+      toast('Network error.', "error");
     }
   };
 
   return (
-    
-<RoleProtected requiredRoles={['tutor']}>
-  
-    <main className="min-h-screen bg-[#F5F5EF]">
-      <CompleteProfileModal />
-      <TutorHeader />
 
-      <div className="p-6 max-w-4xl mx-auto mt-8 w-full">
-        <h2 className="text-2xl font-bold mb-6 text-black">Edit Your Weekly Schedule</h2>
+    <RoleProtected requiredRoles={['tutor']}>
 
-        <div className="space-y-6 overflow-x-auto">
-          {daysOfWeek.map((day) => (
-            <div key={day.id} className="bg-white p-4 rounded-xl shadow border border-gray-200">
-              <h3 className="text-lg font-semibold mb-2">{day.name}</h3>
+      <main className="min-h-screen bg-[#F5F5EF]">
+        <CompleteProfileModal />
+        <TutorHeader />
 
-              {(availability[day.id] || []).map((range, index) => (
-                <div
-                  key={index}
-                  className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-3"
-                >
-                  <div className="flex gap-2">
-                    <input
-                      type="time"
-                      value={range.start}
-                      onChange={(e) => updateRange(day.id, index, 'start', e.target.value)}
-                      className="border px-3 py-2 rounded-md w-[120px] sm:w-32"
-                    />
-                    <span className="text-sm font-medium self-center">to</span>
-                    <input
-                      type="time"
-                      value={range.end}
-                      onChange={(e) => updateRange(day.id, index, 'end', e.target.value)}
-                      className="border px-3 py-2 rounded-md w-[120px] sm:w-32"
-                    />
-                  </div>
-                  <button
-                    onClick={() => removeRange(day.id, index)}
-                    className="text-red-500 text-sm hover:underline mt-1 sm:mt-0"
+        <div className="p-6 max-w-4xl mx-auto mt-8 w-full">
+          <h2 className="text-2xl font-bold mb-6 text-black">Edit Your Weekly Schedule</h2>
+
+          <div className="space-y-6 overflow-x-auto">
+            {daysOfWeek.map((day) => (
+              <div key={day.id} className="bg-white p-4 rounded-xl shadow border border-gray-200">
+                <h3 className="text-lg font-semibold mb-2">{day.name}</h3>
+
+                {(availability[day.id] || []).map((range, index) => (
+                  <div
+                    key={index}
+                    className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-3"
                   >
-                    Remove
-                  </button>
-                </div>
-              ))}
+                    <div className="flex gap-2">
+                      <input
+                        type="time"
+                        value={range.start}
+                        onChange={(e) => updateRange(day.id, index, 'start', e.target.value)}
+                        className="border px-3 py-2 rounded-md w-[120px] sm:w-32"
+                      />
+                      <span className="text-sm font-medium self-center">to</span>
+                      <input
+                        type="time"
+                        value={range.end}
+                        onChange={(e) => updateRange(day.id, index, 'end', e.target.value)}
+                        className="border px-3 py-2 rounded-md w-[120px] sm:w-32"
+                      />
+                    </div>
+                    <button
+                      onClick={() => removeRange(day.id, index)}
+                      className="text-red-500 text-sm hover:underline mt-1 sm:mt-0"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
 
-              {errors[day.id] && <p className="text-red-600 text-sm">{errors[day.id]}</p>}
+                {errors[day.id] && <p className="text-red-600 text-sm">{errors[day.id]}</p>}
 
-              <button
-                onClick={() => addRange(day.id)}
-                className="text-[#E8B14F] text-sm font-medium hover:underline mt-2"
-              >
-                + Add Time Range
-              </button>
-            </div>
-          ))}
+                <button
+                  onClick={() => addRange(day.id)}
+                  className="text-[#E8B14F] text-sm font-medium hover:underline mt-2"
+                >
+                  + Add Time Range
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-8 text-right">
+            <button
+              onClick={handleSubmit}
+              className="bg-[#E8B14F] text-white font-bold py-2 px-6 rounded-full hover:bg-yellow-500 transition"
+            >
+              Save Schedule
+            </button>
+          </div>
         </div>
 
-        <div className="mt-8 text-right">
-          <button
-            onClick={handleSubmit}
-            className="bg-[#E8B14F] text-white font-bold py-2 px-6 rounded-full hover:bg-yellow-500 transition"
-          >
-            Save Schedule
-          </button>
-        </div>
-      </div>
-
-      {/* Conflict Modal */}
-      {showModal && (
-        <ConflictModal
-          sessions={modalSessions}
-          onCancel={handleModalCancel}
-          onConfirm={handleModalConfirm}
-        />
-      )}
-    </main>
-</RoleProtected>
+        {/* Conflict Modal */}
+        {showModal && (
+          <ConflictModal
+            sessions={modalSessions}
+            onCancel={handleModalCancel}
+            onConfirm={handleModalConfirm}
+          />
+        )}
+      </main>
+    </RoleProtected>
   );
 }

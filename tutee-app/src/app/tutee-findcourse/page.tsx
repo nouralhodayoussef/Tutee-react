@@ -1,7 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import TuteeHeader from "@/components/layout/TuteeHeader";
 import Link from "next/link";
 import RoleProtected from "@/components/security/RoleProtected";
@@ -27,7 +27,6 @@ export default function TuteeFindCourse() {
   const [loading, setLoading] = useState(false);
   const [showMajors, setShowMajors] = useState(false);
   const [showUniversities, setShowUniversities] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -52,7 +51,7 @@ export default function TuteeFindCourse() {
     setLoading(true);
     try {
       const res = await fetch(
-        `http://localhost:4000/findcourse/courses?major_id=${selectedMajor}&university_id=${selectedUniversity}&search=${encodeURIComponent(searchTerm)}`
+        `http://localhost:4000/findcourse/tutors?major=${selectedMajor}&university=${selectedUniversity}&search=${encodeURIComponent(searchTerm)}`
       );
       const data = await res.json();
       setCourses(Array.isArray(data) ? data : []);
@@ -74,23 +73,36 @@ export default function TuteeFindCourse() {
     // eslint-disable-next-line
   }, [selectedMajor, selectedUniversity]);
 
-  const renderStars = (rating: number) => {
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating - fullStars >= 0.25 && rating - fullStars < 0.75;
-    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+  const renderStars = (rating: number | null | undefined) => {
+    const parsedRating = typeof rating === "number" ? rating : parseFloat(rating as any);
+    const safeRating = isNaN(parsedRating) ? 0 : parsedRating;
+
+    const fullStars = Math.floor(safeRating);
+    const remainder = safeRating - fullStars;
+
+    let halfStar = false;
+    let adjustedFullStars = fullStars;
+
+    if (remainder >= 0.75) {
+      adjustedFullStars += 1;
+    } else if (remainder >= 0.25) {
+      halfStar = true;
+    }
+
+    const emptyStars = 5 - adjustedFullStars - (halfStar ? 1 : 0);
+
     return (
-      <div className="flex gap-0.5 mt-1 text-[18px]">
-        {Array.from({ length: fullStars }).map((_, i) => (
-          <span key={`full-${i}`} className="text-yellow-400">
-            ★
-          </span>
-        ))}
-        {hasHalfStar && <span className="text-yellow-400">⯪</span>}
-        {Array.from({ length: emptyStars }).map((_, i) => (
-          <span key={`empty-${i}`} className="text-gray-300">
-            ☆
-          </span>
-        ))}
+      <div className="flex items-center gap-1">
+        <div className="flex gap-0.5 text-[18px]">
+          {Array.from({ length: adjustedFullStars }).map((_, i) => (
+            <span key={`full-${i}`} className="text-yellow-400">★</span>
+          ))}
+          {halfStar && <span className="text-yellow-400">⯪</span>}
+          {Array.from({ length: emptyStars }).map((_, i) => (
+            <span key={`empty-${i}`} className="text-gray-300">☆</span>
+          ))}
+        </div>
+        <span className="text-sm text-gray-600">({safeRating.toFixed(1)})</span>
       </div>
     );
   };
@@ -283,14 +295,21 @@ export default function TuteeFindCourse() {
                         <div className="mt-4 flex items-center gap-3">
                           <img
                             src={course.photo || "/imgs/default-profile.png"}
-                            alt={`${course.tutor_first} ${course.tutor_last}`}
+                            alt={`${course.first_name} ${course.last_name}`}
                             className="w-10 h-10 rounded-full object-cover"
                           />
-                          <div>
-                            <p className="text-sm font-medium">
-                              {course.tutor_first} {course.tutor_last}
+                          <div className="flex flex-col text-sm">
+                            <p className="font-medium">
+                              {course.first_name} {course.last_name}
                             </p>
-                            {renderStars(course.avg_rating)}
+                            <div className="flex items-center gap-2">
+                              <span className="text-[#696984]">Course:</span>
+                              {renderStars(course.course_rating)}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[#696984]">Overall:</span>
+                              {renderStars(course.overall_rating)}
+                            </div>
                           </div>
                         </div>
                       </Link>

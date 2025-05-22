@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import TutorHeader from '@/components/layout/TutorHeader';
 import RoleProtected from "@/components/security/RoleProtected";
 import CompleteProfileModal from '@/components/Tutor/CompleteProfileModal';
@@ -16,7 +16,6 @@ import { Star } from 'lucide-react';
 import { tuteeLogoBase64 } from '@/utils/pdfLogo';
 
 type ViewType = 'scheduled' | 'completed' | 'cancelled';
-
 
 interface Session {
   session_id: number;
@@ -42,6 +41,8 @@ interface CancelledSession extends Session {
 
 export default function TutorSessionsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [view, setView] = useState<ViewType>('scheduled');
   const [sessions, setSessions] = useState<Session[]>([]);
   const [completedSessions, setCompletedSessions] = useState<CompletedSession[]>([]);
@@ -57,6 +58,26 @@ export default function TutorSessionsPage() {
   const [rateModalOpen, setRateModalOpen] = useState(false);
   const [sessionToRate, setSessionToRate] = useState<CompletedSession | null>(null);
 
+  const rateSessionId = searchParams.get('rateSession');
+
+  // Auto-open RateTuteeModal on mount if rateSession param in URL
+  useEffect(() => {
+    if (rateSessionId && (sessions.length > 0 || completedSessions.length > 0)) {
+      let sessionToRate: CompletedSession | undefined = completedSessions.find(
+        (s) => Number(s.session_id) === Number(rateSessionId)
+      );
+
+      if (!sessionToRate) {
+        const s = sessions.find(s => Number(s.session_id) === Number(rateSessionId));
+        if (s) sessionToRate = { ...s, tutee_rating: null };
+      }
+
+      if (sessionToRate && sessionToRate.tutee_rating == null) {
+        setSessionToRate(sessionToRate);
+        setRateModalOpen(true);
+      }
+    }
+  }, [rateSessionId, sessions, completedSessions]);
   useEffect(() => {
     // Scheduled Sessions
     fetch('http://localhost:4000/tutor/booked-sessions', { credentials: 'include' })
@@ -81,8 +102,6 @@ export default function TutorSessionsPage() {
       .then(res => res.json())
       .then(setCancelledSessions);
   }, []);
-
-
 
   const isCancelable = (scheduledDate: string) => {
     const sessionTime = new Date(scheduledDate.replace(' ', 'T')).getTime();
@@ -125,6 +144,7 @@ export default function TutorSessionsPage() {
     setCancelModalOpen(false);
     setSessionToCancel(null);
   };
+
   // Tabs UI class
   const tabClass = (type: ViewType) =>
     "px-5 py-2 rounded-full font-semibold transition " +
@@ -170,7 +190,6 @@ export default function TutorSessionsPage() {
       ? `Schedule for ${new Date().toDateString()}`
       : `Week of ${getStartOfWeek()} to ${getEndOfWeek()}`;
     doc.text(subtitle, 60, 36); // bumped down for spacing
-
 
     // 🟡 Today = autoTable layout
     if (type === 'today') {
@@ -221,7 +240,6 @@ export default function TutorSessionsPage() {
         doc.setTextColor(0);
         doc.text(`${hour}:00`, startX - 18, startY + (row + 1) * cellHeight + 8);
 
-
         days.forEach((day, col) => {
           const x = startX + col * cellWidth;
           const y = startY + (row + 1) * cellHeight;
@@ -248,7 +266,6 @@ export default function TutorSessionsPage() {
     doc.save(`tutor-schedule-${type}.pdf`);
   };
 
-
   function getStartOfWeek() {
     const date = new Date();
     const diff = date.getDate() - date.getDay() + 1;
@@ -260,6 +277,7 @@ export default function TutorSessionsPage() {
     const diff = date.getDate() - date.getDay() + 7;
     return new Date(date.setDate(diff)).toDateString();
   }
+
   // --- RENDER SELECTED SESSIONS ---
   function renderSessions() {
     if (view === 'scheduled') {

@@ -18,6 +18,7 @@ interface Review {
   reviewer: string;
   comment: string;
   rating: number;
+  course_code: string;
   photo?: string | null;
 }
 
@@ -58,17 +59,13 @@ export default function TuteeTutorProfile() {
 
         const queryCode = searchParams.get('selectedCourse');
 
-        // Normalize arrays to avoid null/undefined issues
         const safeCourses = Array.isArray(data.courses) ? data.courses : [];
         const safeSkills = Array.isArray(data.skills) ? data.skills : [];
         const safeReviews = Array.isArray(data.reviews) ? data.reviews : [];
 
-        // Set selected course if passed in query string
         if (queryCode && safeCourses.length > 0) {
           const match = safeCourses.find((c: Course) => c.course_code === queryCode);
-          if (match) {
-            setSelectedCourse(match);
-          }
+          if (match) setSelectedCourse(match);
         }
 
         setTutor({
@@ -84,25 +81,28 @@ export default function TuteeTutorProfile() {
     };
 
     fetchTutor();
-    // eslint-disable-next-line
   }, []);
 
-  // Unique courses (safety for possible bad API data)
   const uniqueCourses: Course[] = Array.isArray(tutor?.courses)
     ? tutor!.courses.filter(
-        (course, idx, arr) =>
-          arr.findIndex(c => c.course_code === course.course_code) === idx
-      )
+      (course, idx, arr) =>
+        arr.findIndex(c => c.course_code === course.course_code) === idx
+    )
     : [];
 
+  const filteredReviews = selectedCourse
+    ? tutor?.reviews?.filter(r => r.course_code === selectedCourse.course_code)
+    : [];
+  const avgCourseRating = (filteredReviews ?? []).length
+    ? ((filteredReviews ?? []).reduce((sum, r) => sum + r.rating, 0) / (filteredReviews ?? []).length).toFixed(1)
+    : 'N/A';
   const getStarsCount = (level: number): number => {
-    if (!Array.isArray(tutor?.reviews)) return 0;
-    return tutor.reviews.filter((r) => r.rating === level).length;
+    if (!Array.isArray(filteredReviews)) return 0;
+    return filteredReviews.filter((r) => r.rating === level).length;
   };
 
   return (
     <RoleProtected requiredRoles={['tutee']}>
-
       <main className="bg-[#F5F5EF] min-h-screen font-montserrat relative z-0">
         <TuteeHeader />
 
@@ -137,7 +137,11 @@ export default function TuteeTutorProfile() {
                 </div>
 
                 <div className="flex flex-wrap gap-4 text-sm text-black/70">
-                  <p>⭐ {tutor?.avg_rating || 'N/A'} Instructor Rating</p>
+                  <p>
+                    ⭐ {Number(tutor?.avg_rating) > 0
+                      ? Number(tutor?.avg_rating).toFixed(1)
+                      : 'N/A'} Instructor Rating
+                  </p>
                   <p>👤 {tutor?.tutee_count || 0} Tutee</p>
                   <p>📚 {tutor?.course_count || 0} Course</p>
                   <p>💰 ${Number(tutor?.price_per_hour).toFixed(2)} / hour</p>
@@ -181,26 +185,16 @@ export default function TuteeTutorProfile() {
             </div>
             {Array.isArray(tutor?.skills) && tutor.skills.length > 10 && (
               <div className="mt-4">
-                {skillsToShow < tutor.skills.length ? (
-                  <button
-                    className="bg-[#E8B14F] hover:bg-yellow-500 text-white px-6 py-2 rounded-full font-bold text-sm"
-                    onClick={() => setSkillsToShow(skillsToShow + 10)}
-                  >
-                    Show More
-                  </button>
-                ) : (
-                  <button
-                    className="bg-gray-400 hover:bg-gray-600 text-white px-6 py-2 rounded-full font-bold text-sm"
-                    onClick={() => setSkillsToShow(10)}
-                  >
-                    Show Less
-                  </button>
-                )}
+                <button
+                  className="bg-[#E8B14F] hover:bg-yellow-500 text-white px-6 py-2 rounded-full font-bold text-sm"
+                  onClick={() => setSkillsToShow(skillsToShow === 10 ? tutor.skills.length : 10)}
+                >
+                  {skillsToShow === 10 ? 'Show More' : 'Show Less'}
+                </button>
               </div>
             )}
           </div>
 
-          {/* This is the other column */}
           <div className="w-full bg-white rounded-2xl shadow p-8 text-center h-fit">
             <p className="text-lg text-black mb-6">
               {selectedCourse
@@ -227,16 +221,20 @@ export default function TuteeTutorProfile() {
           <div className="bg-[#E8B14F4D] rounded-2xl p-6 drop-shadow-md w-full max-w-[730px] lg:ml-0">
             <div className="flex flex-col lg:flex-row mb-8">
               <div className="bg-white rounded-2xl w-full max-w-[198px] h-[150px] flex flex-col items-center justify-center mr-0 lg:mr-6 mb-6 lg:mb-0">
-                <p className="text-[24px] text-black/60 font-semibold">{tutor?.avg_rating} out of 5</p>
-                <p className="text-[#FDB022] text-lg">
-                  {'⭐'.repeat(Math.round(Number(tutor?.avg_rating)))}
+                <p className="text-[24px] text-black/60 font-semibold">
+                  {avgCourseRating} out of 5
                 </p>
-                <p className="text-sm text-black/60">Top Rated</p>
+                <p className="text-[#FDB022] text-lg">
+                  {'⭐'.repeat(Math.round(Number(avgCourseRating)))}
+                </p>
+                <p className="text-sm text-black/60">
+                  {selectedCourse ? `Rating for ${selectedCourse.course_code}` : 'Overall Rating'}
+                </p>
               </div>
               <div className="flex-1 flex flex-col justify-center gap-2">
                 {[5, 4, 3, 2, 1].map((level) => {
                   const count = getStarsCount(level);
-                  const total = Array.isArray(tutor?.reviews) ? tutor.reviews.length : 0;
+                  const total = filteredReviews?.length || 0;
                   const percentage = total > 0 ? (count / total) * 100 : 0;
                   return (
                     <div key={level} className="flex items-center gap-2">
@@ -253,9 +251,9 @@ export default function TuteeTutorProfile() {
               </div>
             </div>
 
-            {Array.isArray(tutor?.reviews) && tutor.reviews.length ? (
+            {Array.isArray(filteredReviews) && filteredReviews.length > 0 ? (
               <div className="space-y-6">
-                {tutor.reviews.map((review, idx) => (
+                {filteredReviews.map((review, idx) => (
                   <div
                     key={idx}
                     className="bg-white rounded-xl p-4 flex flex-col sm:flex-row gap-4 items-start shadow-sm"
@@ -291,12 +289,11 @@ export default function TuteeTutorProfile() {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 text-sm">No reviews yet.</p>
+              <p className="text-gray-500 text-sm">No reviews for this course yet.</p>
             )}
           </div>
         </section>
 
-        {/* Scheduling Modal */}
         {showModal && tutor && selectedCourse && (
           <ScheduleModal
             onClose={() => setShowModal(false)}

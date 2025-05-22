@@ -329,7 +329,7 @@ export default function TuteeHome() {
                   </motion.p>
                 )}
               </AnimatePresence>
-              <Link href="/find-course">
+              <Link href="/tutee-findcourse">
                 <motion.button
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.97 }}

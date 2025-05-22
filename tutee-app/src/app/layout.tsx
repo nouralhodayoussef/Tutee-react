@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import FooterWrapper from "@/components/layout/FooterWrapper"; // use the new wrapper
+import FooterWrapper from "@/components/layout/FooterWrapper";
+import ToastProvider from "@/components/Toast"; 
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,8 +35,10 @@ export default function RootLayout({
         />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {children}
-        <FooterWrapper />
+        <ToastProvider>
+          {children}
+          <FooterWrapper />
+        </ToastProvider>
       </body>
     </html>
   );
