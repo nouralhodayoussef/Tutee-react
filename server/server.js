@@ -123,6 +123,9 @@ app.use("/api/admin", require("./routes/admin/majors"));
 app.use("/api/admin", require("./routes/admin/courses"));
 app.use("/api/admin", require("./routes/admin/update-course"));
 
+app.use("/admin/upload-profile", require("./routes/admin/upload-profile"));
+app.use("/admin/info", require("./routes/admin/info"));
+
 app.use("/login", loginRoute);
 app.use("/check-session", require("./routes/security/check-session"));
 // app.use('/check-username', checkUser);//useless for now
