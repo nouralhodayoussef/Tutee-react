@@ -73,9 +73,9 @@ const TuteeHeader = () => {
       {/* Desktop Navigation */}
       <nav className="hidden md:flex gap-10 text-sm font-semibold text-black">
         <Link href="/tutee">HOME</Link>
-        <Link href="/tutee/booked-sessions">BOOKED SESSIONS</Link>
-        <Link href="/tutee-findcourse">FIND A COURSE</Link>
-        <Link href="/tutee/find-tutor">FIND A TUTOR</Link>
+        <Link href="../tutee/booked-sessions">BOOKED SESSIONS</Link>
+        <Link href="../tutee-findcourse">FIND A COURSE</Link>
+        <Link href="../tutee/find-tutor">FIND A TUTOR</Link>
         <Link href="../tutee/contact-us">CONTACT US</Link>
       </nav>
 
@@ -135,7 +135,7 @@ const TuteeHeader = () => {
             className="absolute top-full left-0 w-full bg-white shadow-md md:hidden z-40 border-t border-gray-200"
           >
             <div className="flex flex-col divide-y divide-gray-200">
-              {["/tutee", "tutee/booked-sessions", "/tutee-findcourse", "/tutee/find-tutor", "../tutee/contact-us"].map((path, i) => {
+              {["/tutee", "../tutee/booked-sessions", "/tutee-findcourse", "../tutee/find-tutor", "../tutee/contact-us"].map((path, i) => {
                 const label = ["HOME", "BOOKED SESSIONS", "FIND A COURSE", "FIND A TUTOR", "CONTACT US"][i];
                 return (
                   <Link

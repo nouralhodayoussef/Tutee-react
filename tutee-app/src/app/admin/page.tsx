@@ -67,7 +67,13 @@ export default function AdminDashboardPage() {
   const [unratedSessions, setUnratedSessions] = useState<any[]>([]);
   const [cancellationReasons, setCancellationReasons] = useState<any[]>([]);
   const [sidebarMin, setSidebarMin] = useState(false);
-
+  const formatTime = (timeStr: string) => {
+    const [hour, minute] = timeStr.split(':');
+    const h = parseInt(hour);
+    const suffix = h >= 12 ? 'PM' : 'AM';
+    const hour12 = h % 12 || 12;
+    return `${hour12}:${minute} ${suffix}`;
+  };
   // Sessions table state
   const [sessions, setSessions] = useState<any[]>([]);
   const [sessionsLoading, setSessionsLoading] = useState(false);
@@ -578,54 +584,82 @@ export default function AdminDashboardPage() {
                       No sessions found for this filter!
                     </div>
                   ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left">
-                        <thead>
-                          <tr className="text-[#E8B14F] font-semibold text-xs md:text-sm">
-                            <th>Date</th>
-                            <th>Time</th>
-                            <th>Tutor</th>
-                            <th>Tutee</th>
-                            <th>Course</th>
-                            <th>Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {sessions.map((s, i) => (
-                            <tr key={s.id || i} className="border-t">
-                              <td className="py-2">
-                                {new Date(s.scheduled_date).toLocaleDateString('en-GB')}
-                              </td>
-                              <td className="py-2">
-                                {new Date(s.scheduled_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </td>
-                              <td className="py-2">
-                                <div className="flex items-center gap-2">
-                                  <img
-                                    src={s.tutor_photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.tutor_first + " " + (s.tutor_last || ""))}`}
-                                    alt="tutor"
-                                    className="w-8 h-8 rounded-full object-cover border border-gray-200"
-                                  />
-                                  <span>{s.tutor_first} {s.tutor_last}</span>
-                                </div>
-                              </td>
-                              <td className="py-2">
-                                <div className="flex items-center gap-2">
-                                  <img
-                                    src={s.tutee_photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.tutee_first + " " + (s.tutee_last || ""))}`}
-                                    alt="tutee"
-                                    className="w-8 h-8 rounded-full object-cover border border-gray-200"
-                                  />
-                                  <span>{s.tutee_first} {s.tutee_last}</span>
-                                </div>
-                              </td>
-                              <td className="py-2">{s.course_code} - {s.course_name}</td>
-                              <td className="py-2 capitalize">{s.status}</td>
+                    <>
+                      {/* Mobile Card Layout */}
+                      <div className="md:hidden space-y-4">
+                        {sessions.map((s, i) => (
+                          <div key={s.id || i} className="bg-white rounded-xl shadow p-4 space-y-2">
+                            <div className="flex justify-between text-xs font-semibold text-[#E8B14F]">
+                              <span>{new Date(s.scheduled_date).toLocaleDateString('en-GB')}</span>
+                              <span>{formatTime(s.slot_time)}</span>
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                              <img
+                                src={s.tutor_photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.tutor_first + " " + s.tutor_last)}`}
+                                alt="tutor"
+                                className="w-8 h-8 rounded-full border border-gray-200 object-cover"
+                              />
+                              <span className="text-sm font-medium">{s.tutor_first} {s.tutor_last}</span>
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                              <img
+                                src={s.tutee_photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.tutee_first + " " + s.tutee_last)}`}
+                                alt="tutee"
+                                className="w-8 h-8 rounded-full border border-gray-200 object-cover"
+                              />
+                              <span className="text-sm font-medium">{s.tutee_first} {s.tutee_last}</span>
+                            </div>
+
+                            <p className="text-sm">
+                              <b>Course:</b> {s.course_code} – {s.course_name}
+                            </p>
+                            <p className="text-sm">
+                              <b>Status:</b> <span className="capitalize">{s.status}</span>
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Desktop Table Layout */}
+                      <div className="hidden md:block overflow-x-auto">
+                        <table className="w-full text-left">
+                          <thead>
+                            <tr className="text-[#E8B14F] font-semibold text-sm">
+                              <th className="py-2 px-2">Date</th>
+                              <th className="py-2 px-2">Time</th>
+                              <th className="py-2 px-2">Tutor</th>
+                              <th className="py-2 px-2">Tutee</th>
+                              <th className="py-2 px-2">Course</th>
+                              <th className="py-2 px-2">Status</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                          </thead>
+                          <tbody>
+                            {sessions.map((s, i) => (
+                              <tr key={s.id || i} className="border-t text-sm">
+                                <td className="py-2 px-2">{new Date(s.scheduled_date).toLocaleDateString('en-GB')}</td>
+                                <td className="py-2 px-2">{formatTime(s.slot_time)}</td>
+                                <td className="py-2 px-2">
+                                  <div className="flex items-center gap-2">
+                                    <img src={s.tutor_photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.tutor_first + " " + s.tutor_last)}`} className="w-8 h-8 rounded-full object-cover border" />
+                                    <span>{s.tutor_first} {s.tutor_last}</span>
+                                  </div>
+                                </td>
+                                <td className="py-2 px-2">
+                                  <div className="flex items-center gap-2">
+                                    <img src={s.tutee_photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.tutee_first + " " + s.tutee_last)}`} className="w-8 h-8 rounded-full object-cover border" />
+                                    <span>{s.tutee_first} {s.tutee_last}</span>
+                                  </div>
+                                </td>
+                                <td className="py-2 px-2">{s.course_code} – {s.course_name}</td>
+                                <td className="py-2 px-2 capitalize">{s.status}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
                   )}
                 </motion.div>
               </motion.div>
