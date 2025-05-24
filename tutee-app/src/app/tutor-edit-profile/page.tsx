@@ -12,8 +12,10 @@ import { getDefaultPhoto } from "@/constants/imagePaths";
 import ConfirmModal from "@/components/ConfirmRemovalModal";
 import CropModal from "@/components/CropModal";
 import RoleProtected from "@/components/security/RoleProtected";
+import { useToast } from '@/components/Toast';
 export default function TutorEditProfile() {
   const router = useRouter();
+  const toast = useToast();
 
   type Skill = {
     id: number;
@@ -130,58 +132,75 @@ export default function TutorEditProfile() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    let isValid = true;
-    const nameRegex = /^[A-Za-z\s]{2,25}$/;
-    const lastNameRegex = /^[A-Za-z\s]{2,35}$/;
+  let isValid = true;
+  const nameRegex = /^[A-Za-z\s]{2,25}$/;
+  const lastNameRegex = /^[A-Za-z\s]{2,35}$/;
 
-    if (inputFirstName && !nameRegex.test(inputFirstName)) {
-      setFirstNameError("First name must be 2-25 letters or spaces only.");
+  // ✅ Price validation (integer + non-negative)
+  if (pricePerHour) {
+    const price = Number(pricePerHour);
+
+    if (isNaN(price) || !Number.isInteger(price)) {
+      toast("Price per hour must be a valid integer.", "error");
       isValid = false;
-    } else {
-      setFirstNameError("");
-    }
-
-    if (inputLastName && !lastNameRegex.test(inputLastName)) {
-      setLastNameError("Last name must be 2-35 letters or spaces only.");
+    } else if (price < 0) {
+      toast("Price per hour cannot be negative.", "error");
       isValid = false;
-    } else {
-      setLastNameError("");
     }
+  }
 
-    if (!isValid) return;
+  // ✅ First name validation
+  if (inputFirstName && !nameRegex.test(inputFirstName)) {
+    setFirstNameError("First name must be 2-25 letters or spaces only.");
+    isValid = false;
+  } else {
+    setFirstNameError("");
+  }
 
-    const payload: any = {
-      selectedMajor,
-      selectedUniversity,
-    };
+  // ✅ Last name validation
+  if (inputLastName && !lastNameRegex.test(inputLastName)) {
+    setLastNameError("Last name must be 2-35 letters or spaces only.");
+    isValid = false;
+  } else {
+    setLastNameError("");
+  }
 
-    if (inputFirstName.trim()) payload.firstName = inputFirstName;
-    if (inputLastName.trim()) payload.lastName = inputLastName;
-    if (pricePerHour.trim()) payload.pricePerHour = pricePerHour;
-    if (inputDescription.trim()) payload.description = inputDescription;
+  if (!isValid) return;
 
-    try {
-      const res = await fetch("http://localhost:4000/update-tutor", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        setSuccessMsg("Profile updated successfully!");
-        setTimeout(() => location.reload(), 1500);
-      } else {
-        const data = await res.json();
-        alert(`Failed: ${data.error}`);
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Something went wrong.");
-    }
+  const payload: any = {
+    selectedMajor,
+    selectedUniversity,
   };
+
+  if (inputFirstName.trim()) payload.firstName = inputFirstName;
+  if (inputLastName.trim()) payload.lastName = inputLastName;
+  if (pricePerHour.trim()) payload.pricePerHour = pricePerHour;
+  if (inputDescription.trim()) payload.description = inputDescription;
+
+  try {
+    const res = await fetch("http://localhost:4000/update-tutor", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (res.ok) {
+      setSuccessMsg("Profile updated successfully!");
+      setTimeout(() => location.reload(), 1500);
+    } else {
+      const data = await res.json();
+      toast(data.error || "Update failed.", "error");
+    }
+  } catch (err) {
+    console.error(err);
+    toast("Something went wrong.", "error");
+  }
+};
+
+
   const handleDeletePhoto = async () => {
     try {
       const res = await fetch("http://localhost:4000/delete-photo", {
