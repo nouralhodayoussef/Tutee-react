@@ -19,26 +19,28 @@ router.get("/", (req, res) => {
   }
 
   const sql = `
-    SELECT 
-      ss.id,
-      ss.scheduled_date,
-      ss.status,
-      tutees.first_name AS tutee_first,
-      tutees.last_name AS tutee_last,
-      tutees.photo AS tutee_photo,
-      tutors.first_name AS tutor_first,
-      tutors.last_name AS tutor_last,
-      tutors.photo AS tutor_photo,
-      c.course_code,
-      c.course_name
-    FROM scheduled_sessions ss
-    JOIN tutees ON ss.tutee_id = tutees.id
-    JOIN tutors ON ss.tutor_id = tutors.id
-    JOIN courses c ON ss.course_id = c.id
-    WHERE ${dateCondition}
-    ORDER BY ss.scheduled_date DESC
-    LIMIT 40
-  `;
+  SELECT 
+    ss.id,
+    ss.scheduled_date,
+    sl.slot_time,
+    ss.status,
+    tutees.first_name AS tutee_first,
+    tutees.last_name AS tutee_last,
+    tutees.photo AS tutee_photo,
+    tutors.first_name AS tutor_first,
+    tutors.last_name AS tutor_last,
+    tutors.photo AS tutor_photo,
+    c.course_code,
+    c.course_name
+  FROM scheduled_sessions ss
+  JOIN session_slots sl ON ss.slot_id = sl.id
+  JOIN tutees ON ss.tutee_id = tutees.id
+  JOIN tutors ON ss.tutor_id = tutors.id
+  JOIN courses c ON ss.course_id = c.id
+  WHERE ${dateCondition}
+  ORDER BY ss.scheduled_date DESC
+  LIMIT 40
+`;
 
   db.query(sql, (err, results) => {
     if (err) return res.status(500).json({ error: "Server error" });

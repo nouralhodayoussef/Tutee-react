@@ -73,10 +73,10 @@ const TuteeHeader = () => {
       {/* Desktop Navigation */}
       <nav className="hidden md:flex gap-10 text-sm font-semibold text-black">
         <Link href="/tutee">HOME</Link>
-        <Link href="../tutee/booked-sessions">BOOKED SESSIONS</Link>
-        <Link href="../tutee-findcourse">FIND A COURSE</Link>
-        <Link href="../tutee/find-tutor">FIND A TUTOR</Link>
-        <Link href="../tutee/contact-us">CONTACT US</Link>
+        <Link href="/../tutee/booked-sessions">BOOKED SESSIONS</Link>
+        <Link href="/../tutee-findcourse">FIND A COURSE</Link>
+        <Link href="/../tutee/find-tutor">FIND A TUTOR</Link>
+        <Link href="/../tutee/contact-us">CONTACT US</Link>
       </nav>
 
       {/* Avatar & Dropdown */}

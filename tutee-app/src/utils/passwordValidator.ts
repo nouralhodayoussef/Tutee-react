@@ -13,8 +13,8 @@ export function validatePassword(password: string): { valid: boolean; errors: st
   if (!/[0-9]/.test(password)) {    // <--- Add this line for digits
     errors.push('Password must include at least one number.');
   }
-  if (!/[#$@.&%]/.test(password)) {
-    errors.push('Password must include at least one special character (# $ @ . & %).');
+  if (!/[_#$@.&%]/.test(password)) {
+    errors.push('Password must include at least one special character (_ # $ @ . & %).');
   }
 
   return { valid: errors.length === 0, errors };

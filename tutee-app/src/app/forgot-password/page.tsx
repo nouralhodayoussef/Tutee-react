@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import LoadingModal from '@/components/forget-password/LoadingModal';
 import OtpModal from '@/components/forget-password/OtpModal';
 import NewPasswordModal from '@/components/forget-password/NewPasswordModal';
-import RoleProtected from "@/components/security/RoleProtected";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
@@ -82,7 +81,6 @@ export default function ForgotPasswordPage() {
 };
 
   return (
-    <RoleProtected requiredRoles={['tutee', 'tutor']}>
     <main className="min-h-screen bg-[#f5f5ef] flex items-center justify-center font-poppins px-4">
       {!showSuccessMessage && (
         <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
@@ -164,6 +162,5 @@ export default function ForgotPasswordPage() {
         />
       )}
     </main>
-    </RoleProtected>
   );
 }
