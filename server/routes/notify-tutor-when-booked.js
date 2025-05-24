@@ -14,20 +14,21 @@ router.post("/", async (req, res) => {
   try {
     const [rows] = await db.promise().query(
       `SELECT 
-         ss.scheduled_date,
-         s.slot_time,
-         c.course_code,
-         c.course_name,
-         CONCAT(tu.first_name, ' ', tu.last_name) AS tutor_name,
-         tutor_user.email AS tutor_email,
-         CONCAT(t.first_name, ' ', t.last_name) AS tutee_name
-       FROM scheduled_sessions ss
-       JOIN session_slots s ON ss.slot_id = s.id
-       JOIN courses c ON ss.course_id = c.id
-       JOIN tutors tu ON ss.tutor_id = tu.id
-       JOIN users tutor_user ON tu.user_id = tutor_user.id
-       JOIN tutees t ON ss.tutee_id = t.id
-       WHERE ss.id = ?`,
+  ss.scheduled_date,
+  ss.note,
+  s.slot_time,
+  c.course_code,
+  c.course_name,
+  CONCAT(tu.first_name, ' ', tu.last_name) AS tutor_name,
+  tutor_user.email AS tutor_email,
+  CONCAT(t.first_name, ' ', t.last_name) AS tutee_name
+FROM scheduled_sessions ss
+JOIN session_slots s ON ss.slot_id = s.id
+JOIN courses c ON ss.course_id = c.id
+JOIN tutors tu ON ss.tutor_id = tu.id
+JOIN users tutor_user ON tu.user_id = tutor_user.id
+JOIN tutees t ON ss.tutee_id = t.id
+WHERE ss.id = ?`,
       [sessionId]
     );
 
@@ -36,8 +37,13 @@ router.post("/", async (req, res) => {
     }
 
     const session = rows[0];
+    const noteText = session.note
+  ? `\n📝 Note from tutee: ${session.note}`
+  : "";
 
     const emailText = `Hello ${session.tutor_name},
+
+    
 
 You have a new booked session on the Tutee platform.
 
@@ -45,6 +51,7 @@ You have a new booked session on the Tutee platform.
 ⏰ Time: ${session.slot_time}
 📘 Course: ${session.course_code} - ${session.course_name}
 👤 Booked by: ${session.tutee_name}
+ ${noteText}
 
 Please log in to your Tutor Dashboard to view this session.
 
