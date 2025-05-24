@@ -67,6 +67,7 @@ export default function SessionRoom() {
 
   const videoSenderRef = useRef<RTCRtpSender | null>(null);
   const cameraVideoTrackRef = useRef<MediaStreamTrack | null>(null);
+  const [showChatMobile, setShowChatMobile] = useState(false);
 
   const handleShareScreen = async () => {
     if (isRemoteSharing) {
@@ -375,34 +376,34 @@ export default function SessionRoom() {
   };
 
   // --- JSX ---
-  return (
-    <div className="relative min-h-screen bg-[#f5f5ef] flex flex-col font-montserrat">
-      {/* Logo and Title Bar */}
-      <div className="flex items-center justify-between px-8 pt-6 pb-2">
-        <img src="/imgs/logo.png" alt="Tutee" className="h-12" />
-        <span className="text-2xl font-bold ml-8">
-          Class<span className="text-[#E8B14F]">room</span>
-        </span>
-        <div className="w-12" />
-      </div>
+return (
+  <div className="relative min-h-screen bg-[#f5f5ef] flex flex-col font-montserrat">
+    {/* Logo and Title Bar */}
+    <div className="flex items-center justify-between px-8 pt-6 pb-2">
+      <img src="/imgs/logo.png" alt="Tutee" className="h-12" />
+      <span className="text-2xl font-bold ml-8">
+        Class<span className="text-[#E8B14F]">room</span>
+      </span>
+      <div className="w-12" />
+    </div>
 
-      {/* Toast Notifications */}
-      <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 space-y-2">
-        {notifications.map((msg, i) => (
-          <div
-            key={i}
-            className="bg-black text-white px-4 py-2 rounded-lg shadow-md animate-fadeInOut text-sm"
-          >
-            {msg}
-          </div>
-        ))}
-      </div>
+    {/* Toast Notifications */}
+    <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 space-y-2">
+      {notifications.map((msg, i) => (
+        <div
+          key={i}
+          className="bg-black text-white px-4 py-2 rounded-lg shadow-md animate-fadeInOut text-sm"
+        >
+          {msg}
+        </div>
+      ))}
+    </div>
 
-      {/* MAIN LAYOUT */}
-      <div className="flex-1 flex flex-row justify-center items-stretch w-full max-w-[1700px] mx-auto gap-8 px-4 pb-28">
-        {/* Main "presentation" (screen share) area */}
+    {/* MAIN LAYOUT */}
+    <div className="flex-1 w-full max-w-[1700px] mx-auto px-4 pb-28">
+      {/* Desktop Layout */}
+      <div className="hidden lg:flex flex-row justify-center items-stretch gap-8 w-full">
         <div className="flex-1 flex flex-col items-center justify-center pt-2">
-          {/* PresentationArea */}
           <PresentationArea
             localScreenStream={localScreenStream}
             remoteScreenStream={remoteScreenStream}
@@ -411,12 +412,9 @@ export default function SessionRoom() {
             onStopSharing={handleStopShareScreen}
           />
         </div>
-
-        {/* RIGHT SIDEBAR */}
         <div className="w-[380px] flex flex-col items-center">
-          {/* User video/photo containers */}
           <div className="flex flex-row justify-end gap-8 w-full mb-5 mt-2">
-            {/* LOCAL USER */}
+            {/* Local Camera */}
             <div className="flex flex-col items-center w-[110px]">
               <div className="rounded-2xl bg-[#F7F7F5] shadow-md w-[110px] h-[110px] flex items-center justify-center overflow-hidden relative">
                 <CameraVideo
@@ -437,7 +435,8 @@ export default function SessionRoom() {
                   : `${sessionInfo?.tutor_first_name ?? ''} ${sessionInfo?.tutor_last_name ?? ''}`}
               </span>
             </div>
-            {/* REMOTE USER */}
+
+            {/* Remote Camera */}
             <div className="flex flex-col items-center w-[110px]">
               <div className="rounded-2xl bg-[#F7F7F5] shadow-md w-[110px] h-[110px] flex items-center justify-center overflow-hidden relative">
                 <CameraVideo
@@ -476,7 +475,6 @@ export default function SessionRoom() {
           <div className="w-full flex-1 flex flex-col rounded-2xl bg-white shadow-xl border border-[#e8b14f]/40 overflow-hidden min-h-[420px]">
             <div className="bg-[#E8B14F] px-4 py-2 font-bold text-black flex items-center sticky top-0 z-10 rounded-t-2xl text-base">
               Chats
-              <span className="ml-2 text-xs font-normal text-black/60"></span>
             </div>
             <div className="flex-1 flex flex-col">
               {socketRef.current && sessionInfo && currentUser && (
@@ -500,35 +498,119 @@ export default function SessionRoom() {
         </div>
       </div>
 
-      {/* Controls (bottom, fixed, pill-shaped) */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50
-    bg-[#E8B14F]/90 rounded-[28px]
-    px-4 py-2 shadow-lg flex flex-row items-center min-w-[330px] max-w-[500px]">
-        <Controls
-          stream={stream}
-          micOn={micOn}
-          camOn={camOn}
-          onShareScreen={handleShareScreen}
-          isScreenSharing={isLocalSharing}
-          onLeave={handleLeave}
-          onOpenWhiteboard={handleOpenWhiteboard}
-          onToggleMic={handleToggleMic}
-          onToggleCam={handleToggleCamera}
-        />
-      </div>
+      {/* Mobile Layout */}
+      <div className="lg:hidden flex flex-col items-center w-full gap-4">
+        <div className="flex flex-row justify-center gap-4 mt-4">
+          <div className="w-[90px] h-[90px] rounded-2xl bg-[#F7F7F5] shadow-md overflow-hidden flex items-center justify-center">
+            <CameraVideo
+              stream={stream}
+              fallbackSrc={
+                currentUser?.role === 'tutee'
+                  ? sessionInfo?.tutee_photo || '/imgs/default-profile.png'
+                  : sessionInfo?.tutor_photo || '/imgs/default-profile.png'
+              }
+              name="You"
+              muted
+              updateKey={localVideoUpdate}
+            />
+          </div>
+          <div className="w-[90px] h-[90px] rounded-2xl bg-[#F7F7F5] shadow-md overflow-hidden flex items-center justify-center">
+            <CameraVideo
+              stream={remoteCamOn ? remoteStream : null}
+              fallbackSrc={
+                currentUser?.role === 'tutee'
+                  ? sessionInfo?.tutor_photo || '/imgs/default-profile.png'
+                  : sessionInfo?.tutee_photo || '/imgs/default-profile.png'
+              }
+              name="Remote"
+              muted={false}
+              updateKey={remoteVideoUpdate}
+              camOn={remoteCamOn}
+            />
+          </div>
+        </div>
 
-      {/* Whiteboard overlay */}
-      {socketRef.current && (
-        <Whiteboard
-          visible={showWhiteboard}
-          onClose={() => {
-            setShowWhiteboard(false);
-            socketRef.current?.emit('close-whiteboard', { roomId });
-          }}
-          socket={socketRef.current}
-          roomId={roomId}
-        />
-      )}
+        <div className="w-full">
+          <PresentationArea
+            localScreenStream={localScreenStream}
+            remoteScreenStream={remoteScreenStream}
+            isLocalSharing={isLocalSharing}
+            isRemoteSharing={isRemoteSharing}
+            onStopSharing={handleStopShareScreen}
+          />
+        </div>
+      </div>
     </div>
-  );
+
+    {/* Controls */}
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#E8B14F]/90 rounded-[28px] px-4 py-2 shadow-lg flex flex-row items-center min-w-[330px] max-w-[500px]">
+      <Controls
+        stream={stream}
+        micOn={micOn}
+        camOn={camOn}
+        onShareScreen={handleShareScreen}
+        isScreenSharing={isLocalSharing}
+        onLeave={handleLeave}
+        onOpenWhiteboard={handleOpenWhiteboard}
+        onToggleMic={handleToggleMic}
+        onToggleCam={handleToggleCamera}
+      />
+    </div>
+
+    {/* Chat FAB for Mobile */}
+    {!showChatMobile && (
+      <button
+        className="fixed bottom-28 right-4 z-50 bg-[#E8B14F] text-black p-3 rounded-full shadow-lg lg:hidden"
+        onClick={() => setShowChatMobile(true)}
+      >
+        💬
+      </button>
+    )}
+
+    {/* Mobile Chat Modal */}
+    {showChatMobile && (
+      <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center lg:hidden">
+        <div className="bg-white rounded-2xl shadow-lg w-11/12 max-h-[80vh] flex flex-col overflow-hidden">
+          <div className="flex justify-between items-center px-4 py-2 bg-[#E8B14F]">
+            <span className="font-semibold text-black">Chats</span>
+            <button onClick={() => setShowChatMobile(false)} className="text-black text-xl font-bold">
+              ✕
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            {socketRef.current && sessionInfo && currentUser && (
+              <ChatBox
+                socket={socketRef.current}
+                currentUser={{
+                  role: currentUser.role,
+                  name:
+                    currentUser.role === 'tutee'
+                      ? sessionInfo.tutee_first_name
+                      : sessionInfo.tutor_first_name,
+                  avatar:
+                    currentUser.role === 'tutee'
+                      ? sessionInfo.tutee_photo
+                      : sessionInfo.tutor_photo,
+                }}
+              />
+            )}
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Whiteboard */}
+    {socketRef.current && (
+      <Whiteboard
+        visible={showWhiteboard}
+        onClose={() => {
+          setShowWhiteboard(false);
+          socketRef.current?.emit('close-whiteboard', { roomId });
+        }}
+        socket={socketRef.current}
+        roomId={roomId}
+      />
+    )}
+  </div>
+);
 }
