@@ -3,10 +3,9 @@
 
 import { useEffect, useState } from 'react';
 import TutorHeader from '@/components/layout/TutorHeader';
-import RoleProtected from "@/components/security/RoleProtected";
-import CompleteProfileModal from '@/components/Tutor/CompleteProfileModal';
 import { useToast } from '@/components/Toast';
-// ---- Types ----
+import RoleProtected from '@/components/security/RoleProtected';
+
 type TimeRange = { start: string; end: string };
 
 type ConflictSession = {
@@ -150,46 +149,43 @@ export default function TutorScheduleEditor() {
     }));
   };
 
-  // Key: on remove, check conflicts, show modal if needed
   const removeRange = async (dayId: number, index: number) => {
-    const rangeToRemove = (availability[dayId] || [])[index];
-    if (!rangeToRemove) return;
+  const rangeToRemove = (availability[dayId] || [])[index];
+  if (!rangeToRemove) return;
 
-    // Get current tutorId (should be from session, or backend can use req.session.user.profile_id)
-    const tutorId = 1; // Replace this with session value if you have one
+  const tutorId = 1;
 
-    // Check backend for conflicts
-    const ranges = [{
-      day_id: dayId,
-      start: rangeToRemove.start,
-      end: rangeToRemove.end,
-    }];
+  const ranges = [{
+    day_id: dayId,
+    start: rangeToRemove.start,
+    end: rangeToRemove.end,
+  }];
 
-    try {
-      const res = await fetch('http://localhost:4000/tutor/check-schedule-conflicts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ tutor_id: tutorId, ranges }),
-      });
-      const data = await res.json();
+  try {
+    const res = await fetch('http://localhost:4000/tutor/check-schedule-conflicts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ tutor_id: tutorId, ranges }),
+    });
+    const data = await res.json();
 
-      if (data.sessions && data.sessions.length > 0) {
-        // Show modal listing sessions
-        setModalSessions(data.sessions);
-        setShowModal(true);
-        setModalDay(dayId);
-        setModalIndex(index);
-      } else {
-        // No conflicts, just remove
-        actuallyRemoveRange(dayId, index);
-      }
-    } catch (err) {
-      alert('Error checking for session conflicts.');
+    setModalDay(dayId);
+    setModalIndex(index);
+
+    if (data.sessions && data.sessions.length > 0) {
+      setModalSessions(data.sessions);
+      setShowModal(true);
+    } else {
+      actuallyRemoveRange(dayId, index); 
     }
-  };
+  } catch (err) {
+    alert('Error checking for session conflicts.');
+  }
+};
 
-  // Actually remove the slot
+
+
   const actuallyRemoveRange = (dayId: number, index: number) => {
     const updated = (availability[dayId] || []).filter((_, i) => i !== index);
     setAvailability((prev) => ({ ...prev, [dayId]: updated }));
@@ -200,7 +196,6 @@ export default function TutorScheduleEditor() {
     setModalIndex(null);
   };
 
-  // Modal: cancel/confirm handlers
   const handleModalCancel = () => {
     setShowModal(false);
     setModalSessions([]);
@@ -209,33 +204,33 @@ export default function TutorScheduleEditor() {
   };
 
   const handleModalConfirm = async () => {
-    // On confirm: cancel sessions & remove availability in backend, then update state
-    const tutorId = 1; // Replace with session or actual value as above
-    const rangeToRemove = modalDay !== null && modalIndex !== null ? (availability[modalDay] || [])[modalIndex] : null;
-    try {
-      await fetch('http://localhost:4000/tutor/cancel-sessions-and-remove-availability', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          tutor_id: tutorId,
-          ranges: [{
-            day_id: modalDay,
-            start: rangeToRemove?.start,
-            end: rangeToRemove?.end,
-          }],
-          session_ids: modalSessions.map(s => s.session_id),
-          reason: "Schedule edited by tutor"
-        }),
-      });
-      if (modalDay !== null && modalIndex !== null) {
-        actuallyRemoveRange(modalDay, modalIndex);
-      }
-      // (Optionally show success message or reload)
-    } catch (err) {
-      alert('Error cancelling sessions.');
-    }
-  };
+  if (modalDay === null || modalIndex === null) return;
+
+  // Cancel sessions in DB if any
+  const tutorId = 1;
+  const rangeToRemove = (availability[modalDay] || [])[modalIndex];
+  try {
+    await fetch('http://localhost:4000/tutor/cancel-sessions-and-remove-availability', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        tutor_id: tutorId,
+        ranges: [{
+          day_id: modalDay,
+          start: rangeToRemove?.start,
+          end: rangeToRemove?.end,
+        }],
+        session_ids: modalSessions.map(s => s.session_id),
+        reason: "Schedule edited by tutor"
+      }),
+    });
+
+    actuallyRemoveRange(modalDay, modalIndex); 
+  } catch (err) {
+    alert('Error cancelling sessions.');
+  }
+};
 
   const updateRange = (dayId: number, index: number, field: 'start' | 'end', value: string) => {
     const updated = [...(availability[dayId] || [])];
@@ -259,7 +254,7 @@ export default function TutorScheduleEditor() {
   const handleSubmit = async () => {
     const hasErrors = Object.values(errors).some(err => err && err.trim().length > 0);
     if (hasErrors) {
-      toast("You have unresolved schedule errors. Please fix them before saving.", "error");
+      toast('Please fix all schedule errors before submitting.', 'error');
       return;
     }
 
@@ -272,7 +267,7 @@ export default function TutorScheduleEditor() {
     );
 
     if (payload.length === 0) {
-      toast('Please add at least one valid time slot.', "error");
+      toast('Please add at least one valid time slot.', 'error');
       return;
     }
 
@@ -286,24 +281,20 @@ export default function TutorScheduleEditor() {
 
       const data = await res.json();
       if (res.ok) {
-        toast('Schedule saved successfully!', "success");
+        toast('Schedule saved successfully!', 'success');
       } else {
-        toast(data.error || 'Error saving schedule.', "error");
+        toast(data.error || 'Error saving schedule.', 'error');
       }
     } catch (err) {
       console.error(err);
-      toast('Network error.', "error");
+      toast('Network error.', 'error');
     }
   };
 
   return (
-
     <RoleProtected requiredRoles={['tutor']}>
-
       <main className="min-h-screen bg-[#F5F5EF]">
-        <CompleteProfileModal />
         <TutorHeader />
-
         <div className="p-6 max-w-4xl mx-auto mt-8 w-full">
           <h2 className="text-2xl font-bold mb-6 text-black">Edit Your Weekly Schedule</h2>
 
@@ -313,10 +304,7 @@ export default function TutorScheduleEditor() {
                 <h3 className="text-lg font-semibold mb-2">{day.name}</h3>
 
                 {(availability[day.id] || []).map((range, index) => (
-                  <div
-                    key={index}
-                    className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-3"
-                  >
+                  <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-3">
                     <div className="flex gap-2">
                       <input
                         type="time"
@@ -363,7 +351,6 @@ export default function TutorScheduleEditor() {
           </div>
         </div>
 
-        {/* Conflict Modal */}
         {showModal && (
           <ConflictModal
             sessions={modalSessions}
