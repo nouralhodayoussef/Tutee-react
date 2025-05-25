@@ -33,7 +33,6 @@ export default function FindTutorPage() {
         setUniversities(data.universities);
         setSelectedMajor(data.selectedMajor);
         setSelectedUniversity(data.selectedUniversity);
-        fetchTutors(data.selectedMajor, data.selectedUniversity, ratingSort, '', null, null);
       });
   }, []);
 
@@ -126,7 +125,8 @@ export default function FindTutorPage() {
                   className="bg-white px-5 py-3 rounded-[10px] shadow-md text-[16px] text-black w-[220px]"
                   value={selectedMajor ?? ''}
                   onChange={e => setSelectedMajor(Number(e.target.value))}
-                >
+                >  <option value={0}>All Majors</option>
+
                   {majors.map((m) => (
                     <option key={m.id} value={m.id}>{m.major_name}</option>
                   ))}
@@ -135,7 +135,7 @@ export default function FindTutorPage() {
                   className="bg-white px-5 py-3 rounded-[10px] shadow-md text-[16px] text-black w-[270px]"
                   value={selectedUniversity ?? ''}
                   onChange={e => setSelectedUniversity(Number(e.target.value))}
-                >
+                >  <option value={0}>All Universities</option>
                   {universities.map((u) => (
                     <option key={u.id} value={u.id}>{u.university_name}</option>
                   ))}
