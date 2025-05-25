@@ -56,8 +56,8 @@ const TutorHeader = () => {
       {/* Desktop Navigation */}
       <nav className="hidden md:flex gap-10 text-sm font-semibold text-black">
         <Link href="/tutor">DASHBOARD</Link>
-        <Link href="/tutor/bookedSessions">BOOKED SESSIONS</Link>
-        <Link href="/tutor/editSchedule">EDIT SCHEDULE</Link>
+        <Link href="/../tutor/bookedSessions">BOOKED SESSIONS</Link>
+        <Link href="/../tutor/editSchedule">EDIT SCHEDULE</Link>
       </nav>
 
       {/* Avatar & Dropdown */}
@@ -96,7 +96,7 @@ const TutorHeader = () => {
       {mobileOpen && (
         <div className="absolute top-full left-0 w-full bg-white shadow-md md:hidden z-40 border-t border-gray-200">
           <div className="flex flex-col divide-y divide-gray-200">
-            {["/tutor", "/tutor/bookedSessions", "/tutor/editSchedule"].map((path, i) => {
+            {["/tutor", "/../tutor/bookedSessions", "/../tutor/editSchedule"].map((path, i) => {
               const label = ["DASHBOARD", "BOOKED SESSIONS", "EDIT SCHEDULE"][i];
               return (
                 <Link
@@ -126,7 +126,7 @@ const TutorHeader = () => {
             {/* Profile Actions */}
             <div className="flex justify-center gap-4 px-6 py-3">
               <Link
-                href="/tutor/edit-profile"
+                href="/../tutor-edit-profile"
                 className="bg-[#E8B14F] text-white text-sm font-semibold px-4 py-2 rounded-full shadow hover:bg-black-800"
                 onClick={() => setMobileOpen(false)}
               >

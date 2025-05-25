@@ -45,7 +45,7 @@ export default function HeaderDropdown() {
     if (role === 'tutee') {
       router.push('/tutee-edit-profile');
     } else if (role === 'tutor') {
-      router.push('/tutor-edit-profile');
+      router.push('/../tutor-edit-profile');
     } else {
       alert('🚫 User role not recognized. Please log in again.');
     }

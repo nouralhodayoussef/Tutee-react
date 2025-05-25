@@ -135,7 +135,7 @@ const TuteeHeader = () => {
             className="absolute top-full left-0 w-full bg-white shadow-md md:hidden z-40 border-t border-gray-200"
           >
             <div className="flex flex-col divide-y divide-gray-200">
-              {["/tutee", "../tutee/booked-sessions", "/tutee-findcourse", "../tutee/find-tutor", "../tutee/contact-us"].map((path, i) => {
+              {["/tutee", "/../tutee/booked-sessions", "/../tutee-findcourse", "/../tutee/find-tutor", "/../tutee/contact-us"].map((path, i) => {
                 const label = ["HOME", "BOOKED SESSIONS", "FIND A COURSE", "FIND A TUTOR", "CONTACT US"][i];
                 return (
                   <Link
@@ -164,7 +164,7 @@ const TuteeHeader = () => {
               {/* Profile Actions */}
               <div className="flex justify-center gap-4 px-6 py-3">
                 <Link
-                  href="/tutee/tutee-edit-profile"
+                  href="/../tutee-edit-profile"
                   className="bg-[#E8B14F] text-white text-sm font-semibold px-4 py-2 rounded-full shadow hover:bg-yellow-600"
                   onClick={() => setMobileOpen(false)}
                 >
