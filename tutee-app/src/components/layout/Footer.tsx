@@ -6,9 +6,9 @@ import { useEffect, useState } from 'react';
 
 const footerLinks = [
   { label: 'ABOUT US', href: '#about' },
+  { label: 'OUR TOP TUTORS', href: '#tutors' },
   { label: 'COURSES & UNIVERSITIES', href: '#courses' },
-  { label: 'HOW IT WORKS', href: '#how-it-works' },
-  { label: 'CONTACT US', href: '#contact' },
+  { label: 'CONTACT US', href: '#contact-us' },
   { label: 'JOIN TUTEE', href: '/register' },
 ];
 
@@ -48,7 +48,7 @@ export default function Footer() {
   }, []);
 
   return (
-<footer className="w-full bg-[#F5F5EF] border-t-2 border-[#E8B14F]/60 mt-16">
+    <footer className="w-full bg-[#F5F5EF] border-t-2 border-[#E8B14F]/60 mt-16">
       <div className="max-w-7xl mx-auto px-6 md:px-12 py-12 flex flex-col gap-8">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-10">
           {/* Logo - dynamic link */}

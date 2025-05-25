@@ -260,7 +260,7 @@ export default function TuteeHome() {
                         <div className="flex gap-4 text-xs text-gray-600 mt-2">
                           <span>👤 {tutor.tutee_count ?? 0} Tutee</span>
                           <span>⭐ {tutor.rating ?? 5} Rating</span>
-                          <span>📚 {tutor.course_count ?? 0} Courses</span>
+                          <span>📚 {tutor.course_count ?? 0} Sessions</span>
                         </div>
                       </div>
                       <Link href={`/tutee/tutor-profile/${tutor.id}`}>

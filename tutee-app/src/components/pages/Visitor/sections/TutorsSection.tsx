@@ -18,7 +18,7 @@ const StarRating = ({ rating }: { rating: number }) => {
   const fullStars = Math.floor(rating);
   const halfStar = rating % 1 !== 0;
   return (
-    <div className="flex gap-1">
+    <div className="flex flex-wrap gap-1 justify-center">
       {[...Array(fullStars)].map((_, i) => (
         <span key={i}>⭐</span>
       ))}
@@ -74,7 +74,6 @@ const TutorsSection = () => {
     >
       {/* Header and Intro */}
       <div className="flex flex-col md:flex-row justify-between items-start mb-12">
-        {/* Left: OUR HEROES + Arrow + MEET THE TUTORS */}
         <div className="flex flex-col items-start gap-3">
           <div className="flex items-center gap-5">
             <h2 className="text-3xl font-bold text-black">OUR HEROES</h2>
@@ -92,7 +91,6 @@ const TutorsSection = () => {
           </div>
           <p className="text-2xl font-light text-black">MEET THE TUTORS</p>
         </div>
-        {/* Right: Intro paragraph */}
         <div className="max-w-2xl mt-4 md:mt-0">
           <p className="text-sm text-black">
             Our tutors are top-performing students and graduates from leading universities around the world. They excel in their fields and are eager to share their expertise with others. From mathematics and science to business and humanities, our tutors cover a wide range of subjects to meet your academic needs.
@@ -110,9 +108,9 @@ const TutorsSection = () => {
         </p>
       </div>
 
-      {/* Mobile Slider with animation */}
+      {/* Mobile Slider */}
       <div className="md:hidden flex flex-col items-center gap-4">
-        <div className="w-full max-w-xs bg-white p-4 rounded-xl shadow-md min-h-[390px] flex items-center justify-center relative">
+        <div className="w-full max-w-[90%] bg-white p-4 rounded-xl shadow-md min-h-[420px] flex items-center justify-center relative">
           <AnimatePresence initial={false} custom={direction}>
             <motion.div
               key={currentIndex}
@@ -128,7 +126,8 @@ const TutorsSection = () => {
                 alt={tutors[currentIndex].name}
                 width={300}
                 height={300}
-                className="rounded-lg object-cover w-full h-[300px]"
+                className="rounded-lg object-cover w-full max-h-[280px]"
+                style={{ objectFit: "cover" }}
               />
               <h4 className="text-lg font-semibold mt-4">{tutors[currentIndex].name}</h4>
               <p className="text-sm text-gray-600">
@@ -136,14 +135,14 @@ const TutorsSection = () => {
                   ? tutors[currentIndex].subject
                   : "—"}
               </p>
-              <div className="flex items-center gap-2 mt-2">
+              <div className="flex flex-wrap justify-center items-center gap-1 mt-2">
                 <StarRating rating={tutors[currentIndex].rating} />
                 <span className="text-xs text-gray-500">({tutors[currentIndex].reviews})</span>
               </div>
             </motion.div>
           </AnimatePresence>
         </div>
-        <div className="flex gap-6">
+        <div className="flex gap-6 mt-2 justify-center">
           <button
             onClick={prev}
             className="bg-[#E8B14F] p-2 rounded-full shadow hover:bg-yellow-500 transition"
@@ -163,7 +162,7 @@ const TutorsSection = () => {
 
       {/* Desktop Grid */}
       <motion.div
-        className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-10"
+        className="hidden md:grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8 mt-10"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.2 }}
