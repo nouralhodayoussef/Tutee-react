@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import TuteeHeader from "@/components/layout/TuteeHeader";
@@ -63,8 +64,8 @@ export default function TuteeEditProfile() {
       }
     };
 
-    
-    
+
+
 
     const fetchDropdownOptions = async () => {
       try {
@@ -73,15 +74,20 @@ export default function TuteeEditProfile() {
         });
         const data = await res.json();
         if (res.ok) {
-          setMajors(data.majors);
-          setUniversities(data.universities);
+          // 🔥 Remove "All Majors"/"All Universities"
+          const filteredMajors = data.majors.filter((m: any) => m.id !== 0);
+          const filteredUniversities = data.universities.filter((u: any) => u.id !== 0);
+
+          setMajors(filteredMajors);
+          setUniversities(filteredUniversities);
 
           const majorName =
-            data.majors.find((m: any) => m.id === data.selectedMajor)
+            filteredMajors.find((m: any) => m.id === data.selectedMajor)
               ?.major_name || "";
           const universityName =
-            data.universities.find((u: any) => u.id === data.selectedUniversity)
+            filteredUniversities.find((u: any) => u.id === data.selectedUniversity)
               ?.university_name || "";
+
           setSelectedMajor(majorName);
           setSelectedUniversity(universityName);
         }
@@ -89,7 +95,6 @@ export default function TuteeEditProfile() {
         console.error("❌ Error fetching dropdown options:", err);
       }
     };
-
     fetchTuteeInfo();
     fetchDropdownOptions();
   }, []);
@@ -185,37 +190,37 @@ export default function TuteeEditProfile() {
   };
 
   const handleCropUpload = async (blob: Blob) => {
-  const formData = new FormData();
-  formData.append("profilePhoto", blob);
+    const formData = new FormData();
+    formData.append("profilePhoto", blob);
 
-  try {
-    const res = await fetch("http://localhost:4000/upload-profile-photo", {
-      method: "POST",
-      credentials: "include",
-      body: formData,
-    });
+    try {
+      const res = await fetch("http://localhost:4000/upload-profile-photo", {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
 
-    const data = await res.json();
-    if (res.ok) {
-      setPhoto(data.photo);
-      setCropModalOpen(false);
-      window.location.reload();
-    } else {
-      alert("❌ Upload failed: " + data.error);
+      const data = await res.json();
+      if (res.ok) {
+        setPhoto(data.photo);
+        setCropModalOpen(false);
+        window.location.reload();
+      } else {
+        alert("❌ Upload failed: " + data.error);
+      }
+    } catch (err) {
+      console.error("Upload error:", err);
+      alert("❌ Something went wrong.");
     }
-  } catch (err) {
-    console.error("Upload error:", err);
-    alert("❌ Something went wrong.");
-  }
-};
-const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0];
-  if (file) {
-    setSelectedImage(file);
-    setPreviewUrl(URL.createObjectURL(file));
-    setCropModalOpen(true);
-  }
-};
+  };
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedImage(file);
+      setPreviewUrl(URL.createObjectURL(file));
+      setCropModalOpen(true);
+    }
+  };
 
 
 

@@ -20,13 +20,17 @@ type University = {
 export default function TuteeFindCourse() {
   const [majors, setMajors] = useState<Major[]>([]);
   const [universities, setUniversities] = useState<University[]>([]);
-  const [selectedMajor, setSelectedMajor] = useState<string | null>(null);
-  const [selectedUniversity, setSelectedUniversity] = useState<string | null>(null);
+  const [filteredMajors, setFilteredMajors] = useState<Major[]>([]);
+  const [filteredUniversities, setFilteredUniversities] = useState<University[]>([]);
+  const [selectedMajor, setSelectedMajor] = useState<string>("0");
+  const [selectedUniversity, setSelectedUniversity] = useState<string>("0");
   const [searchTerm, setSearchTerm] = useState("");
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [showMajors, setShowMajors] = useState(false);
   const [showUniversities, setShowUniversities] = useState(false);
+  const [majorInput, setMajorInput] = useState("");
+  const [universityInput, setUniversityInput] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -36,9 +40,17 @@ export default function TuteeFindCourse() {
         });
         const data = await res.json();
         setMajors(data.majors);
+        setFilteredMajors(data.majors);
         setUniversities(data.universities);
-        if (data.selectedMajor) setSelectedMajor(data.selectedMajor.toString());
-        if (data.selectedUniversity) setSelectedUniversity(data.selectedUniversity.toString());
+        setFilteredUniversities(data.universities);
+        setSelectedMajor(data.selectedMajor?.toString() || "0");
+        setSelectedUniversity(data.selectedUniversity?.toString() || "0");
+
+        const selectedMajorObj = data.majors.find((m: Major) => m.id === data.selectedMajor);
+        const selectedUniObj = data.universities.find((u: University) => u.id === data.selectedUniversity);
+
+        setMajorInput(selectedMajorObj?.major_name || "");
+        setUniversityInput(selectedUniObj?.university_name || "");
       } catch (err) {
         console.error("❌ Fetch error:", err);
       }
@@ -47,11 +59,13 @@ export default function TuteeFindCourse() {
   }, []);
 
   const fetchCourses = async () => {
-    if (!selectedMajor || !selectedUniversity) return;
     setLoading(true);
     try {
+      const majorParam = selectedMajor !== "0" ? selectedMajor : "";
+      const universityParam = selectedUniversity !== "0" ? selectedUniversity : "";
+
       const res = await fetch(
-        `http://localhost:4000/findcourse/tutors?major=${selectedMajor}&university=${selectedUniversity}&search=${encodeURIComponent(searchTerm)}`
+        `http://localhost:4000/findcourse/tutors?major=${majorParam}&university=${universityParam}&search=${encodeURIComponent(searchTerm)}`
       );
       const data = await res.json();
       setCourses(Array.isArray(data) ? data : []);
@@ -62,11 +76,6 @@ export default function TuteeFindCourse() {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (searchTerm === "") fetchCourses();
-    // eslint-disable-next-line
-  }, [searchTerm]);
 
   useEffect(() => {
     fetchCourses();
@@ -107,25 +116,14 @@ export default function TuteeFindCourse() {
     );
   };
 
-  // Animations
-  const fadeUp = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100, damping: 18 } },
-  };
-
   const fadeGrow = {
     hidden: { opacity: 0, scale: 0.95, y: 6 },
     visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.2 } },
     exit: { opacity: 0, scale: 0.95, y: 6, transition: { duration: 0.13 } },
   };
 
-  const gridContainer = {
-    hidden: {},
-    show: { transition: { staggerChildren: 0.07 } }
-  };
-
   return (
-    <RoleProtected requiredRoles={['tutee']}>
+    <RoleProtected requiredRoles={["tutee"]}>
       <TuteeHeader />
       <section className="w-full flex justify-center py-10 bg-[#f5f5ef] font-poppins">
         <div className="w-full max-w-[1057px] px-4">
@@ -157,14 +155,21 @@ export default function TuteeFindCourse() {
             {/* Dropdown Filters */}
             <div className="flex gap-4 relative z-10">
               {/* Major Dropdown */}
-              <div className="relative w-[150px]">
-                <button
-                  onClick={() => setShowMajors(!showMajors)}
-                  className="w-full h-[55px] bg-white rounded-[10px] px-4 text-[16px] text-left text-black shadow-md truncate"
-                >
-                  {majors.find((m) => m.id.toString() === selectedMajor)?.major_name ?? "Major"}
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2">▾</span>
-                </button>
+              <div className="relative w-[180px]">
+                <input
+                  type="text"
+                  placeholder="Select Major"
+                  className="w-full h-[55px] bg-white rounded-[10px] px-4 text-[16px] text-black shadow-md"
+                  value={majorInput}
+                  onFocus={() => setShowMajors(true)}
+                  onChange={(e) => {
+                    const input = e.target.value.toLowerCase();
+                    setMajorInput(e.target.value);
+                    setFilteredMajors(
+                      majors.filter((m) => m.major_name.toLowerCase().includes(input))
+                    );
+                  }}
+                />
                 <AnimatePresence>
                   {showMajors && (
                     <motion.div
@@ -174,11 +179,12 @@ export default function TuteeFindCourse() {
                       variants={fadeGrow}
                       className="absolute mt-1 w-full max-h-[200px] overflow-y-auto bg-white rounded-[10px] shadow-md z-50"
                     >
-                      {majors.map((m) => (
+                      {filteredMajors.map((m) => (
                         <div
                           key={m.id}
                           onClick={() => {
                             setSelectedMajor(m.id.toString());
+                            setMajorInput(m.major_name);
                             setShowMajors(false);
                           }}
                           className="px-4 py-2 hover:bg-gray-100 cursor-pointer truncate"
@@ -190,15 +196,25 @@ export default function TuteeFindCourse() {
                   )}
                 </AnimatePresence>
               </div>
+
               {/* University Dropdown */}
-              <div className="relative w-[190px]">
-                <button
-                  onClick={() => setShowUniversities(!showUniversities)}
-                  className="w-full h-[55px] bg-white rounded-[10px] px-4 text-[16px] text-left text-black shadow-md truncate"
-                >
-                  {universities.find((u) => u.id.toString() === selectedUniversity)?.university_name ?? "University"}
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2">▾</span>
-                </button>
+              <div className="relative w-[200px]">
+                <input
+                  type="text"
+                  placeholder="Select University"
+                  className="w-full h-[55px] bg-white rounded-[10px] px-4 text-[16px] text-black shadow-md"
+                  value={universityInput}
+                  onFocus={() => setShowUniversities(true)}
+                  onChange={(e) => {
+                    const input = e.target.value.toLowerCase();
+                    setUniversityInput(e.target.value);
+                    setFilteredUniversities(
+                      universities.filter((u) =>
+                        u.university_name.toLowerCase().includes(input)
+                      )
+                    );
+                  }}
+                />
                 <AnimatePresence>
                   {showUniversities && (
                     <motion.div
@@ -208,11 +224,12 @@ export default function TuteeFindCourse() {
                       variants={fadeGrow}
                       className="absolute mt-1 w-full max-h-[200px] overflow-y-auto bg-white rounded-[10px] shadow-md z-50"
                     >
-                      {universities.map((u) => (
+                      {filteredUniversities.map((u) => (
                         <div
                           key={u.id}
                           onClick={() => {
                             setSelectedUniversity(u.id.toString());
+                            setUniversityInput(u.university_name);
                             setShowUniversities(false);
                           }}
                           className="px-4 py-2 hover:bg-gray-100 cursor-pointer truncate"
@@ -234,90 +251,48 @@ export default function TuteeFindCourse() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15, duration: 0.7, type: "spring", stiffness: 70 }}
           >
-            <h2 className="text-xl font-semibold mb-6 text-gray-800">
-              Available Courses
-            </h2>
-            <AnimatePresence mode="wait">
-              {loading ? (
-                <motion.p
-                  key="loading"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="text-gray-500"
-                >
-                  Loading courses...
-                </motion.p>
-              ) : courses.length === 0 ? (
-                <motion.p
-                  key="nocourses"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="text-gray-500"
-                >
-                  No courses found for the selected filters.
-                </motion.p>
-              ) : (
-                <motion.div
-                  key="courses"
-                  variants={gridContainer}
-                  initial="hidden"
-                  animate="show"
-                  exit="hidden"
-                  className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8"
-                >
-                  {courses.map((course, index) => (
-                    <motion.div
-                      key={index}
-                      variants={fadeUp}
-                      initial="hidden"
-                      animate="visible"
-                      exit="hidden"
-                      transition={{ delay: index * 0.09, type: "spring", stiffness: 110 }}
-                    >
-                      <Link
-                        href={`/tutee/tutor-profile/${course.tutor_id}?selectedCourse=${encodeURIComponent(course.course_code)}&courseName=${encodeURIComponent(course.course_name)}`}
-                        className="bg-white rounded-2xl p-5 shadow-md w-[272px] h-[291px] flex flex-col justify-between hover:shadow-lg transition"
-                      >
-                        <div className="text-[#696984] text-sm">
-                          {majors.find((m) => m.id.toString() === selectedMajor)?.major_name} ·{" "}
-                          {universities.find((u) => u.id.toString() === selectedUniversity)?.university_name}
+            <h2 className="text-xl font-semibold mb-6 text-gray-800">Available Courses</h2>
+            {loading ? (
+              <p className="text-gray-500">Loading courses...</p>
+            ) : courses.length === 0 ? (
+              <p className="text-gray-500">No courses found for the selected filters.</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+                {courses.map((course, index) => (
+                  <Link
+                    key={index}
+                    href={`/tutee/tutor-profile/${course.tutor_id}?selectedCourse=${encodeURIComponent(course.course_code)}&courseName=${encodeURIComponent(course.course_name)}`}
+                    className="bg-white rounded-2xl p-5 shadow-md w-[272px] h-[291px] flex flex-col justify-between hover:shadow-lg transition"
+                  >
+                    <div className="text-[#696984] text-sm">
+                      {course.major_name} · {course.university_name}
+                    </div>
+                    <div className="mt-3">
+                      <h3 className="font-semibold text-black text-lg mb-1">{course.course_code}</h3>
+                      <p className="text-[#696984] text-sm">{course.course_name}</p>
+                    </div>
+                    <div className="mt-4 flex items-center gap-3">
+                      <img
+                        src={course.photo || "/imgs/default-profile.png"}
+                        alt={`${course.first_name} ${course.last_name}`}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                      <div className="flex flex-col text-sm">
+                        <p className="font-medium">{course.first_name} {course.last_name}</p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#696984]">Course:</span>
+                          {renderStars(course.course_rating)}
                         </div>
-                        <div className="mt-3">
-                          <h3 className="font-semibold text-black text-lg mb-1">
-                            {course.course_code}
-                          </h3>
-                          <p className="text-[#696984] text-sm">
-                            {course.course_name}
-                          </p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#696984]">Overall:</span>
+                          {renderStars(course.overall_rating)}
                         </div>
-                        <div className="mt-4 flex items-center gap-3">
-                          <img
-                            src={course.photo || "/imgs/default-profile.png"}
-                            alt={`${course.first_name} ${course.last_name}`}
-                            className="w-10 h-10 rounded-full object-cover"
-                          />
-                          <div className="flex flex-col text-sm">
-                            <p className="font-medium">
-                              {course.first_name} {course.last_name}
-                            </p>
-                            <div className="flex items-center gap-2">
-                              <span className="text-[#696984]">Course:</span>
-                              {renderStars(course.course_rating)}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-[#696984]">Overall:</span>
-                              {renderStars(course.overall_rating)}
-                            </div>
-                          </div>
-                        </div>
-                      </Link>
-                    </motion.div>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </motion.div>
         </div>
       </section>

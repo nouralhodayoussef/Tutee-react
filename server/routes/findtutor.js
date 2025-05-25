@@ -36,12 +36,12 @@ router.get('/search', (req, res) => {
   const params = [];
 
   // Filters
-  if (major) {
+  if (major && major !== '0') {
     sql += ' AND tutors.major_id = ?';
     params.push(major);
   }
 
-  if (university) {
+  if (university && university !== '0') {
     sql += ' AND tutors.university_id = ?';
     params.push(university);
   }
@@ -68,6 +68,7 @@ router.get('/search', (req, res) => {
   sql += ' AND tutors.price_per_hour BETWEEN ? AND ?';
   params.push(minPrice, maxPrice);
 
+  // ✅ Remove LIMIT/OFFSET so frontend handles pagination
   sql += `
     GROUP BY tutors.id
     ORDER BY avg_rating ${ratingSort === 'asc' ? 'ASC' : 'DESC'}
