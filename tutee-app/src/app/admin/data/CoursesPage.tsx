@@ -49,22 +49,30 @@ export default function CoursesPage() {
   }, []);
 
   useEffect(() => {
-    if (selectedUniversity && selectedMajor) {
-      fetch(`http://localhost:4000/api/admin/courses?university_id=${selectedUniversity}&major_id=${selectedMajor}`)
-        .then(res => res.json())
-        .then(setCourses);
-    } else {
-      fetch('http://localhost:4000/api/admin/courses')
-        .then(res => res.json())
-        .then(setCourses);
+    const baseUrl = 'http://localhost:4000/api/admin/courses';
+    const params = new URLSearchParams();
+
+    if (selectedUniversity) {
+      params.append('university_id', selectedUniversity.toString());
     }
+
+    if (selectedMajor) {
+      params.append('major_id', selectedMajor.toString());
+    }
+
+    const url = params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
+
+    fetch(url)
+      .then(res => res.json())
+      .then(setCourses)
+      .catch(err => console.error("Failed to fetch courses:", err));
   }, [selectedUniversity, selectedMajor]);
 
   const filteredCourses = Array.isArray(courses)
     ? courses.filter(course =>
-        course.course_code.toLowerCase().includes(search.toLowerCase()) ||
-        course.course_name.toLowerCase().includes(search.toLowerCase())
-      )
+      course.course_code.toLowerCase().includes(search.toLowerCase()) ||
+      course.course_name.toLowerCase().includes(search.toLowerCase())
+    )
     : [];
 
   const paginatedCourses = filteredCourses.slice((currentPage - 1) * coursesPerPage, currentPage * coursesPerPage);
@@ -99,23 +107,27 @@ export default function CoursesPage() {
       <div className="flex flex-wrap gap-4 mb-6 items-center">
         <select
           value={selectedUniversity ?? ''}
-          onChange={e => setSelectedUniversity(Number(e.target.value))}
+          onChange={e => setSelectedUniversity(e.target.value ? Number(e.target.value) : null)}
           className="px-4 py-2 rounded-full border border-yellow-400 shadow-sm focus:outline-none"
         >
-          <option value="">Select University</option>
+          <option value="">All Universities</option>
           {universities.map(u => (
-            <option key={u.id} value={u.id}>{u.university_name}</option>
+            <option key={u.id} value={u.id}>
+              {u.university_name}
+            </option>
           ))}
         </select>
 
         <select
           value={selectedMajor ?? ''}
-          onChange={e => setSelectedMajor(Number(e.target.value))}
+          onChange={e => setSelectedMajor(e.target.value ? Number(e.target.value) : null)}
           className="px-4 py-2 rounded-full border border-yellow-400 shadow-sm focus:outline-none"
         >
-          <option value="">Select Major</option>
+          <option value="">All Majors</option>
           {majors.map(m => (
-            <option key={m.id} value={m.id}>{m.major_name}</option>
+            <option key={m.id} value={m.id}>
+              {m.major_name}
+            </option>
           ))}
         </select>
 
@@ -124,8 +136,8 @@ export default function CoursesPage() {
           placeholder="Search by Course Code or Name"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-className="px-4 py-2 border border-yellow-400 rounded-full shadow-sm w-80 focus:outline-none"
-            />
+          className="px-4 py-2 border border-yellow-400 rounded-full shadow-sm w-80 focus:outline-none"
+        />
       </div>
 
       <div className="bg-white shadow rounded p-4">
@@ -181,28 +193,28 @@ className="px-4 py-2 border border-yellow-400 rounded-full shadow-sm w-80 focus:
         </table>
 
         {totalPages > 1 && (
-  <div className="flex justify-end mt-4 gap-2 items-center">
-    <button
-      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-      disabled={currentPage === 1}
-      className="px-3 py-1 text-sm border rounded bg-black text-[#E8B14F] disabled:opacity-50"
-    >
-      Previous
-    </button>
+          <div className="flex justify-end mt-4 gap-2 items-center">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1 text-sm border rounded bg-black text-[#E8B14F] disabled:opacity-50"
+            >
+              Previous
+            </button>
 
-    <span className="text-sm text-gray-700 font-medium">
-      Page {currentPage} / {totalPages}
-    </span>
+            <span className="text-sm text-gray-700 font-medium">
+              Page {currentPage} / {totalPages}
+            </span>
 
-    <button
-      onClick={() => setCurrentPage(prev => (prev < totalPages ? prev + 1 : prev))}
-      disabled={currentPage === totalPages}
-      className="px-3 py-1 text-sm border rounded bg-[#E8B14F] text-black disabled:opacity-50"
-    >
-      Next
-    </button>
-  </div>
-)}
+            <button
+              onClick={() => setCurrentPage(prev => (prev < totalPages ? prev + 1 : prev))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 text-sm border rounded bg-[#E8B14F] text-black disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

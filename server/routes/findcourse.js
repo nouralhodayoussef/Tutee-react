@@ -17,10 +17,13 @@ router.get("/options", (req, res) => {
   `;
 
   db.query(tuteeQuery, [userId], (err, result) => {
-    if (err)
+    if (err) {
       return res.status(500).json({ error: "Failed to fetch tutee profile" });
-    if (result.length === 0)
+    }
+
+    if (result.length === 0) {
       return res.status(404).json({ error: "Tutee not found" });
+    }
 
     const { major_id, university_id } = result[0];
 
@@ -30,16 +33,14 @@ router.get("/options", (req, res) => {
       db.query(
         "SELECT id, university_name FROM universities ORDER BY university_name ASC",
         (err, universities) => {
-          if (err)
+          if (err) {
             return res.status(500).json({ error: "Failed to fetch universities" });
+          }
 
-          // Add "All" at the top
-          const formattedMajors = [{ id: 0, major_name: "All Majors" }, ...majors];
-          const formattedUniversities = [{ id: 0, university_name: "All Universities" }, ...universities];
-
+          // ✅ Send only actual majors & universities (no "All")
           res.status(200).json({
-            majors: formattedMajors,
-            universities: formattedUniversities,
+            majors,
+            universities,
             selectedMajor: major_id,
             selectedUniversity: university_id,
           });
