@@ -262,7 +262,7 @@ export default function TuteeEditProfile() {
                   </label>
                   <button
                     onClick={() => setShowDeleteModal(true)}
-                    className="bg-[#8C94A3] text-white rounded-full px-6 py-2 text-[16px] hover:opacity-90"
+                    className="bg-[#8C94A3] cursor-pointer text-white rounded-full px-6 py-2 text-[16px] hover:opacity-90"
                   >
                     Remove Photo
                   </button>
@@ -389,7 +389,7 @@ export default function TuteeEditProfile() {
                 <div className="mt-10 mb-5">
                   <button
                     type="submit"
-                    className="bg-[#E8B14F] text-white rounded-full px-8 py-2 text-[16px] font-medium hover:opacity-90"
+                    className="bg-[#E8B14F] cursor-pointer text-white rounded-full px-8 py-2 text-[16px] font-medium hover:opacity-90"
                   >
                     Update Profile
                   </button>

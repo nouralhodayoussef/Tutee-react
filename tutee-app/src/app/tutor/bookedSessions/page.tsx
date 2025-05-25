@@ -215,10 +215,10 @@ export default function TutorSessionsPage() {
 
     // 🟡 Week = grid layout
     if (type === 'week') {
-      // 🔍 Step 1: Extract earliest/latest session hours to trim grid
+      //  Step 1: Extract earliest/latest session hours to trim grid
       const sessionHours = filtered.map(s => new Date(s.scheduled_datetime).getHours());
-      const minHour = Math.max(7, Math.min(...sessionHours) - 1); // Lower bound
-      const maxHour = Math.min(23, Math.max(...sessionHours) + 1); // Upper bound
+      const minHour = Math.max(7, Math.min(...sessionHours) - 1);
+      const maxHour = Math.min(23, Math.max(...sessionHours) + 1);
       const hours = Array.from({ length: maxHour - minHour + 1 }, (_, i) => minHour + i);
 
       const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -294,7 +294,7 @@ export default function TutorSessionsPage() {
             </select>
             <button
               onClick={() => handlePrintSchedule(printOption)}
-              className="bg-[#E8B14F] text-white font-semibold px-6 py-2 rounded-full shadow hover:bg-yellow-500"
+              className="bg-[#E8B14F] cursor-pointer text-white font-semibold px-6 py-2 rounded-full shadow hover:bg-yellow-500"
             >
               Download PDF
             </button>
@@ -348,7 +348,7 @@ export default function TutorSessionsPage() {
                       <>
                         <button
                           onClick={() => router.push(`/session/setup/${session.room_link}`)}
-                          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full text-xs font-semibold"
+                          className="bg-green-600 hover:bg-green-700 cursor-pointer text-white px-4 py-2 rounded-full text-xs font-semibold"
                         >
                           Join Session
                         </button>
@@ -361,7 +361,7 @@ export default function TutorSessionsPage() {
                     )}
 
                     <button
-                      className="bg-[#E8B14F] px-4 py-2 rounded-full text-xs font-semibold"
+                      className="bg-[#E8B14F] cursor-pointer hover:bg-[#d9a13e] px-4 py-2 rounded-full text-xs font-semibold"
                       onClick={() => handleCheckMaterials(session.materials)}
                     >
                       Check Materials
@@ -369,7 +369,7 @@ export default function TutorSessionsPage() {
 
                     {isCancelable(session.scheduled_datetime) ? (
                       <button
-                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-full text-xs font-semibold"
+                        className="bg-red-500 cursor-pointer hover:bg-red-600 text-white px-4 py-2 rounded-full text-xs font-semibold"
                         onClick={() => handleCancelClick(session)}
                       >
                         Cancel Session
@@ -515,9 +515,9 @@ export default function TutorSessionsPage() {
         <section className="max-w-6xl mx-auto px-6 py-12">
           {/* Tabs Toggle */}
           <div className="flex gap-3 mb-8">
-            <button className={tabClass('scheduled')} onClick={() => setView('scheduled')}>Scheduled</button>
-            <button className={tabClass('completed')} onClick={() => setView('completed')}>Completed</button>
-            <button className={tabClass('cancelled')} onClick={() => setView('cancelled')}>Cancelled</button>
+            <button className={`${tabClass('scheduled')} cursor-pointer`} onClick={() => setView('scheduled')}>Scheduled</button>
+            <button className={`${tabClass('completed')} cursor-pointer`} onClick={() => setView('completed')}>Completed</button>
+            <button className={`${tabClass('cancelled')} cursor-pointer`} onClick={() => setView('cancelled')}>Canceled</button>
           </div>
 
           {/* Section Header */}

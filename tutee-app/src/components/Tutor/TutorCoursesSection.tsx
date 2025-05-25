@@ -176,7 +176,7 @@ const addCourse = async () => {
       <div className="flex justify-between items-center mb-4">
         <p className="text-[#E8B14F] font-bold text-[16px]">Your Courses</p>
         <button
-          className="text-sm text-[#E8B14F] underline"
+          className="text-sm cursor-pointer text-[#E8B14F] underline"
           onClick={() => setShowAddModal(true)}
         >
           Add a Course
@@ -203,7 +203,7 @@ const addCourse = async () => {
                 <td className="p-2">{c.course_name}</td>
                 <td className="p-2 text-center">
                   <button onClick={() => deleteCourse(c.id)}>
-                    <X className="w-4 h-4 text-red-600" />
+                    <X className="w-4 cursor-pointer h-4 text-red-600" />
                   </button>
                 </td>
               </tr>
@@ -223,7 +223,7 @@ const addCourse = async () => {
           <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md relative font-poppins overflow-y-auto max-h-[90vh]">
             <button
               onClick={() => setShowAddModal(false)}
-              className="absolute top-3 right-4 text-gray-600 font-bold text-lg"
+              className="absolute cursor-pointer top-3 right-4 text-gray-600 font-bold text-lg"
             >
               ×
             </button>
@@ -283,7 +283,7 @@ const addCourse = async () => {
               </div>
 
               <button
-                className="bg-[#E8B14F] text-white px-6 py-2 rounded-full mt-2 w-full hover:opacity-90"
+                className="bg-[#E8B14F] cursor-pointer text-white px-6 py-2 rounded-full mt-2 w-full hover:opacity-90"
                 onClick={addCourse}
                 disabled={!selectedCourseId}
               >
@@ -313,7 +313,7 @@ const addCourse = async () => {
           <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md relative overflow-y-auto max-h-[90vh]">
             <button
               onClick={() => setShowCreateModal(false)}
-              className="absolute top-3 right-4 text-gray-600"
+              className="absolute cursor-pointer top-3 right-4 text-gray-600"
             >
               ×
             </button>
@@ -333,7 +333,7 @@ const addCourse = async () => {
               className="w-full border border-[#E8B14F] rounded-full px-4 py-2 mb-4"
             />
             <button
-              className="bg-[#E8B14F] text-white px-6 py-2 rounded-full w-full"
+              className="bg-[#E8B14F] cursor-pointer hover:bg-[#d9a13e] text-white px-6 py-2 rounded-full w-full"
               onClick={createCourse}
             >
               Add Course

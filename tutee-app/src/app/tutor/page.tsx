@@ -116,7 +116,7 @@ export default function TutorHomePage() {
 
             <div className="mt-6 flex items-center gap-4">
               <Link href="/tutor/bookedSessions">
-                <button className="bg-[#E8B14F] text-black font-bold px-6 py-3 text-sm rounded-full shadow">
+                <button className="bg-[#E8B14F] hover:bg-[#d9a13e] cursor-pointer text-black font-bold px-6 py-3 text-sm rounded-full shadow">
                   See All Scheduled Sessions
                 </button>
               </Link>

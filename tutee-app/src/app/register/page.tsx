@@ -318,7 +318,7 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <button type="submit" className="w-full sm:w-2/3 mx-auto px-6 py-3 bg-[#E8B14F] text-white rounded-full font-semibold font-poppins">
+            <button type="submit" className="w-full cursor-pointer hover:bg-[#d9a13e] sm:w-2/3 mx-auto px-6 py-3 bg-[#E8B14F] text-white rounded-full font-semibold font-poppins">
               Register
             </button>
           </form>

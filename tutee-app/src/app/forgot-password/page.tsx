@@ -68,7 +68,7 @@ export default function ForgotPasswordPage() {
       credentials: 'include',
     });
 
-    // Optional: clear frontend state too
+    //  clear frontend state too
     sessionStorage.clear();
     localStorage.clear();
   } catch (err) {

@@ -324,7 +324,7 @@ export default function TutorScheduleEditor() {
                     </div>
                     <button
                       onClick={() => removeRange(day.id, index)}
-                      className="text-red-500 text-sm hover:underline mt-1 sm:mt-0"
+                      className="text-red-500 text-sm cursor-pointer hover:underline mt-1 sm:mt-0"
                     >
                       Remove
                     </button>
@@ -335,7 +335,7 @@ export default function TutorScheduleEditor() {
 
                 <button
                   onClick={() => addRange(day.id)}
-                  className="text-[#E8B14F] text-sm font-medium hover:underline mt-2"
+                  className="text-[#E8B14F] cursor-pointer text-sm font-medium hover:underline mt-2"
                 >
                   + Add Time Range
                 </button>
@@ -346,7 +346,7 @@ export default function TutorScheduleEditor() {
           <div className="mt-8 text-right">
             <button
               onClick={handleSubmit}
-              className="bg-[#E8B14F] text-white font-bold py-2 px-6 rounded-full hover:bg-yellow-500 transition"
+              className="bg-[#E8B14F] cursor-pointer text-white font-bold py-2 px-6 rounded-full hover:bg-yellow-500 transition"
             >
               Save Schedule
             </button>

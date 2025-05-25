@@ -390,7 +390,7 @@ export default function TuteeBookedSessions() {
           <div className="flex gap-3 mb-8">
             <button className={`${tabClass('scheduled')} cursor-pointer`}onClick={() => setView('scheduled')}>Scheduled</button>
             <button className={`${tabClass('completed')} cursor-pointer`} onClick={() => setView('completed')}>Completed</button>
-            <button className={`${tabClass('cancelled')} cursor-pointer`} onClick={() => setView('cancelled')}>Cancelled</button>
+            <button className={`${tabClass('cancelled')} cursor-pointer`} onClick={() => setView('cancelled')}>Canceled</button>
           </div>
 
           {/* Section Header */}

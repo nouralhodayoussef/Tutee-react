@@ -212,7 +212,7 @@ export default function TutorEditProfile() {
         const data = await res.json();
         const defaultPhoto = data.photo;
         setPhoto(defaultPhoto);
-        setShowDeleteModal(false); // hide modal
+        setShowDeleteModal(false);
 
         setTimeout(() => {
           window.location.reload();
@@ -238,9 +238,9 @@ export default function TutorEditProfile() {
         const skill = availableSkills.find((s) => s.id === skillId);
         if (skill) {
           setSkills((prev) => [...prev, skill]);
-          setSearchSkill(""); // ✅ clear input
+          setSearchSkill("");
           setSuccessMsg2(`Skill “${skill.skill_name}” added successfully!`);
-          setTimeout(() => window.location.reload(), 800); // ✅ reload
+          setTimeout(() => window.location.reload(), 800); 
         }
       }
     } catch (err) {
@@ -288,7 +288,7 @@ export default function TutorEditProfile() {
 
         // ✅ Slight delay before reloading, to ensure state updates finish
         setTimeout(() => {
-          window.location.reload(); // 🔄 force full reload
+          window.location.reload();
         }, 800);
       } else {
         alert(data.error || "Failed to add skill");
@@ -336,7 +336,7 @@ export default function TutorEditProfile() {
                 </div>
               </div>
               <div className="flex gap-3">
-                <label className="bg-[#E8B14F] text-white rounded-full px-6 py-[10px] text-[16px] font-medium hover:opacity-90 cursor-pointer flex items-center justify-center">
+                <label className="bg-[#E8B14F] text-white rounded-full px-6  text-[16px] font-medium hover:opacity-90 cursor-pointer flex items-center justify-center">
                   Update Photo
                   <input
                     type="file"
@@ -347,7 +347,7 @@ export default function TutorEditProfile() {
                 </label>
                 <button
                   onClick={() => setShowDeleteModal(true)}
-                  className="bg-[#8C94A3] text-white rounded-full px-6 py-2 text-[16px] hover:opacity-90"
+                  className="bg-[#8C94A3] cursor-pointer text-white rounded-full px-6 py-2 text-[16px] hover:opacity-90"
                 >
                   Remove Photo
                 </button>
@@ -447,7 +447,7 @@ export default function TutorEditProfile() {
                 <div className="flex items-center gap-4">
                   <button
                     type="submit"
-                    className="bg-[#E8B14F] text-white rounded-full px-8 py-2"
+                    className="bg-[#E8B14F] cursor-pointer hover:bg-[#d9a13e] text-white rounded-full px-8 py-2"
                   >
                     Update Profile
                   </button>
@@ -578,7 +578,7 @@ export default function TutorEditProfile() {
                       <button
                         type="button"
                         onClick={() => setShowSkillModal(true)}
-                        className="text-[#E8B14F] underline text-sm font-medium ml-2"
+                        className="text-[#E8B14F] cursor-pointer underline text-sm font-medium ml-2"
                       >
                         View more
                       </button>
