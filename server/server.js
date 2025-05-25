@@ -318,7 +318,7 @@ cron.schedule("0 * * * *", async () => {
 
         // Email to Tutee
         await transporter.sendMail({
-          from: process.env.EMAIL_USER,
+          from: `"Tutee Team" <${process.env.EMAIL_USER}>`,
           to: session.tutee_email,
           subject: "⏰ Reminder: Your Upcoming Tutee Session",
           text: `Dear ${session.tutee_first} ${session.tutee_last},
@@ -332,7 +332,7 @@ Tutee Team`,
 
         // Email to Tutor
         await transporter.sendMail({
-          from: process.env.EMAIL_USER,
+         from: `"Tutee Team" <${process.env.EMAIL_USER}>`,
           to: session.tutor_email,
           subject: "⏰ Reminder: Your Upcoming Tutee Session",
           text: `Dear ${session.tutor_first} ${session.tutor_last},

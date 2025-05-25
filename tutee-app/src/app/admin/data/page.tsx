@@ -82,7 +82,7 @@ export default function AdminCurrentDataPage() {
                 <button
                   key={key}
                   onClick={() => setTab(key as 'tutors' | 'tutees' | 'courses')}
-                  className={`py-2 px-4 text-sm font-medium transition-all relative
+                  className={`py-2 cursor-pointer px-4 text-sm font-medium transition-all relative
           ${selected
                       ? 'text-[#E8B14F] font-semibold after:absolute after:bottom-0 after:left-0 after:w-full after:h-[3px] after:bg-[#E8B14F]'
                       : 'text-gray-500 hover:text-[#E8B14F]'}
@@ -179,7 +179,7 @@ export default function AdminCurrentDataPage() {
                     <button
                       onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                       disabled={currentPage === 1}
-                      className={`px-4 py-1 rounded text-sm font-medium border transition ${currentPage === 1
+                      className={`px-4 py-1 cursor-pointer rounded text-sm font-medium border transition ${currentPage === 1
                           ? 'bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed'
                           : 'bg-black text-[#E8B14F] border-black hover:opacity-90'
                         }`}
@@ -189,7 +189,7 @@ export default function AdminCurrentDataPage() {
                     <button
                       onClick={() => setCurrentPage(prev => (prev < totalPages ? prev + 1 : prev))}
                       disabled={currentPage === totalPages}
-                      className={`px-4 py-1 rounded text-sm font-medium border transition ${currentPage === totalPages
+                      className={`px-4 py-1 cursor-pointer rounded text-sm font-medium border transition ${currentPage === totalPages
                           ? 'bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed'
                           : 'bg-[#E8B14F] text-black border-[#E8B14F] hover:opacity-90'
                         }`}

@@ -182,7 +182,7 @@ export default function CoursesPage() {
                 )}
                 <td className="p-3">
                   {editCourseId === course.id ? (
-                    <button onClick={saveEdit} className="text-green-600 font-medium">Save</button>
+                    <button onClick={saveEdit} className=" cursor-pointer text-green-600 font-medium">Save</button>
                   ) : (
                     <Pencil onClick={() => handleEdit(course)} className="w-4 h-4 cursor-pointer text-blue-600" />
                   )}
@@ -197,7 +197,7 @@ export default function CoursesPage() {
             <button
               onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
-              className="px-3 py-1 text-sm border rounded bg-black text-[#E8B14F] disabled:opacity-50"
+              className="px-3 cursor-pointer py-1 text-sm border rounded bg-black text-[#E8B14F] disabled:opacity-50"
             >
               Previous
             </button>
@@ -209,7 +209,7 @@ export default function CoursesPage() {
             <button
               onClick={() => setCurrentPage(prev => (prev < totalPages ? prev + 1 : prev))}
               disabled={currentPage === totalPages}
-              className="px-3 py-1 text-sm border rounded bg-[#E8B14F] text-black disabled:opacity-50"
+              className="px-3 cursor-pointer py-1 text-sm border rounded bg-[#E8B14F] text-black disabled:opacity-50"
             >
               Next
             </button>

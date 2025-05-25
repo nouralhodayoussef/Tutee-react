@@ -184,7 +184,7 @@ export default function AdminDashboardPage() {
                 key={sec.value}
                 onClick={() => setSection(sec.value)}
                 className={`
-                  flex items-center gap-2
+                  flex items-center gap-2 cursor-pointer
                   px-3 py-2 sm:px-6 sm:py-2
                   rounded-xl font-semibold
                   text-sm sm:text-base shadow
@@ -207,7 +207,7 @@ export default function AdminDashboardPage() {
                   <motion.button
                     key={opt.value}
                     onClick={() => setDateFilter(opt.value)}
-                    className={`px-2 md:px-4 py-1 rounded-full text-xs md:text-sm font-semibold transition-all
+                    className={`px-2 cursor-pointer md:px-4 py-1 rounded-full text-xs md:text-sm font-semibold transition-all
           ${dateFilter === opt.value
                         ? "bg-[#E8B14F] text-black shadow"
                         : "text-gray-600 hover:bg-[#FDE68A]"}
@@ -545,7 +545,7 @@ export default function AdminDashboardPage() {
                   </h2>
                   <div className="flex gap-3">
                     <button
-                      className={`px-4 py-2 rounded-full font-semibold text-sm transition-all shadow
+                      className={`px-4 py-2 cursor-pointer rounded-full font-semibold text-sm transition-all shadow
                         ${sessionsRange === "today" ? "bg-[#E8B14F] text-black" : "bg-white text-gray-700 hover:bg-[#fdf7ea]"}
                       `}
                       onClick={() => setSessionsRange("today")}
@@ -553,7 +553,7 @@ export default function AdminDashboardPage() {
                       Today
                     </button>
                     <button
-                      className={`px-4 py-2 rounded-full font-semibold text-sm transition-all shadow
+                      className={`px-4 cursor-pointer py-2 rounded-full font-semibold text-sm transition-all shadow
                         ${sessionsRange === "week" ? "bg-[#E8B14F] text-black" : "bg-white text-gray-700 hover:bg-[#fdf7ea]"}
                       `}
                       onClick={() => setSessionsRange("week")}
@@ -561,7 +561,7 @@ export default function AdminDashboardPage() {
                       This Week
                     </button>
                     <button
-                      className={`px-4 py-2 rounded-full font-semibold text-sm transition-all shadow
+                      className={`px-4 cursor-pointer py-2 rounded-full font-semibold text-sm transition-all shadow
                         ${sessionsRange === "upcoming" ? "bg-[#E8B14F] text-black" : "bg-white text-gray-700 hover:bg-[#fdf7ea]"}
                       `}
                       onClick={() => setSessionsRange("upcoming")}

@@ -114,14 +114,14 @@ const OtpModal = ({ email, userData, onVerify, onClose }: OtpModalProps) => {
             <div className="flex justify-end gap-4 mt-6">
               <button
                 onClick={onClose}
-                className="px-4 py-2 bg-gray-300 rounded-full text-sm text-black"
+                className="px-4 cursor-pointer py-2 bg-gray-300 rounded-full text-sm text-black"
               >
                 Cancel
               </button>
               <button
                 onClick={handleVerify}
                 disabled={verifying}
-                className="px-4 py-2 bg-[#E8B14F] text-white rounded-full text-sm"
+                className="px-4 cursor-pointer py-2 bg-[#E8B14F] text-white rounded-full text-sm"
               >
                 {verifying ? 'Verifying...' : 'Verify'}
               </button>
