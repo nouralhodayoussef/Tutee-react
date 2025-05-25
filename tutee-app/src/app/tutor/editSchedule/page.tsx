@@ -201,6 +201,7 @@ export default function TutorScheduleEditor() {
     setModalSessions([]);
     setModalDay(null);
     setModalIndex(null);
+     window.location.reload();  
   };
 
   const handleModalConfirm = async () => {
@@ -282,6 +283,7 @@ export default function TutorScheduleEditor() {
       const data = await res.json();
       if (res.ok) {
         toast('Schedule saved successfully!', 'success');
+        window.location.reload();
       } else {
         toast(data.error || 'Error saving schedule.', 'error');
       }

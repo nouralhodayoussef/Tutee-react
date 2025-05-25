@@ -84,7 +84,7 @@ export default function ForgotPasswordPage() {
     <main className="min-h-screen bg-[#f5f5ef] flex items-center justify-center font-poppins px-4">
       {!showSuccessMessage && (
         <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
-          <h2 className="text-2xl font-semibold text-center mb-6">Reset Your Password</h2>
+          <h2 className="text-2xl  font-semibold text-center mb-6">Reset Your Password</h2>
 
           {status === 'success' && (
             <p className="text-green-600 text-center mb-4">
@@ -107,10 +107,10 @@ export default function ForgotPasswordPage() {
             />
             <button
               type="submit"
-              className="w-full bg-[#f2b300] hover:bg-[#e8b14f] text-white py-3 rounded text-[16px] font-medium"
+              className="w-full bg-[#f2b300] hover:bg-[#e8b14f] cursor-pointer text-white py-3 rounded text-[16px] font-medium"
               disabled={showLoading}
             >
-              Send Reset Link
+              Send Reset otp
             </button>
           </form>
         </div>

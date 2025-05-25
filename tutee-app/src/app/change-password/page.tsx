@@ -84,7 +84,7 @@ export default function ChangePasswordPage() {
 <RoleProtected requiredRoles={['tutee', 'tutor']}>
     <div className="min-h-screen bg-[#f5f5f5] flex items-center justify-center font-poppins">
       <div className="bg-white p-10 rounded-xl shadow-md w-full max-w-md">
-        <h2 className="text-center text-2xl font-bold mb-6">Change Password</h2>
+        <h2 className="text-center  text-2xl font-bold mb-6">Change Password</h2>
 
         {/* Old Password */}
         <div className="relative mb-2">
@@ -143,7 +143,7 @@ export default function ChangePasswordPage() {
         {/* Submit Button */}
         <button
           onClick={handleUpdate}
-          className="w-full bg-[#E8B14F] text-white font-semibold py-3 rounded-full hover:opacity-90"
+          className="w-full bg-[#E8B14F] hover:bg-[#d9a13e] cursor-pointer text-white font-semibold py-3 rounded-full hover:opacity-90"
         >
           Update Password
         </button>

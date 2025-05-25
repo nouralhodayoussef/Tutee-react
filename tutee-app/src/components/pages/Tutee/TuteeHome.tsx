@@ -192,7 +192,7 @@ export default function TuteeHome() {
                 <motion.button
                   whileHover={{ scale: 1.06 }}
                   whileTap={{ scale: 0.97 }}
-                  className="bg-[#E8B14F] text-black font-bold px-6 py-3 text-sm rounded-full shadow"
+                  className="bg-[#E8B14F] cursor-pointer text-black font-bold px-6 py-3 text-sm rounded-full shadow"
                 >
                   Search & Schedule
                 </motion.button>
@@ -264,7 +264,7 @@ export default function TuteeHome() {
                         </div>
                       </div>
                       <Link href={`/tutee/tutor-profile/${tutor.id}`}>
-                        <button className="bg-[#E8B14F] text-black font-bold px-4 py-2 text-xs rounded-full shadow">
+                        <button className="bg-[#E8B14F] cursor-pointer hover:bg-[#d9a13e] text-black font-bold px-4 py-2 text-xs rounded-full shadow">
                           Schedule
                         </button>
                       </Link>
@@ -287,7 +287,7 @@ export default function TuteeHome() {
                 <motion.button
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.97 }}
-                  className="bg-[#E8B14F] text-black font-bold px-6 py-3 text-sm rounded-full shadow"
+                  className="bg-[#E8B14F] cursor-pointer text-black font-bold px-6 py-3 text-sm rounded-full shadow"
                 >
                   Find A Tutor
                 </motion.button>
@@ -333,7 +333,7 @@ export default function TuteeHome() {
                 <motion.button
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.97 }}
-                  className="bg-[#E8B14F] text-black font-bold px-6 py-3 text-sm rounded-full shadow"
+                  className="bg-[#E8B14F] cursor-pointer text-black font-bold px-6 py-3 text-sm rounded-full shadow"
                 >
                   Find A Course
                 </motion.button>

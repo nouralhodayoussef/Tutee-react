@@ -244,7 +244,7 @@ export default function TuteeBookedSessions() {
                             href={`/session/setup/${s.room_link}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="bg-[#E8B14F] text-black font-bold text-xs px-6 py-2 rounded-full"
+                            className="bg-[#E8B14F] hover:bg-[#d9a13e] text-black font-bold text-xs px-6 py-2 rounded-full"
                           >
                             Join Session Now
                           </a>
@@ -299,7 +299,7 @@ export default function TuteeBookedSessions() {
                     <div className="flex flex-wrap items-center gap-2 pt-2">
                       {c.tutor_rating == null ? (
                         <button
-                          className="bg-[#E8B14F] text-black font-bold text-xs px-6 py-2 rounded-full"
+                          className="bg-[#E8B14F] cursor-pointer hover:bg-[#d9a13e] text-black font-bold text-xs px-6 py-2 rounded-full"
                           onClick={() => openRateModal(c)}
                         >
                           Rate Tutor
@@ -388,9 +388,9 @@ export default function TuteeBookedSessions() {
         <section className="max-w-6xl mx-auto px-6 py-12">
           {/* Tabs Toggle */}
           <div className="flex gap-3 mb-8">
-            <button className={tabClass('scheduled')} onClick={() => setView('scheduled')}>Scheduled</button>
-            <button className={tabClass('completed')} onClick={() => setView('completed')}>Completed</button>
-            <button className={tabClass('cancelled')} onClick={() => setView('cancelled')}>Cancelled</button>
+            <button className={`${tabClass('scheduled')} cursor-pointer`}onClick={() => setView('scheduled')}>Scheduled</button>
+            <button className={`${tabClass('completed')} cursor-pointer`} onClick={() => setView('completed')}>Completed</button>
+            <button className={`${tabClass('cancelled')} cursor-pointer`} onClick={() => setView('cancelled')}>Cancelled</button>
           </div>
 
           {/* Section Header */}

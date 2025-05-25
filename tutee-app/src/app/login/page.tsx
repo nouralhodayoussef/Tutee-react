@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+
 'use client';
 
 import { useState } from 'react';
@@ -152,7 +152,7 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="w-full sm:w-[232px] h-[49px] bg-[#E8B14F] rounded-[36px] text-white text-[16px] mt-2 self-end"
+              className="w-full sm:w-[232px] h-[49px] bg-[#E8B14F] rounded-[36px] text-white text-[16px] mt-2 self-end hover:bg-[#d9a13e] cursor-pointer"
             >
               Login
             </button>
